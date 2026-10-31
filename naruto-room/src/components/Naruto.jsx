@@ -46,22 +46,22 @@ const Naruto = React.memo(function Naruto({
 
   // Character physical state
   const physics = useRef({
-    x: -19.4,
-    y: 1.62,
-    z: 5.0,
-    groundY: 1.62,
+    x: -16.31,
+    y: -0.07,
+    z: -6.8,
+    groundY: -0.07,
     velocityY: 0,
     isGrounded: true,
-    rotation: Math.PI, // start facing forward down the main street towards Hokage Monument (-Z)
+    rotation: Math.PI, // start facing forward down the main street towards well and Hokage Monument (-Z)
     chakra: 100,
     speed: 0, // for smooth acceleration
   });
 
   // Throttler ref to prevent flooding React state on every single animation frame
   const lastReportRef = useRef({
-    x: -19.4,
-    y: 1.62,
-    z: 5.0,
+    x: -16.31,
+    y: -0.07,
+    z: -6.8,
     state: 'idle',
     chakra: 100,
     lastPosTime: 0,
@@ -89,24 +89,24 @@ const Naruto = React.memo(function Naruto({
   // Reset character position if requested
   useEffect(() => {
     if (resetSignal) {
-      physics.current.x = -19.4;
-      physics.current.y = 1.62;
-      physics.current.z = 5.0;
-      physics.current.groundY = 1.62;
+      physics.current.x = -16.31;
+      physics.current.y = -0.07;
+      physics.current.z = -6.8;
+      physics.current.groundY = -0.07;
       physics.current.velocityY = 0;
       physics.current.isGrounded = true;
       physics.current.rotation = Math.PI;
       physics.current.speed = 0;
       if (group.current) {
-        group.current.position.set(-19.4, 1.62, 5.0);
+        group.current.position.set(-16.31, -0.07, -6.8);
         group.current.rotation.y = Math.PI;
       }
       if (playerPosRef) {
-        playerPosRef.current[0] = -19.4;
-        playerPosRef.current[1] = 1.62;
-        playerPosRef.current[2] = 5.0;
+        playerPosRef.current[0] = -16.31;
+        playerPosRef.current[1] = -0.07;
+        playerPosRef.current[2] = -6.8;
       }
-      onPositionUpdate?.([-19.4, 1.62, 5.0]);
+      onPositionUpdate?.([-16.31, -0.07, -6.8]);
     }
   }, [resetSignal, onPositionUpdate, playerPosRef]);
 
@@ -252,6 +252,15 @@ const Naruto = React.memo(function Naruto({
       }
 
       if (e.repeat || isMovementPaused) return;
+
+      // DEV ONLY: press P to show Naruto's exact world coordinates (for placing objects)
+      if (import.meta.env.DEV && e.code === 'KeyP') {
+        const ph = physics.current;
+        const msg = `Naruto position: [${ph.x.toFixed(2)}, ${ph.y.toFixed(2)}, ${ph.z.toFixed(2)}]  rotation: ${ph.rotation.toFixed(2)}`;
+        console.log(msg);
+        window.alert(msg);
+        return;
+      }
 
       if (!activeKeyMap.current[e.code]) {
         activeKeyMap.current[e.code] = true;

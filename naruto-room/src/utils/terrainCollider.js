@@ -210,6 +210,22 @@ export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = 
 export function isWallBlocking(collider, ox, oy, oz, dirX, dirZ, maxDist = 0.6) {
   if (!collider || !collider.isSpatialCollider) return false;
 
+  // Check registered cylinder obstacles (e.g. gate pillars, trees)
+  if (collider.obstacles && collider.obstacles.length > 0) {
+    const targetX = ox + dirX * maxDist;
+    const targetZ = oz + dirZ * maxDist;
+    for (let i = 0; i < collider.obstacles.length; i++) {
+      const obs = collider.obstacles[i];
+      if (oy >= obs.minY && oy <= obs.maxY) {
+        const dx = targetX - obs.x;
+        const dz = targetZ - obs.z;
+        if (dx * dx + dz * dz <= obs.radiusSq) {
+          return true;
+        }
+      }
+    }
+  }
+
   const col = Math.floor((ox - collider.minX) / collider.cellSize);
   const row = Math.floor((oz - collider.minZ) / collider.cellSize);
   if (col < 0 || col >= collider.cols || row < 0 || row >= collider.rows) {

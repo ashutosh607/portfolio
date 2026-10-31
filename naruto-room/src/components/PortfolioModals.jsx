@@ -81,7 +81,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
         <div className="portfolio-modal-header">
           <div className="modal-title-group">
             <span className="modal-category-tag">
-              {activeModal === 'intro' && '🍃 LOCATION 01 • KONOHA MAIN STREET'}
+              {activeModal === 'intro' && '🍃 LOCATION 01 • MAIN ENTRY GATE'}
               {activeModal === 'projects' && '🍜 LOCATION 02 • ICHIRAKU RAMEN MENU'}
               {activeModal === 'about' && "📜 LOCATION 03 • HOKAGE'S OFFICE ARCHIVE"}
               {activeModal === 'skills' && '⚔️ LOCATION 04 • TRAINING GROUNDS SCROLLS'}

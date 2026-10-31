@@ -89,7 +89,7 @@ export default function App() {
 
 function AppContent() {
   const [terrainMesh, setTerrainMesh] = useState(null);
-  const [narutoPos, setNarutoPos] = useState([-19.4, 1.62, 5.0]);
+  const [narutoPos, setNarutoPos] = useState([-16.31, -0.07, -6.8]);
   const [characterState, setCharacterState] = useState('idle');
   const [chakra, setChakra] = useState(100);
   const [activeKeys, setActiveKeys] = useState({});
@@ -109,7 +109,7 @@ function AppContent() {
   // Shared ref for camera yaw angle so Naruto steers relative to camera orientation
   const cameraAngleRef = useRef(0);
   // Shared mutable position ref for 60fps tracking without React re-renders
-  const narutoPosRef = useRef([-19.4, 1.62, 5.0]);
+  const narutoPosRef = useRef([-16.31, -0.07, -6.8]);
   // Shared mutable touch input ref for mobile controls
   const touchInputRef = useRef({
     forward: false,

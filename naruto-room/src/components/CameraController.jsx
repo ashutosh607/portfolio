@@ -21,8 +21,8 @@ const CameraController = React.memo(function CameraController({
   });
 
   // Reusable pre-allocated vectors (zero GC allocations per frame)
-  const smoothLookTarget = useRef(new THREE.Vector3(-19.4, 1.62 + CAMERA_CONFIG.targetHeight, 5.0));
-  const smoothCamPos = useRef(new THREE.Vector3(-19.4, 3.6, 11.0));
+  const smoothLookTarget = useRef(new THREE.Vector3(-16.31, -0.07 + CAMERA_CONFIG.targetHeight, -6.8));
+  const smoothCamPos = useRef(new THREE.Vector3(-16.31, -0.07 + 1.8, -6.8 + CAMERA_CONFIG.defaultDistance));
   const desiredTarget = useRef(new THREE.Vector3());
   const desiredCamPos = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
@@ -129,7 +129,7 @@ const CameraController = React.memo(function CameraController({
     const { yaw, pitch, distance } = orbitRef.current;
     const dt = Math.min(delta, 0.05);
 
-    const pos = playerPosRef?.current || [-19.4, 1.62, 5.0];
+    const pos = playerPosRef?.current || [-16.31, -0.07, -6.8];
     const targetX = pos[0];
     const targetY = pos[1] + CAMERA_CONFIG.targetHeight;
     const targetZ = pos[2];

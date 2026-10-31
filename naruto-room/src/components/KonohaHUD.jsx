@@ -65,7 +65,7 @@ const TOP_NAV_ITEMS = [
 const KonohaHUD = React.memo(function KonohaHUD({
   activeKeys = {},
   chakra = 100,
-  currentPosition = [-19.4, 1.62, 5.0],
+  currentPosition = [-16.31, -0.07, -6.8],
   onResetPosition,
   nearbyCharacterInfo = null,
   nearbyLocation = null,
@@ -84,6 +84,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
   const [isControlsOpen, setIsControlsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [visitedIds, setVisitedIds] = useState(() => new Set(['main-street']));
+  const [copiedCoords, setCopiedCoords] = useState(false);
 
   const isKeyPressed = (code) => Boolean(activeKeys[code]);
 
@@ -115,7 +116,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
       });
     }
 
-    const distFromSpawn = Math.hypot(currentPosition[0] - -19.4, currentPosition[2] - 5.0);
+    const distFromSpawn = Math.hypot(currentPosition[0] - -16.31, currentPosition[2] - -6.8);
     if (distFromSpawn > 5.0 && showWelcomeCard) {
       setShowWelcomeCard(false);
     }
@@ -289,6 +290,61 @@ const KonohaHUD = React.memo(function KonohaHUD({
           </button>
         </div>
       </header>
+
+      {/* Live Interactive Coordinates Display (Right Side) */}
+      <div
+        className="shinobi-coords-widget"
+        style={{
+          position: 'fixed',
+          right: '18px',
+          top: '75px',
+          zIndex: 40,
+          background: 'rgba(20, 16, 13, 0.85)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(212, 175, 55, 0.55)',
+          borderRadius: '10px',
+          padding: '8px 12px',
+          color: '#faebd7',
+          fontFamily: 'Consolas, "Courier New", monospace',
+          fontSize: '12px',
+          boxShadow: '0 4px 18px rgba(0,0,0,0.45)',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '3px',
+          minWidth: '135px',
+          pointerEvents: 'auto',
+        }}
+      >
+        <div style={{ color: '#d4af37', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
+          📍 COORDINATES
+        </div>
+        <div>X: {currentPosition ? currentPosition[0].toFixed(2) : '0.00'}</div>
+        <div>Y: {currentPosition ? currentPosition[1].toFixed(2) : '0.00'}</div>
+        <div>Z: {currentPosition ? currentPosition[2].toFixed(2) : '0.00'}</div>
+        <button
+          type="button"
+          onClick={() => {
+            const txt = `[${currentPosition[0].toFixed(2)}, ${currentPosition[1].toFixed(2)}, ${currentPosition[2].toFixed(2)}]`;
+            navigator.clipboard?.writeText(txt);
+            setCopiedCoords(true);
+            setTimeout(() => setCopiedCoords(false), 1500);
+          }}
+          style={{
+            marginTop: '4px',
+            background: copiedCoords ? '#27ae60' : '#c42b1c',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            padding: '4px 8px',
+            cursor: 'pointer',
+            fontSize: '11px',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+          }}
+        >
+          {copiedCoords ? '✓ Copied!' : 'Copy Point'}
+        </button>
+      </div>
 
       {/* ================= 2. COMPACT MENU / SETTINGS DRAWER ================= */}
       {isMenuOpen && (

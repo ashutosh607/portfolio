@@ -11,14 +11,14 @@ export const KONOHA_LOCATIONS = [
     signLabel: 'Intro → Main Street',
     icon: '🍃',
     modalKey: 'intro',
-    description: 'The bustling central artery of the Hidden Leaf Village and starting spawn point.',
-    // Central Main Street entrance boulevard overlooking the village & Hokage Monument
-    position: [-19.4, 1.62, 5.0],
-    arrivalFacing: Math.PI, // Straight North down the ramp towards the well and Hokage monument
+    description: 'The bustling central avenue of the Hidden Leaf Village and starting welcome point.',
+    // Grand entrance stairs - Konoha Main Street Board properly standing straight
+    position: [-22.79, 0.55, 10.2],
+    arrivalFacing: Math.PI, // Straight North facing the Konoha Main Street Board
     cameraYaw: 0,
-    shrinePosition: [-16.8, 1.60, 4.0],
-    shrineRotation: 0, // Straight facing South
-    radius: 6.0,
+    shrinePosition: [-22.79, 0.55, 7.95],
+    shrineRotation: 0, // Properly standing straight facing incoming shinobi
+    radius: 5.5,
     badge: 'INTRO',
     color: '#c42b1c',
   },
@@ -34,11 +34,11 @@ export const KONOHA_LOCATIONS = [
     modalKey: 'projects',
     description: "Naruto's favorite ramen shop. Browse engineering projects served as signature dishes.",
     // Actual 3D modeled Ichiraku Ramen shop with banners, counter & stools
-    position: [-25.5, 0.02, -13.2],
-    arrivalFacing: 0, // Straight North facing the counter and banners
-    cameraYaw: Math.PI,
-    shrinePosition: [-28.4, 0.02, -13.2],
-    shrineRotation: 0, // Straight parallel to shop counter
+    position: [-24.8, 0.02, -13.2],
+    arrivalFacing: -Math.PI / 2, // Straight West facing the counter and Ichiraku board
+    cameraYaw: Math.PI / 2,
+    shrinePosition: [-28.0, 0.02, -13.2],
+    shrineRotation: Math.PI / 2, // Proper straight standing facing the street and approaching shinobi
     radius: 5.5,
     badge: 'PROJECTS',
     color: '#e67e22',
@@ -46,20 +46,20 @@ export const KONOHA_LOCATIONS = [
   {
     id: 'hokage-office',
     number: '03',
-    name: "Hokage's Office",
+    name: "Hokage's Office Gate",
     shortName: "Hokage's Office",
-    japaneseName: '火影邸',
+    japaneseName: '火影邸門',
     role: 'About Me & Journey',
     signLabel: "About → Hokage's Office",
     icon: '📜',
     modalKey: 'about',
     description: 'The administrative heart of Konoha. Developer background, AI/ML journey, and goals.',
-    // Grand Hokage Residence entrance courtyard straight in front of entrance double doors & stairs
-    position: [-17.6, -0.02, -33.0],
-    arrivalFacing: Math.PI, // Straight North looking into Hokage entrance stairs
-    cameraYaw: 0,
-    shrinePosition: [-20.4, -0.02, -34.5],
-    shrineRotation: 0, // Straight facing South towards the front gate & well
+    // Placed at [31.90, 3.35, -35.08] with Lady Tsunade standing beside it properly straight
+    position: [31.90, 3.35, -37.5],
+    arrivalFacing: 0, // Facing South towards the Hokage Office Gate and Lady Tsunade
+    cameraYaw: Math.PI,
+    shrinePosition: [31.90, 3.35, -35.08],
+    shrineRotation: Math.PI, // Properly standing straight facing incoming shinobi
     radius: 6.5,
     badge: 'ABOUT',
     color: '#27ae60',
@@ -74,13 +74,13 @@ export const KONOHA_LOCATIONS = [
     signLabel: 'Skills → Training Grounds',
     icon: '⚔️',
     modalKey: 'skills',
-    description: 'Outdoor shinobi training arena and battle dome overseen by Master Jiraiya.',
-    // Outdoor Training Arena Dome courtyard supervised by Master Jiraiya
-    position: [2.0, 0.0, 18.5],
-    arrivalFacing: Math.PI, // Facing straight towards the training arena doorway
-    cameraYaw: 0,
-    shrinePosition: [0.6, 0.0, 19.5],
-    shrineRotation: 0, // Straight facing the courtyard
+    description: 'Outdoor shinobi training arena and grounds overseen by Master Jiraiya.',
+    // Placed at [44.84, 0.00, 46.89] with Master Jiraiya standing beside the Training Grounds Board properly straight
+    position: [44.12, 0.00, 44.2],
+    arrivalFacing: 0, // Facing South towards the Board and Master Jiraiya
+    cameraYaw: Math.PI,
+    shrinePosition: [43.40, 0.00, 46.89],
+    shrineRotation: Math.PI, // Properly standing straight facing incoming shinobi
     radius: 6.5,
     badge: 'SKILLS',
     color: '#2980b9',
@@ -88,20 +88,20 @@ export const KONOHA_LOCATIONS = [
   {
     id: 'mission-board',
     number: '05',
-    name: 'Mission Board',
-    shortName: 'Mission Board',
-    japaneseName: '任務受付',
+    name: 'Mission Gate',
+    shortName: 'Mission Gate',
+    japaneseName: '任務受付門',
     role: 'Experience & Hackathons',
-    signLabel: 'Experience → Mission Board',
+    signLabel: 'Missions → Mission Gate',
     icon: '🏆',
     modalKey: 'achievements',
     description: 'Pinned shinobi mission dossiers covering hackathons, team projects, and milestones.',
-    // Northeast Shinobi Outpost Plaza with Team 7 assembled
-    position: [16.0, 0.58, -21.8],
-    arrivalFacing: Math.PI, // Straight North facing the mission board
+    // Placed at [-2.26, 0.56, -7.92], Sasuke (left) & Sakura (right) beside it, properly standing straight
+    position: [-2.26, 0.56, -5.3],
+    arrivalFacing: Math.PI, // Straight North facing Sasuke, the Mission Gate, and Sakura
     cameraYaw: 0,
-    shrinePosition: [16.0, 0.58, -24.2],
-    shrineRotation: 0, // Straight
+    shrinePosition: [-2.26, 0.56, -7.92],
+    shrineRotation: 0, // Properly standing straight facing incoming shinobi
     radius: 6.0,
     badge: 'MISSIONS',
     color: '#8e44ad',

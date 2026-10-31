@@ -10,16 +10,18 @@ import { buildTerrainCollider, sampleGroundY } from '../utils/terrainCollider';
 useFBX.preload('/models/konoha/source/untitled.fbx');
 useTexture.preload('/models/konoha/textures/Picsart_26-05-30_22-38-46-674.png');
 
-// Shared geometries and materials for destination shrines & directional signs
-const postGeom = new THREE.CylinderGeometry(0.08, 0.1, 2.2, 8);
-const beamGeom = new THREE.BoxGeometry(1.7, 0.14, 0.14);
-const subBeamGeom = new THREE.BoxGeometry(1.35, 0.09, 0.1);
-const signBoardGeom = new THREE.BoxGeometry(1.24, 0.44, 0.05);
+// Shared geometries and materials for clean, proper straight-standing destination boards
+const postGeom = new THREE.CylinderGeometry(0.08, 0.09, 2.25, 12);
+const postCapGeom = new THREE.ConeGeometry(0.12, 0.12, 4);
+const topFrameGeom = new THREE.BoxGeometry(1.36, 0.10, 0.12);
+const bottomFrameGeom = new THREE.BoxGeometry(1.36, 0.08, 0.10);
+const signBoardGeom = new THREE.BoxGeometry(1.24, 0.52, 0.05);
 const ringGeom = new THREE.RingGeometry(1.15, 1.45, 24);
 const innerDiscGeom = new THREE.CircleGeometry(1.15, 24);
 
 const postMat = new THREE.MeshLambertMaterial({ color: '#2c1a11' });
-const beamMat = new THREE.MeshLambertMaterial({ color: '#c42b1c' });
+const frameMat = new THREE.MeshLambertMaterial({ color: '#8b261b' });
+const capMat = new THREE.MeshLambertMaterial({ color: '#1a1412' });
 
 // Procedural high-resolution canvas texture for the physical 3D wooden sign plaque
 function createSignboardTexture(loc) {
@@ -170,6 +172,23 @@ const KonohaVillage = React.memo(function KonohaVillage({
     if (!colliderBuiltRef.current) {
       colliderBuiltRef.current = true;
       const spatialCollider = buildTerrainCollider(offsetGroupRef.current, 2.5);
+
+      // Solid collision for Mission Gate, Team 7, Main Street Board, Hokage Office Gate, and Jiraiya Training Grounds
+      spatialCollider.obstacles = [
+        { x: -2.84, z: -7.92, radiusSq: 0.06, minY: 0.0, maxY: 3.0 }, // Mission Gate Left Post
+        { x: -1.68, z: -7.92, radiusSq: 0.06, minY: 0.0, maxY: 3.0 }, // Mission Gate Right Post
+        { x: -3.66, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sasuke
+        { x: -0.86, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sakura
+        { x: -23.37, z: 7.95, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Left Post
+        { x: -22.21, z: 7.95, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Right Post
+        { x: 31.32, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Left Post
+        { x: 32.48, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Right Post
+        { x: 33.30, z: -35.08, radiusSq: 0.16, minY: 2.0, maxY: 5.5 }, // Lady Tsunade
+        { x: 42.82, z: 46.89, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Training Grounds Board Left Post
+        { x: 43.98, z: 46.89, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Training Grounds Board Right Post
+        { x: 44.84, z: 46.89, radiusSq: 0.20, minY: -1.0, maxY: 3.0 }, // Master Jiraiya
+      ];
+
       colliderRef.current = spatialCollider;
       onTerrainReady?.(spatialCollider);
 
@@ -282,18 +301,21 @@ const KonohaVillage = React.memo(function KonohaVillage({
             position={[sPos[0], sPos[1] || 0, sPos[2]]}
             rotation={[0, loc.shrineRotation || 0, 0]}
           >
-            {/* Left & Right Torii Shrine Pillars */}
-            <mesh position={[-0.58, 1.1, 0]} geometry={postGeom} material={postMat} />
-            <mesh position={[0.58, 1.1, 0]} geometry={postGeom} material={postMat} />
-            {/* Top Crimson Kasagi Crossbeam */}
-            <mesh position={[0, 2.15, 0]} geometry={beamGeom} material={beamMat} />
-            {/* Lower Nuki Crossbeam */}
-            <mesh position={[0, 1.78, 0]} geometry={subBeamGeom} material={postMat} />
+            {/* Left & Right Vertical Standing Posts */}
+            <mesh position={[-0.58, 1.12, 0]} geometry={postGeom} material={postMat} />
+            <mesh position={[0.58, 1.12, 0]} geometry={postGeom} material={postMat} />
+            {/* Post Finials / Caps */}
+            <mesh position={[-0.58, 2.28, 0]} rotation={[0, Math.PI / 4, 0]} geometry={postCapGeom} material={capMat} />
+            <mesh position={[0.58, 2.28, 0]} rotation={[0, Math.PI / 4, 0]} geometry={postCapGeom} material={capMat} />
+            {/* Clean Straight Top Frame */}
+            <mesh position={[0, 2.18, 0]} geometry={topFrameGeom} material={frameMat} />
+            {/* Clean Straight Bottom Frame */}
+            <mesh position={[0, 1.62, 0]} geometry={bottomFrameGeom} material={postMat} />
             {/* Physical 3D Wooden Sign Plaque with procedural burnt-in typography */}
             <mesh
-              position={[0, 1.96, 0.05]}
+              position={[0, 1.90, 0.04]}
               geometry={signBoardGeom}
-              material={signboardMaterials[loc.id] || beamMat}
+              material={signboardMaterials[loc.id] || frameMat}
             />
 
             {/* Glowing Interactive Ground Ring */}

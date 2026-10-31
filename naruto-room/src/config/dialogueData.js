@@ -7,14 +7,15 @@ export const CHARACTERS_DATA = [
     name: 'Sasuke Uchiha',
     japaneseName: 'うちはサスケ',
     title: 'Uchiha Prodigy • Team 7 Shinobi',
-    locationLabel: 'Mission Outpost Plaza',
+    locationLabel: 'Mission Gate — Konoha Plaza',
     modelPath: '/models/sasuke_uchiha.glb',
-    // Team 7 Mission Board Outpost plaza, standing straight with Sakura & Naruto
-    position: [14.2, 0.58, -23.0],
-    rotation: [0, 0, 0],
+    // Standing on the LEFT of the Mission Gate at [-2.26, 0.56, -7.92], turned slightly towards center
+    position: [-3.66, 0.556, -7.85],
+    rotation: [0, 0.25, 0],
     scale: 0.96, // Calibrated height: ~1.75m
     modelRotation: [0, 0, 0],
     modelOffset: [0, 0, 0],
+    feetOffset: 0.01,
     interactionDistance: 3.5,
     themeColor: '#34495e',
     accentColor: '#9b59b6',
@@ -22,7 +23,7 @@ export const CHARACTERS_DATA = [
     dialogueSequence: [
       {
         speaker: 'Sasuke Uchiha',
-        text: "You're finally here, Ashutosh. The Hokage posted new high-rank missions on the board.",
+        text: "You're finally here, Ashutosh. The Hokage posted new high-rank missions on the Mission Gate.",
       },
       {
         speaker: 'Ashutosh',
@@ -30,7 +31,7 @@ export const CHARACTERS_DATA = [
       },
       {
         speaker: 'Sasuke Uchiha',
-        text: "Hmph. Don't slow me down. Let's see the mission dossiers and show everyone what Team 7 is capable of.",
+        text: "Hmph. Don't slow me down. Let's inspect the mission dossiers and show everyone what Team 7 is capable of.",
       },
     ],
     choices: [
@@ -56,14 +57,15 @@ export const CHARACTERS_DATA = [
     name: 'Sakura Haruno',
     japaneseName: '春野サクラ',
     title: 'Medical Ninja • Team 7 Shinobi',
-    locationLabel: 'Mission Outpost Plaza',
+    locationLabel: 'Mission Gate — Konoha Plaza',
     modelPath: '/models/sakura.glb',
-    // Team 7 Mission Board Outpost plaza, standing straight beside Sasuke & Naruto
-    position: [17.8, 0.58, -23.0],
-    rotation: [0, 0, 0],
+    // Standing on the RIGHT of the Mission Gate at [-2.26, 0.56, -7.92], turned slightly towards center
+    position: [-0.86, 0.556, -7.85],
+    rotation: [0, -0.25, 0],
     scale: 0.276, // Calibrated height: ~1.62m
     modelRotation: [0, 0, 0],
     modelOffset: [0, 0, 0],
+    feetOffset: 0.01,
     interactionDistance: 3.2,
     themeColor: '#e84393',
     accentColor: '#00b894',
@@ -71,7 +73,7 @@ export const CHARACTERS_DATA = [
     dialogueSequence: [
       {
         speaker: 'Sakura Haruno',
-        text: "Ashutosh! Sasuke! Team 7 is fully assembled at the Mission Board! Are we ready for our next big deployment?",
+        text: "Ashutosh! Sasuke! Team 7 is fully assembled at the Mission Gate! Are we ready for our next big deployment?",
       },
       {
         speaker: 'Ashutosh',
@@ -105,14 +107,15 @@ export const CHARACTERS_DATA = [
     name: 'Tsunade Senju',
     japaneseName: '綱手',
     title: 'Fifth Hokage • Legendary Sannin',
-    locationLabel: "Hokage's Office Grand Entrance",
+    locationLabel: "Hokage's Office Gate",
     modelPath: '/models/tsunade/source/Tsunade.glb',
-    // Standing straight at the grand entrance courtyard of the Hokage's Office facing approaching visitors
-    position: [-14.8, -0.02, -34.5],
-    rotation: [0, 0, 0],
+    // Standing beside the Hokage Office Gate at [31.90, 3.35, -35.08], properly standing straight facing visitors
+    position: [33.30, 3.35, -35.08],
+    rotation: [0, 2.9, 0],
     scale: 0.0915, // Calibrated height: ~1.65m
     modelRotation: [0, 0, 0],
     modelOffset: [0, 0, 0],
+    feetOffset: 0.01,
     interactionDistance: 3.5,
     themeColor: '#27ae60',
     accentColor: '#d35400',
@@ -162,14 +165,15 @@ export const CHARACTERS_DATA = [
     name: 'Jiraiya',
     japaneseName: '自来也',
     title: 'Toad Sage • Legendary Sannin & Mentor',
-    locationLabel: 'Outdoor Training Grounds Arena',
+    locationLabel: 'Training Grounds',
     modelPath: '/models/jiraiya_free_fire_skin_original_rig.glb',
-    // Standing outdoors at the entrance of the Training Arena Dome supervising training
-    position: [3.4, 0.0, 19.5],
-    rotation: [0, 0, 0],
+    // Standing beside his Training Grounds Board at [44.84, 0.00, 46.89], standing straight facing visitors
+    position: [44.84, 0.00, 46.89],
+    rotation: [0, Math.PI, 0],
     scale: 1.76, // Calibrated height: ~1.85m tall
     modelRotation: [0, 0, 0],
     modelOffset: [0, 0, 0],
+    feetOffset: 0.01,
     interactionDistance: 3.5,
     themeColor: '#c0392b',
     accentColor: '#f39c12',
