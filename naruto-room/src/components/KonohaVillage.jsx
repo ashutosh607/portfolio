@@ -179,8 +179,8 @@ const KonohaVillage = React.memo(function KonohaVillage({
         { x: -1.68, z: -7.92, radiusSq: 0.06, minY: 0.0, maxY: 3.0 }, // Mission Gate Right Post
         { x: -3.66, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sasuke
         { x: -0.86, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sakura
-        { x: -23.37, z: 7.95, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Left Post
-        { x: -22.21, z: 7.95, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Right Post
+        { x: -23.37, z: 7.10, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Left Post
+        { x: -22.21, z: 7.10, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Right Post
         { x: 31.32, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Left Post
         { x: 32.48, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Right Post
         { x: 33.30, z: -35.08, radiusSq: 0.16, minY: 2.0, maxY: 5.5 }, // Lady Tsunade

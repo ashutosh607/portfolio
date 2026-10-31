@@ -16,7 +16,7 @@ export const KONOHA_LOCATIONS = [
     position: [-22.79, 0.55, 10.2],
     arrivalFacing: Math.PI, // Straight North facing the Konoha Main Street Board
     cameraYaw: 0,
-    shrinePosition: [-22.79, 0.55, 7.95],
+    shrinePosition: [-22.79, 0.55, 7.10],
     shrineRotation: 0, // Properly standing straight facing incoming shinobi
     radius: 5.5,
     badge: 'INTRO',
