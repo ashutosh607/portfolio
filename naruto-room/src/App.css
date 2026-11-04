@@ -43,11 +43,15 @@
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
   overflow: hidden;
   background-color: #8ec3eb;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--charcoal);
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
 }
 
 .three-canvas {
@@ -58,6 +62,7 @@
   left: 0;
   outline: none;
   cursor: grab;
+  touch-action: none !important;
 }
 
 .three-canvas:active {
@@ -1277,58 +1282,315 @@
 .shinobi-mobile-touchpad {
   display: none;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  touch-action: none !important;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: auto;
 }
 
-.touch-dpad {
+.touch-dpad-disc {
+  position: relative;
+  width: 138px;
+  height: 138px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(34, 28, 22, 0.72) 0%, rgba(18, 14, 11, 0.88) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.38);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.52), inset 0 2px 6px rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.touch-knob {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e74c3c 0%, #a93226 70%, #641e16 100%);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 5;
+  transition: transform 0.04s ease-out;
+}
+
+.touch-dpad-cross {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  justify-content: space-between;
+  padding: 6px;
+  pointer-events: none;
 }
 
 .touch-row {
+  width: 100%;
   display: flex;
-  gap: 4px;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.touch-center-hub {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px dashed rgba(212, 175, 55, 0.25);
 }
 
 .touch-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  border: 1px solid rgba(182, 165, 140, 0.35);
-  background: var(--charcoal-glass);
-  color: var(--parchment);
-  font-size: 12px;
-  cursor: pointer;
-  touch-action: manipulation;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  background: rgba(26, 21, 17, 0.65);
+  color: #faebd7;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none; /* Let parent disc handle continuous 8-way drag */
+  transition: all 0.12s ease;
 }
 
-.touch-btn:active {
+.touch-btn.is-active {
   background: var(--vermilion);
-  border-color: var(--vermilion);
+  border-color: #ffd700;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(196, 43, 28, 0.8);
+  transform: scale(1.1);
 }
 
-.touch-action-col {
+/* Dedicated Right-Hand Mobile Action Cluster */
+.shinobi-mobile-actionpad {
+  display: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.mobile-action-buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-action-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(42, 34, 27, 0.92) 0%, rgba(20, 16, 13, 0.95) 100%);
+  border: 2px solid rgba(212, 175, 55, 0.42);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.48), inset 0 1px 3px rgba(255, 255, 255, 0.15);
+  color: #faebd7;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-}
-
-.touch-action-pill {
-  padding: 7px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(182, 165, 140, 0.35);
-  background: var(--charcoal-glass);
-  color: var(--parchment);
-  font-size: 11px;
-  font-weight: 500;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 0.14s ease;
 }
 
-.touch-action-pill:active {
-  background: var(--vermilion);
+.mobile-action-circle.jump-btn {
+  width: 58px;
+  height: 58px;
+  border-color: rgba(212, 175, 55, 0.55);
+}
+
+.mobile-action-circle .action-glyph {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.mobile-action-circle.jump-btn .action-glyph {
+  font-size: 20px;
+}
+
+.mobile-action-circle .action-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #dfd1bc;
+  margin-top: 2px;
+}
+
+.mobile-action-circle:active,
+.mobile-action-circle.is-active,
+.mobile-action-circle.is-toggled {
+  background: radial-gradient(circle at 35% 35%, #e74c3c 0%, #c42b1c 65%, #781e14 100%);
+  border-color: #ffd700;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(196, 43, 28, 0.75), inset 0 2px 4px rgba(255, 255, 255, 0.35);
+  transform: scale(0.94);
+}
+
+.mobile-interact-btn {
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d4af37 0%, #c42b1c 100%);
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 20px rgba(196, 43, 28, 0.65);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: mobileActionPulse 1.4s infinite alternate ease-in-out;
+}
+
+@keyframes mobileActionPulse {
+  from {
+    transform: scale(1);
+    box-shadow: 0 4px 14px rgba(196, 43, 28, 0.55);
+  }
+  to {
+    transform: scale(1.05);
+    box-shadow: 0 6px 22px rgba(212, 175, 55, 0.8);
+  }
+}
+
+.mobile-interact-btn:active {
+  transform: scale(0.96);
+}
+
+.mobile-interact-btn .action-btn-icon {
+  font-size: 16px;
+}
+
+/* Coordinates Widget Styling (Desktop & Mobile) */
+.shinobi-coords-widget {
+  position: fixed;
+  right: 18px;
+  top: 75px;
+  z-index: 40;
+  background: rgba(20, 16, 13, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 10px;
+  padding: 6px 10px;
+  color: #faebd7;
+  font-family: Consolas, "Courier New", monospace;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.coords-toggle-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.coords-icon-tag {
+  font-size: 11px;
+}
+
+.coords-title-text {
+  color: #d4af37;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+}
+
+.coords-chevron {
+  font-size: 9px;
+  color: #b5a48b;
+  margin-left: auto;
+}
+
+.coords-details-body {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 11px;
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  padding-top: 6px;
+}
+
+.coords-coord-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.coords-copy-pill {
+  margin-top: 6px;
+  background: #c42b1c;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.coords-copy-pill:active {
+  background: #27ae60;
+}
+
+/* Mobile Controls Guide Popover Details */
+.mobile-controls-guide {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.ctrl-guide-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(30, 24, 19, 0.45);
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.ctrl-icon-badge {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.ctrl-guide-row strong {
+  display: block;
+  font-size: 12px;
+  color: #dfd1bc;
+}
+
+.ctrl-guide-row p {
+  margin: 0;
+  font-size: 10.5px;
+  color: #a89882;
+}
+
+.mobile-dest-top-pill {
+  display: none;
+}
+
+.mobile-controls-label {
+  display: none;
 }
 
 /* ==========================================================================
@@ -2780,7 +3042,7 @@
 
 @media (max-width: 920px) {
   .shinobi-top-nav {
-    padding: 0 16px;
+    padding: 0 max(12px, env(safe-area-inset-left));
     height: 54px;
   }
   .shinobi-center-links,
@@ -2788,14 +3050,68 @@
   .shinobi-dest-trigger {
     display: none;
   }
+  .shinobi-dest-trigger.mobile-dest-top-pill {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 10px;
+    background: var(--charcoal-glass);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    border-radius: 999px;
+    color: #faebd7;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .dest-compass-mini {
+    font-size: 13px;
+  }
   .shinobi-hint-pill {
     display: none;
   }
   .shinobi-mobile-touchpad {
     display: flex;
   }
-  .mobile-dest-shortcut {
-    display: inline-flex;
+  .shinobi-mobile-actionpad {
+    display: flex;
+  }
+  .desktop-dest-shortcut {
+    display: none !important;
+  }
+  .desktop-controls-label {
+    display: none;
+  }
+  .mobile-controls-label {
+    display: inline;
+  }
+  .mobile-controls-guide {
+    display: flex;
+  }
+  .desktop-only-controls {
+    display: none;
+  }
+  .shinobi-bottom-bar {
+    padding: 0 max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+    align-items: flex-end;
+  }
+  .shinobi-bottom-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .mobile-controls-toggle {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+  .shinobi-coords-widget {
+    top: 60px;
+    right: 12px;
+  }
+  .shinobi-coords-widget.is-collapsed {
+    padding: 4px 8px;
+  }
+  .shinobi-coords-widget.is-collapsed .coords-details-body {
+    display: none;
   }
   .shinobi-welcome-panel {
     top: 66px;
@@ -2806,8 +3122,34 @@
   .welcome-serif-heading {
     font-size: 28px;
   }
-  .shinobi-bottom-bar {
-    padding: 0 16px 16px;
+}
+
+@media (max-width: 440px) {
+  .touch-dpad-disc {
+    width: 124px;
+    height: 124px;
+  }
+  .touch-knob {
+    width: 38px;
+    height: 38px;
+  }
+  .touch-btn {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+  .mobile-action-circle {
+    width: 48px;
+    height: 48px;
+  }
+  .mobile-action-circle.jump-btn {
+    width: 52px;
+    height: 52px;
+  }
+  .mobile-interact-btn {
+    min-height: 40px;
+    padding: 6px 12px;
+    font-size: 12px;
   }
 }
 

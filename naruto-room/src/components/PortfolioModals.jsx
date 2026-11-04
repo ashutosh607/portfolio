@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import RamenBookModal from './RamenBookModal';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
@@ -37,6 +38,18 @@ const PortfolioModals = React.memo(function PortfolioModals({
   }, [activeModal, selectedProject, onClose]);
 
   if (!activeModal) return null;
+
+  // Custom Interactive Japanese Ramen Book for Ichiraku Projects Menu
+  if (activeModal === 'projects') {
+    return (
+      <RamenBookModal
+        isOpen={true}
+        onClose={onClose}
+        onFastTravel={onFastTravel}
+        initialProjectId={selectedProject?.id}
+      />
+    );
+  }
 
   const handleInspectProjectById = (projectId) => {
     const found = PORTFOLIO_PROJECTS.find((p) => p.id === projectId);
@@ -120,8 +133,8 @@ const PortfolioModals = React.memo(function PortfolioModals({
                 ← Back to About
               </button>
             )}
-            <button className="modal-close-button" onClick={onClose} title="Close (ESC)">
-              ✕ ESC
+            <button className="modal-close-button" onClick={onClose} title="Close">
+              ✕ Close
             </button>
           </div>
         </div>

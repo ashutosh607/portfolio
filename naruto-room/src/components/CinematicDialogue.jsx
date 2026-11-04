@@ -210,14 +210,20 @@ export default function CinematicDialogue({
           <button
             className="dialogue-close-btn"
             onClick={onClose}
-            title="End conversation (ESC)"
+            title="End conversation"
           >
-            ✕ ESC
+            ✕ Close
           </button>
         </div>
 
-        {/* Dialogue Body */}
-        <div className="dialogue-panel-body">
+        {/* Dialogue Body - Tap anywhere to advance text on mobile or desktop */}
+        <div
+          className="dialogue-panel-body"
+          onClick={(e) => {
+            if (e.target.closest('button, a, .ninja-choice-btn')) return;
+            handleAdvance();
+          }}
+        >
           {/* Speaker Portrait / Emblem Frame */}
           <div className={`speaker-portrait-box ${isAshutoshSpeaker ? 'is-player' : ''}`}>
             <div className="portrait-emblem-wrap">

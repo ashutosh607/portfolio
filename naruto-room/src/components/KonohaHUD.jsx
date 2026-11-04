@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { KONOHA_LOCATIONS } from '../config/locations';
 
 // Minimal line-art SVG icons for the 6 destinations
@@ -85,6 +85,16 @@ const KonohaHUD = React.memo(function KonohaHUD({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [visitedIds, setVisitedIds] = useState(() => new Set(['main-street']));
   const [copiedCoords, setCopiedCoords] = useState(false);
+  const [isCoordsExpanded, setIsCoordsExpanded] = useState(
+    typeof window !== 'undefined' ? window.innerWidth > 768 : false
+  );
+  const [isSprintToggled, setIsSprintToggled] = useState(false);
+
+  // Mobile virtual 8-way directional thumbpad state
+  const dpadRef = useRef(null);
+  const dpadPointerId = useRef(null);
+  const [dpadActive, setDpadActive] = useState({ forward: false, backward: false, left: false, right: false });
+  const [knobOffset, setKnobOffset] = useState({ x: 0, y: 0 });
 
   const isKeyPressed = (code) => Boolean(activeKeys[code]);
 
@@ -146,6 +156,89 @@ const KonohaHUD = React.memo(function KonohaHUD({
       }
     },
     [touchInputRef]
+  );
+
+  const updateDpadFromCoords = useCallback(
+    (clientX, clientY, rect) => {
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const dx = clientX - centerX;
+      const dy = clientY - centerY;
+      const dist = Math.hypot(dx, dy);
+      const maxRadius = rect.width / 2;
+
+      if (dist < 12) {
+        // Deadzone
+        setTouchKey('forward', false);
+        setTouchKey('backward', false);
+        setTouchKey('left', false);
+        setTouchKey('right', false);
+        setDpadActive({ forward: false, backward: false, left: false, right: false });
+        setKnobOffset({ x: 0, y: 0 });
+        return;
+      }
+
+      // Smoothly clamp visual knob
+      const clampedDist = Math.min(dist, maxRadius * 0.65);
+      const angle = Math.atan2(dy, dx);
+      setKnobOffset({
+        x: Math.cos(angle) * clampedDist,
+        y: Math.sin(angle) * clampedDist,
+      });
+
+      const deg = (angle * 180) / Math.PI; // -180 to 180
+      const forward = deg < -20 && deg > -160;
+      const backward = deg > 20 && deg < 160;
+      const left = Math.abs(deg) > 110;
+      const right = Math.abs(deg) < 70;
+
+      setTouchKey('forward', forward);
+      setTouchKey('backward', backward);
+      setTouchKey('left', left);
+      setTouchKey('right', right);
+      setDpadActive({ forward, backward, left, right });
+    },
+    [setTouchKey]
+  );
+
+  const handleDpadPointerDown = useCallback(
+    (e) => {
+      e.stopPropagation();
+      try {
+        e.currentTarget.setPointerCapture(e.pointerId);
+      } catch {}
+      dpadPointerId.current = e.pointerId;
+      if (dpadRef.current) {
+        updateDpadFromCoords(e.clientX, e.clientY, dpadRef.current.getBoundingClientRect());
+      }
+    },
+    [updateDpadFromCoords]
+  );
+
+  const handleDpadPointerMove = useCallback(
+    (e) => {
+      if (dpadPointerId.current !== e.pointerId) return;
+      e.stopPropagation();
+      if (dpadRef.current) {
+        updateDpadFromCoords(e.clientX, e.clientY, dpadRef.current.getBoundingClientRect());
+      }
+    },
+    [updateDpadFromCoords]
+  );
+
+  const handleDpadPointerEnd = useCallback(
+    (e) => {
+      if (dpadPointerId.current !== e.pointerId && dpadPointerId.current !== null) return;
+      e.stopPropagation();
+      dpadPointerId.current = null;
+      setTouchKey('forward', false);
+      setTouchKey('backward', false);
+      setTouchKey('left', false);
+      setTouchKey('right', false);
+      setDpadActive({ forward: false, backward: false, left: false, right: false });
+      setKnobOffset({ x: 0, y: 0 });
+    },
+    [setTouchKey]
   );
 
   const handleOpenDestination = useCallback(
@@ -262,6 +355,20 @@ const KonohaHUD = React.memo(function KonohaHUD({
             <span className="dest-trigger-count">{visitedIds.size}/6</span>
           </button>
 
+          {/* Mobile Top Destinations Shortcut Button */}
+          <button
+            type="button"
+            className="shinobi-dest-trigger mobile-dest-top-pill"
+            onClick={() => {
+              setIsDestinationsOpen((prev) => !prev);
+              setIsMenuOpen(false);
+            }}
+            title="Toggle Village Destinations Drawer"
+          >
+            <span className="dest-compass-mini" aria-hidden="true">🧭</span>
+            <span className="dest-trigger-count">{visitedIds.size}/6</span>
+          </button>
+
           <button
             type="button"
             className={`shinobi-menu-pill ${isMenuOpen ? 'is-open' : ''}`}
@@ -292,58 +399,49 @@ const KonohaHUD = React.memo(function KonohaHUD({
       </header>
 
       {/* Live Interactive Coordinates Display (Right Side) */}
-      <div
-        className="shinobi-coords-widget"
-        style={{
-          position: 'fixed',
-          right: '18px',
-          top: '75px',
-          zIndex: 40,
-          background: 'rgba(20, 16, 13, 0.85)',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(212, 175, 55, 0.55)',
-          borderRadius: '10px',
-          padding: '8px 12px',
-          color: '#faebd7',
-          fontFamily: 'Consolas, "Courier New", monospace',
-          fontSize: '12px',
-          boxShadow: '0 4px 18px rgba(0,0,0,0.45)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '3px',
-          minWidth: '135px',
-          pointerEvents: 'auto',
-        }}
-      >
-        <div style={{ color: '#d4af37', fontSize: '10px', fontWeight: 'bold', letterSpacing: '1px' }}>
-          📍 COORDINATES
-        </div>
-        <div>X: {currentPosition ? currentPosition[0].toFixed(2) : '0.00'}</div>
-        <div>Y: {currentPosition ? currentPosition[1].toFixed(2) : '0.00'}</div>
-        <div>Z: {currentPosition ? currentPosition[2].toFixed(2) : '0.00'}</div>
-        <button
-          type="button"
-          onClick={() => {
-            const txt = `[${currentPosition[0].toFixed(2)}, ${currentPosition[1].toFixed(2)}, ${currentPosition[2].toFixed(2)}]`;
-            navigator.clipboard?.writeText(txt);
-            setCopiedCoords(true);
-            setTimeout(() => setCopiedCoords(false), 1500);
-          }}
-          style={{
-            marginTop: '4px',
-            background: copiedCoords ? '#27ae60' : '#c42b1c',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            padding: '4px 8px',
-            cursor: 'pointer',
-            fontSize: '11px',
-            fontWeight: '600',
-            transition: 'all 0.2s ease',
-          }}
+      <div className={`shinobi-coords-widget ${isCoordsExpanded ? 'is-expanded' : 'is-collapsed'}`}>
+        <div
+          className="coords-toggle-header"
+          onClick={() => setIsCoordsExpanded((prev) => !prev)}
+          role="button"
+          tabIndex={0}
+          title="Toggle coordinates panel"
         >
-          {copiedCoords ? '✓ Copied!' : 'Copy Point'}
-        </button>
+          <span className="coords-icon-tag" aria-hidden="true">📍</span>
+          <span className="coords-title-text">
+            {isCoordsExpanded
+              ? 'COORDINATES'
+              : `[${currentPosition ? currentPosition[0].toFixed(1) : '0'}, ${currentPosition ? currentPosition[2].toFixed(1) : '0'}]`}
+          </span>
+          <span className="coords-chevron" aria-hidden="true">{isCoordsExpanded ? '▲' : '▼'}</span>
+        </div>
+
+        {isCoordsExpanded && (
+          <div className="coords-details-body">
+            <div className="coords-coord-row">
+              <span>X:</span> <strong>{currentPosition ? currentPosition[0].toFixed(2) : '0.00'}</strong>
+            </div>
+            <div className="coords-coord-row">
+              <span>Y:</span> <strong>{currentPosition ? currentPosition[1].toFixed(2) : '0.00'}</strong>
+            </div>
+            <div className="coords-coord-row">
+              <span>Z:</span> <strong>{currentPosition ? currentPosition[2].toFixed(2) : '0.00'}</strong>
+            </div>
+            <button
+              type="button"
+              className="coords-copy-pill"
+              onClick={(e) => {
+                e.stopPropagation();
+                const txt = `[${currentPosition[0].toFixed(2)}, ${currentPosition[1].toFixed(2)}, ${currentPosition[2].toFixed(2)}]`;
+                navigator.clipboard?.writeText(txt);
+                setCopiedCoords(true);
+                setTimeout(() => setCopiedCoords(false), 1500);
+              }}
+            >
+              {copiedCoords ? '✓ Copied Point' : 'Copy Point'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ================= 2. COMPACT MENU / SETTINGS DRAWER ================= */}
@@ -697,9 +795,9 @@ const KonohaHUD = React.memo(function KonohaHUD({
           </div>
         )}
 
-      {/* ================= 6. FLOATING KEYBOARD CONTROLS PANEL (TOGGLED BY 'H' OR BUTTON) ================= */}
+      {/* ================= 6. FLOATING CONTROLS GUIDE (TOGGLED BY 'H' OR BUTTON) ================= */}
       {isControlsOpen && !isDialogueActive && (
-        <aside className="shinobi-controls-popover" role="dialog" aria-label="Keyboard & Mouse Controls">
+        <aside className="shinobi-controls-popover" role="dialog" aria-label="Controls Guide">
           <div className="controls-popover-header">
             <span>SHINOBI CONTROLS</span>
             <button
@@ -711,7 +809,55 @@ const KonohaHUD = React.memo(function KonohaHUD({
               ✕
             </button>
           </div>
-          <ul className="controls-popover-list">
+
+          {/* Touchscreen Mobile Gestures Guide */}
+          <div className="mobile-controls-guide">
+            <div className="ctrl-guide-row">
+              <span className="ctrl-icon-badge">🕹️</span>
+              <div>
+                <strong>Thumbpad (Bottom-Left)</strong>
+                <p>Drag thumb or tap arrows to run in 8 directions</p>
+              </div>
+            </div>
+            <div className="ctrl-guide-row">
+              <span className="ctrl-icon-badge">👆</span>
+              <div>
+                <strong>Swipe Screen Anywhere</strong>
+                <p>Rotate camera smoothly 360° to look around</p>
+              </div>
+            </div>
+            <div className="ctrl-guide-row">
+              <span className="ctrl-icon-badge">⚡</span>
+              <div>
+                <strong>Sprint Button</strong>
+                <p>Tap to toggle continuous sprint, or hold down</p>
+              </div>
+            </div>
+            <div className="ctrl-guide-row">
+              <span className="ctrl-icon-badge">🥷</span>
+              <div>
+                <strong>Jump Button</strong>
+                <p>Leap over steps, terrain, and obstacles</p>
+              </div>
+            </div>
+            <div className="ctrl-guide-row">
+              <span className="ctrl-icon-badge">💬</span>
+              <div>
+                <strong>Talk / Explore Button</strong>
+                <p>Lights up automatically when near villagers or boards</p>
+              </div>
+            </div>
+            <div className="ctrl-guide-row">
+              <span className="ctrl-icon-badge">🤏</span>
+              <div>
+                <strong>Two-Finger Pinch</strong>
+                <p>Pinch in / out anywhere on screen to zoom camera</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Keyboard List */}
+          <ul className="controls-popover-list desktop-only-controls">
             <li>
               <kbd>WASD / Arrows</kbd>
               <span>Move Character</span>
@@ -742,7 +888,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
 
       {/* ================= 7. MINIMAL BOTTOM HUD BAR ================= */}
       <footer className="shinobi-bottom-bar">
-        {/* Bottom-Left: Minimal Keyboard Hint Pill + Touch Controls on Mobile */}
+        {/* Bottom-Left: Keyboard Hint Pill on Desktop + Ergonomic 8-Way Thumbpad on Mobile */}
         <div className="shinobi-bottom-left">
           <div className="shinobi-hint-pill">
             <span className="hint-compass-icon" aria-hidden="true">
@@ -791,80 +937,163 @@ const KonohaHUD = React.memo(function KonohaHUD({
             )}
           </div>
 
-          {/* Mobile Touch Controls Pad (Only shown on touch / mobile viewports) */}
-          <div className="shinobi-mobile-touchpad">
-            <div className="touch-dpad">
-              <button
-                type="button"
-                className="touch-btn"
-                onPointerDown={() => setTouchKey('forward', true)}
-                onPointerUp={() => setTouchKey('forward', false)}
-                onPointerLeave={() => setTouchKey('forward', false)}
-                aria-label="Move Forward"
-              >
-                ▲
-              </button>
-              <div className="touch-row">
+          {/* Mobile Ergonomic 8-Way Touch D-Pad / Thumbpad */}
+          <div
+            ref={dpadRef}
+            className="shinobi-mobile-touchpad"
+            onPointerDown={handleDpadPointerDown}
+            onPointerMove={handleDpadPointerMove}
+            onPointerUp={handleDpadPointerEnd}
+            onPointerCancel={handleDpadPointerEnd}
+            aria-label="Movement Thumbpad"
+          >
+            <div className="touch-dpad-disc">
+              {/* Dynamic Center Knob indicator that slides with thumb */}
+              <div
+                className="touch-knob"
+                style={{
+                  transform: `translate(${knobOffset.x}px, ${knobOffset.y}px)`,
+                }}
+              />
+
+              <div className="touch-dpad-cross">
                 <button
                   type="button"
-                  className="touch-btn"
-                  onPointerDown={() => setTouchKey('left', true)}
-                  onPointerUp={() => setTouchKey('left', false)}
-                  onPointerLeave={() => setTouchKey('left', false)}
-                  aria-label="Move Left"
+                  className={`touch-btn btn-up ${dpadActive.forward ? 'is-active' : ''}`}
+                  aria-label="Move Forward"
                 >
-                  ◀
+                  ▲
                 </button>
+                <div className="touch-row">
+                  <button
+                    type="button"
+                    className={`touch-btn btn-left ${dpadActive.left ? 'is-active' : ''}`}
+                    aria-label="Move Left"
+                  >
+                    ◀
+                  </button>
+                  <div className="touch-center-hub" />
+                  <button
+                    type="button"
+                    className={`touch-btn btn-right ${dpadActive.right ? 'is-active' : ''}`}
+                    aria-label="Move Right"
+                  >
+                    ▶
+                  </button>
+                </div>
                 <button
                   type="button"
-                  className="touch-btn"
-                  onPointerDown={() => setTouchKey('backward', true)}
-                  onPointerUp={() => setTouchKey('backward', false)}
-                  onPointerLeave={() => setTouchKey('backward', false)}
+                  className={`touch-btn btn-down ${dpadActive.backward ? 'is-active' : ''}`}
                   aria-label="Move Backward"
                 >
                   ▼
                 </button>
-                <button
-                  type="button"
-                  className="touch-btn"
-                  onPointerDown={() => setTouchKey('right', true)}
-                  onPointerUp={() => setTouchKey('right', false)}
-                  onPointerLeave={() => setTouchKey('right', false)}
-                  aria-label="Move Right"
-                >
-                  ▶
-                </button>
               </div>
-            </div>
-            <div className="touch-action-col">
-              <button
-                type="button"
-                className="touch-action-pill"
-                onPointerDown={() => setTouchKey('sprint', true)}
-                onPointerUp={() => setTouchKey('sprint', false)}
-                onPointerLeave={() => setTouchKey('sprint', false)}
-              >
-                Sprint
-              </button>
-              <button
-                type="button"
-                className="touch-action-pill"
-                onPointerDown={() => setTouchKey('jump', true)}
-                onPointerUp={() => setTouchKey('jump', false)}
-                onPointerLeave={() => setTouchKey('jump', false)}
-              >
-                Jump
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Bottom-Right: Compact Controls Toggle Pill */}
+        {/* Bottom-Right: Desktop Shortcuts OR Mobile Right-Hand Action Pad */}
         <div className="shinobi-bottom-right">
+          {/* Mobile Right Action Pad: Talk/Explore, Sprint, Jump */}
+          <div className="shinobi-mobile-actionpad">
+            {/* Contextual Action Button (Talk / Explore) */}
+            {(nearbyCharacterInfo?.character || nearbyLocation) && (
+              <button
+                type="button"
+                className="mobile-interact-btn pulse-glow"
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={() => {
+                  if (nearbyCharacterInfo?.character) {
+                    onStartDialogue?.(nearbyCharacterInfo.character);
+                  } else if (nearbyLocation) {
+                    handleOpenDestination(nearbyLocation);
+                  }
+                }}
+                aria-label="Interact"
+              >
+                <span className="action-btn-icon">
+                  {nearbyCharacterInfo?.character ? '💬' : '📜'}
+                </span>
+                <span className="action-btn-text">
+                  {nearbyCharacterInfo?.character
+                    ? `Talk to ${nearbyCharacterInfo.character.name.split(' ')[0]}`
+                    : `Explore ${nearbyLocation.shortName || nearbyLocation.name}`}
+                </span>
+              </button>
+            )}
+
+            <div className="mobile-action-buttons-row">
+              {/* Sprint Button (Hold or Tap to toggle) */}
+              <button
+                type="button"
+                className={`mobile-action-circle sprint-btn ${isSprintToggled || isKeyPressed('ShiftLeft') ? 'is-active' : ''}`}
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {}
+                  setTouchKey('sprint', true);
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  if (!isSprintToggled) {
+                    setTouchKey('sprint', false);
+                  }
+                }}
+                onPointerCancel={(e) => {
+                  e.stopPropagation();
+                  if (!isSprintToggled) {
+                    setTouchKey('sprint', false);
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsSprintToggled((prev) => {
+                    const next = !prev;
+                    setTouchKey('sprint', next);
+                    return next;
+                  });
+                }}
+                title="Sprint (Hold or Tap to Toggle)"
+                aria-label="Sprint"
+              >
+                <span className="action-glyph">⚡</span>
+                <span className="action-label">SPRINT</span>
+              </button>
+
+              {/* Jump Button */}
+              <button
+                type="button"
+                className="mobile-action-circle jump-btn"
+                onPointerDown={(e) => {
+                  e.stopPropagation();
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {}
+                  setTouchKey('jump', true);
+                }}
+                onPointerUp={(e) => {
+                  e.stopPropagation();
+                  setTouchKey('jump', false);
+                }}
+                onPointerCancel={(e) => {
+                  e.stopPropagation();
+                  setTouchKey('jump', false);
+                }}
+                title="Jump"
+                aria-label="Jump"
+              >
+                <span className="action-glyph">🥷</span>
+                <span className="action-label">JUMP</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Only Buttons */}
           <button
             type="button"
-            className="shinobi-show-controls-pill mobile-dest-shortcut"
+            className="shinobi-show-controls-pill desktop-dest-shortcut"
             onClick={() => {
               setIsDestinationsOpen((prev) => !prev);
               setIsControlsOpen(false);
@@ -886,7 +1115,8 @@ const KonohaHUD = React.memo(function KonohaHUD({
                 <path d="M7 10h2M11 10h2M15 10h2M7 14h10" />
               </svg>
             </span>
-            <span>{isControlsOpen ? 'Hide Controls' : 'Show Controls'}</span>
+            <span className="desktop-controls-label">{isControlsOpen ? 'Hide Controls' : 'Show Controls'}</span>
+            <span className="mobile-controls-label">{isControlsOpen ? 'Close' : 'Guide'}</span>
           </button>
         </div>
       </footer>
