@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import RamenBookModal from './RamenBookModal';
 import AboutModal from './AboutModal';
 import ContactModal from './ContactModal';
+import ResumeViewerModal from './ResumeViewerModal';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
@@ -27,7 +28,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
     }
   }, [activeModal]);
 
-  // ESC key to close modal or exit sub-view (RamenBookModal, AboutModal & ContactModal handle ESC with their own GSAP exit animations)
+  // ESC key to close modal or exit sub-view (RamenBookModal, AboutModal, ContactModal & ResumeViewerModal handle ESC with their own GSAP exit animations)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
@@ -35,7 +36,8 @@ const PortfolioModals = React.memo(function PortfolioModals({
         activeModal &&
         activeModal !== 'projects' &&
         activeModal !== 'about' &&
-        activeModal !== 'contact'
+        activeModal !== 'contact' &&
+        activeModal !== 'resume'
       ) {
         if (selectedProject) {
           setSelectedProject(null);
@@ -97,6 +99,18 @@ const PortfolioModals = React.memo(function PortfolioModals({
         onTeleportToMonument={
           onFastTravel ? () => travelToDestination('hokage-monument') : null
         }
+      />
+    );
+  }
+
+  // Dedicated PDF Resume Viewer Modal
+  if (activeModal === 'resume') {
+    return (
+      <ResumeViewerModal
+        isOpen={true}
+        onClose={onClose}
+        onBack={resumeOrigin ? () => onOpenModal?.(resumeOrigin) : null}
+        originName={resumeOrigin === 'contact' ? 'Contact' : 'About'}
       />
     );
   }

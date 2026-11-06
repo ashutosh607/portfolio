@@ -2,9 +2,9 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import './ContactModal.css';
 
-const CONTACT_EMAIL = 'ashutosh.shinobi.dev@gmail.com';
-const GITHUB_URL = 'https://github.com/ashutosh';
-const LINKEDIN_URL = 'https://www.linkedin.com';
+const CONTACT_EMAIL = 'ashutoshkadam607@gmail.com';
+const GITHUB_URL = 'https://github.com/ashutosh607';
+const LINKEDIN_URL = 'https://www.linkedin.com/in/Ashutosh-kadam';
 
 export default function ContactModal({
   isOpen,
