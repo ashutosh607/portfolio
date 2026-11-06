@@ -25,7 +25,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
   // ESC key to close modal or exit sub-view
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.code === 'Escape' && activeModal) {
+      if (e.code === 'Escape' && activeModal && activeModal !== 'projects') {
         if (selectedProject) {
           setSelectedProject(null);
         } else {

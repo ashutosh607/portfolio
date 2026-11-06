@@ -208,6 +208,7 @@ function AppContent() {
     <div className="app-viewport">
       {/* 3D Scene Canvas */}
       <Canvas
+        frameloop={activeModal === 'projects' ? 'demand' : 'always'}
         shadows={enableShadows}
         dpr={isLiteMode ? [0.8, 1.0] : [1, 1.35]}
         camera={{ position: [0, 3.2, 5.5], fov: 46, near: 0.3, far: 250 }}

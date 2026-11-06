@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import gsap from 'gsap';
+import { flushSync } from 'react-dom';
+import { PageTurnSurface } from './PageTurnSurface';
 import { PORTFOLIO_PROJECTS } from '../config/locations';
 import './RamenBookModal.css';
 
@@ -12,297 +14,214 @@ const SIGNATURE_PROJECT_IDS = [
 ];
 
 export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialProjectId = null }) {
-  // Book physical state: 'closed' | 'opening' | 'open' | 'closing' | 'turning'
   const [bookState, setBookState] = useState('closed');
-  const [currentSpread, setCurrentSpread] = useState(1); // 1 = Projects spread, 2 = Architecture spread
+  const [currentSpread, setCurrentSpread] = useState(1);
   const [selectedProjectIndex, setSelectedProjectIndex] = useState(0);
   const [isMobileDetailView, setIsMobileDetailView] = useState(false);
-
-  // DOM Refs for GSAP animations
+  const [busy, setBusy] = useState(false);
+  const [turnNotice, setTurnNotice] = useState('');
   const bookContainerRef = useRef(null);
   const frontCoverRef = useRef(null);
   const interiorSpreadRef = useRef(null);
   const rightPageContentRef = useRef(null);
   const turningLeafRef = useRef(null);
+  const dialogRef = useRef(null);
+  const timelineRef = useRef(null);
+  const surfaceRef = useRef(null);
   const isTransitioningRef = useRef(false);
-
-  // Filter the 4 projects in exact menu order
-  const projects = useMemo(() => {
-    return SIGNATURE_PROJECT_IDS.map((id, idx) => {
-      const p = PORTFOLIO_PROJECTS.find((item) => item.id === id);
-      return {
-        ...p,
-        menuIndex: `0${idx + 1}`,
-      };
-    }).filter(Boolean);
+  const generationRef = useRef(0);
+  const touchRef = useRef(null);
+  const afterCloseRef = useRef(null);
+  const projects = useMemo(() => SIGNATURE_PROJECT_IDS.map(id => PORTFOLIO_PROJECTS.find(project => project.id === id)).filter(Boolean).map((project, index) => ({ ...project, menuIndex: `0${index + 1}` })), []);
+  const currentProject = projects[selectedProjectIndex] || projects[0];
+  const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const mobileView = () => window.matchMedia('(max-width: 860px)').matches;
+  const lock = useCallback(() => {
+    if (isTransitioningRef.current) return false;
+    isTransitioningRef.current = true;
+    setBusy(true);
+    return true;
+  }, []);
+  const unlock = useCallback(() => {
+    isTransitioningRef.current = false;
+    setBusy(false);
   }, []);
 
-  const currentProject = projects[selectedProjectIndex] || projects[0];
-
-  // Initialize closed state whenever modal is opened
-  useEffect(() => {
-    if (isOpen) {
-      setBookState('closed');
-      setCurrentSpread(1);
-      setIsMobileDetailView(false);
-
-      if (initialProjectId) {
-        const foundIdx = projects.findIndex((p) => p.id === initialProjectId);
-        if (foundIdx !== -1) {
-          setSelectedProjectIndex(foundIdx);
-        }
-      } else {
-        setSelectedProjectIndex(0);
-      }
-    } else {
-      setBookState('closed');
-    }
-  }, [isOpen, initialProjectId, projects]);
-
-  // ============================================================================
-  // GSAP 3D BOOK OPENING ANIMATION
-  // ============================================================================
-  const handleOpenBook = useCallback(() => {
-    if (bookState !== 'closed' || isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-    setBookState('opening');
-
-    const container = bookContainerRef.current;
-    const cover = frontCoverRef.current;
-    const interior = interiorSpreadRef.current;
-    const isMobile = window.innerWidth <= 860;
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        setBookState('open');
-        isTransitioningRef.current = false;
-      },
-    });
-
-    if (isMobile) {
-      tl.to(cover, {
-        opacity: 0,
-        y: -12,
-        duration: 0.45,
-        ease: 'power2.inOut',
-      })
-        .fromTo(
-          interior,
-          { opacity: 0, scale: 0.96 },
-          { opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' },
-          '-=0.15'
-        );
-    } else {
-      tl.to(container, {
-        width: 1080,
-        duration: 0.85,
-        ease: 'power3.inOut',
-      })
-        .to(
-          cover,
-          {
-            rotateY: -180,
-            duration: 0.85,
-            ease: 'power3.inOut',
-            boxShadow: '-14px 20px 45px rgba(0, 0, 0, 0.65)',
-          },
-          0
-        )
-        .fromTo(
-          interior,
-          { opacity: 0 },
-          { opacity: 1, duration: 0.4, ease: 'power2.out' },
-          0.35
-        );
-    }
-  }, [bookState]);
-
-  // ============================================================================
-  // GSAP 3D BOOK CLOSING ANIMATION
-  // ============================================================================
-  const handleCloseBook = useCallback(() => {
-    if (isTransitioningRef.current) return;
-
-    if (bookState === 'closed') {
-      onClose();
-      return;
-    }
-
-    isTransitioningRef.current = true;
-    setBookState('closing');
-
-    const container = bookContainerRef.current;
-    const cover = frontCoverRef.current;
-    const interior = interiorSpreadRef.current;
-    const isMobile = window.innerWidth <= 860;
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        isTransitioningRef.current = false;
-        setBookState('closed');
-        onClose();
-      },
-    });
-
-    if (isMobile) {
-      tl.to(interior, {
-        opacity: 0,
-        y: 12,
-        duration: 0.35,
-        ease: 'power2.in',
-      });
-    } else {
-      tl.to(interior, {
-        opacity: 0,
-        duration: 0.25,
-        ease: 'power2.in',
-      })
-        .to(
-          cover,
-          {
-            rotateY: 0,
-            duration: 0.75,
-            ease: 'power3.inOut',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.75)',
-          },
-          0.1
-        )
-        .to(
-          container,
-          {
-            width: 460,
-            duration: 0.75,
-            ease: 'power3.inOut',
-          },
-          0.1
-        );
-    }
-  }, [bookState, onClose]);
-
-  // ============================================================================
-  // GSAP PROJECT DETAIL TRANSITION: BLUR-TO-CLEAR SEQUENCING
-  // ============================================================================
-  const handleSelectProject = useCallback((index) => {
-    if (index === selectedProjectIndex || isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-
-    const rightContent = rightPageContentRef.current;
-
-    const tl = gsap.timeline({
-      onComplete: () => {
-        isTransitioningRef.current = false;
-      },
-    });
-
-    if (rightContent) {
-      tl.to(rightContent, {
-        opacity: 0,
-        filter: 'blur(10px)',
-        y: -8,
-        duration: 0.22,
-        ease: 'power2.in',
-        onComplete: () => {
-          setSelectedProjectIndex(index);
-          setIsMobileDetailView(true);
-        },
-      })
-        .set(rightContent, {
-          opacity: 0,
-          filter: 'blur(12px)',
-          y: 12,
-        })
-        .to(rightContent, {
-          opacity: 1,
-          filter: 'blur(0px)',
-          y: 0,
-          duration: 0.55,
-          ease: 'power3.out',
-        })
-        .fromTo(
-          rightContent.querySelectorAll('.ingredient-badge'),
-          { opacity: 0, y: 6, scale: 0.94 },
-          { opacity: 1, y: 0, scale: 1, stagger: 0.04, duration: 0.3, ease: 'power2.out' },
-          '-=0.3'
-        );
-    } else {
-      setSelectedProjectIndex(index);
-      setIsMobileDetailView(true);
-      isTransitioningRef.current = false;
-    }
-  }, [selectedProjectIndex]);
-
-  // ============================================================================
-  // GSAP PHYSICAL 3D PAGE-TURN ANIMATION
-  // ============================================================================
-  const handleTurnSpread = useCallback((direction) => {
-    if (isTransitioningRef.current) return;
-    const nextSpread = currentSpread + direction;
-    if (nextSpread < 1 || nextSpread > 2) return;
-
-    isTransitioningRef.current = true;
-    setBookState('turning');
-
-    const turningLeaf = turningLeafRef.current;
-    if (turningLeaf) {
-      const isNext = direction > 0;
-      const startRot = isNext ? 0 : -180;
-      const endRot = isNext ? -180 : 0;
-
-      gsap.set(turningLeaf, {
-        display: 'block',
-        transformOrigin: isNext ? 'left center' : 'right center',
-        rotateY: startRot,
-      });
-
-      gsap.to(turningLeaf, {
-        rotateY: endRot,
-        duration: 0.75,
-        ease: 'power3.inOut',
-        onComplete: () => {
-          setCurrentSpread(nextSpread);
-          gsap.set(turningLeaf, { display: 'none' });
-          setBookState('open');
-          isTransitioningRef.current = false;
-        },
-      });
-    } else {
-      setCurrentSpread(nextSpread);
-      setBookState('open');
-      isTransitioningRef.current = false;
-    }
-  }, [currentSpread]);
-
-  // Keyboard shortcut listener
   useEffect(() => {
     if (!isOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (isMobileDetailView) {
-          setIsMobileDetailView(false);
-        } else {
-          handleCloseBook();
-        }
-      } else if (bookState === 'open') {
-        if (e.key === 'ArrowUp') {
-          handleSelectProject(selectedProjectIndex > 0 ? selectedProjectIndex - 1 : projects.length - 1);
-        } else if (e.key === 'ArrowDown') {
-          handleSelectProject(selectedProjectIndex < projects.length - 1 ? selectedProjectIndex + 1 : 0);
-        } else if (e.key === 'ArrowRight' && currentSpread === 1) {
-          handleTurnSpread(1);
-        } else if (e.key === 'ArrowLeft' && currentSpread === 2) {
-          handleTurnSpread(-1);
-        }
+    const generation = generationRef;
+    const previousFocus = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    // Reset the external animation session when the modal is reopened.
+    // eslint-disable-next-line react/set-state-in-effect
+    setBookState('closed');
+    setCurrentSpread(1);
+    setSelectedProjectIndex(Math.max(0, projects.findIndex(project => project.id === initialProjectId)));
+    setIsMobileDetailView(false);
+    unlock();
+    const focusFrame = requestAnimationFrame(() => dialogRef.current?.querySelector('.cover-open-trigger-btn')?.focus({ preventScroll: true }));
+    return () => {
+      generation.current++;
+      cancelAnimationFrame(focusFrame);
+      timelineRef.current?.kill();
+      surfaceRef.current?.dispose();
+      surfaceRef.current = null;
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus?.({ preventScroll: true });
+    };
+  }, [isOpen, initialProjectId, projects, unlock]);
+
+  function prepareInnerCover(container, page) {
+    const face = container.querySelector('.cover-inner-face');
+    const copy = page.cloneNode(true);
+    copy.removeAttribute('tabindex');
+    face.replaceChildren(copy);
+  }
+
+  const handleOpenBook = useCallback(() => {
+    if (bookState !== 'closed' || !lock()) return;
+    setBookState('opening');
+    const container = bookContainerRef.current;
+    const cover = frontCoverRef.current;
+    prepareInnerCover(cover, interiorSpreadRef.current.querySelector('[data-spread="1"] .page-left'));
+    timelineRef.current = gsap.timeline({ onComplete: () => {
+      setBookState('open');
+      unlock();
+      requestAnimationFrame(() => interiorSpreadRef.current?.querySelector('.menu-dish-item')?.focus({ preventScroll: true }));
+    } });
+    const duration = reducedMotion() ? 0.01 : 1.12;
+    timelineRef.current.to(container, { '--book-lift': '-5px', duration: reducedMotion() ? 0 : 0.18, ease: 'power2.out' })
+      .to(cover, { rotateY: -180, duration, ease: 'power2.inOut' })
+      .to(container, { '--book-offset': '0%', duration, ease: 'power2.inOut' }, '<')
+      .to(container, { '--open-progress': 1, duration, ease: 'power2.inOut' }, '<')
+      .to(container, { '--book-lift': '0px', duration: reducedMotion() ? 0 : 0.18, ease: 'power2.out' });
+  }, [bookState, lock, unlock]);
+
+  const handleCloseBook = useCallback(() => {
+    if (isTransitioningRef.current) return;
+    if (bookState === 'closed') { onClose(); return; }
+    if (!lock()) return;
+    prepareInnerCover(frontCoverRef.current, interiorSpreadRef.current.querySelector(`[data-spread="${currentSpread}"] .page-left`));
+    setBookState('closing');
+    const duration = reducedMotion() ? 0.01 : 1.12;
+    timelineRef.current = gsap.timeline({ onComplete: () => {
+      unlock();
+      setBookState('closed');
+      const action = afterCloseRef.current;
+      afterCloseRef.current = null;
+      onClose();
+      action?.();
+    } });
+    timelineRef.current.to(frontCoverRef.current, { rotateY: 0, duration, ease: 'power2.inOut' })
+      .to(bookContainerRef.current, { '--book-offset': '-25%', '--open-progress': 0, duration, ease: 'power2.inOut' }, '<');
+  }, [bookState, currentSpread, onClose, lock, unlock]);
+
+  const handleSelectProject = useCallback(index => {
+    if (bookState !== 'open' || currentSpread !== 1 || !lock()) return;
+    if (index === selectedProjectIndex) {
+      setIsMobileDetailView(true);
+      requestAnimationFrame(() => { if (mobileView()) interiorSpreadRef.current?.querySelector('[data-spread="1"] .mobile-back-action-btn')?.focus({ preventScroll: true }); });
+      unlock();
+      return;
+    }
+    const node = rightPageContentRef.current;
+    timelineRef.current = gsap.timeline({ onComplete: () => { unlock(); if (mobileView()) interiorSpreadRef.current.querySelector('[data-spread="1"] .mobile-back-action-btn')?.focus({ preventScroll: true }); } });
+    timelineRef.current.to(node, { opacity: 0, filter: 'blur(4px)', y: -8, duration: reducedMotion() ? 0 : 0.17 })
+      .call(() => { flushSync(() => { setSelectedProjectIndex(index); setIsMobileDetailView(true); }); })
+      .set(node, { y: 8 })
+      .to(node, { opacity: 1, filter: 'blur(0px)', y: 0, duration: reducedMotion() ? 0.01 : 0.3, ease: 'power2.out' });
+  }, [bookState, currentSpread, selectedProjectIndex, lock, unlock]);
+
+  const handleTurnSpread = useCallback(async direction => {
+    const nextSpread = currentSpread + direction;
+    if (bookState !== 'open' || nextSpread < 1 || nextSpread > 2 || !lock()) return;
+    const generation = generationRef.current;
+    const mobile = mobileView();
+    const finish = () => {
+      if (generation !== generationRef.current) return;
+      setCurrentSpread(nextSpread);
+      setIsMobileDetailView(false);
+      setBookState('open');
+      turningLeafRef.current.style.visibility = 'hidden';
+      unlock();
+      requestAnimationFrame(() => {
+        const page = dialogRef.current?.querySelector(`[data-spread="${nextSpread}"] .page-left`);
+        page?.focus({ preventScroll: true });
+      });
+    };
+    if (reducedMotion()) { finish(); return; }
+    try {
+      if (!surfaceRef.current) surfaceRef.current = new PageTurnSurface(turningLeafRef.current);
+      const root = interiorSpreadRef.current;
+      const from = root.querySelector(`[data-spread="${currentSpread}"] .${mobile ? (isMobileDetailView ? 'page-right' : 'page-left') : direction > 0 ? 'page-right' : 'page-left'}`);
+      const to = root.querySelector(`[data-spread="${nextSpread}"] .${mobile || direction > 0 ? 'page-left' : 'page-right'}`);
+      // Front is always the right-hand face; back UVs are reversed once, not text.
+      await surfaceRef.current.prepare(direction > 0 ? from : to, direction > 0 ? to : from, mobile, direction);
+      if (generation !== generationRef.current) return;
+      flushSync(() => setBookState(direction > 0 ? 'turning-forward' : 'turning-backward'));
+      turningLeafRef.current.style.visibility = 'visible';
+      const motion = { progress: direction > 0 ? 0 : 1 };
+      timelineRef.current = gsap.timeline({ onComplete: finish }).to(motion, {
+        progress: direction > 0 ? 1 : 0, duration: 1.15, ease: 'power2.inOut',
+        onUpdate: () => surfaceRef.current?.render(motion.progress),
+      });
+    } catch (error) {
+      if (generation !== generationRef.current) return;
+      // WebGL loss / unavailable DOM capture: reading still works, with no fake flip.
+      console.warn('Book page rendering unavailable:', error.message);
+      setTurnNotice('Page animation is unavailable on this device. Reading controls remain available.');
+      surfaceRef.current?.dispose();
+      surfaceRef.current = null;
+      finish();
+    }
+  }, [bookState, currentSpread, isMobileDetailView, lock, unlock]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = event => {
+      if (event.key === 'Tab') {
+        const controls = [...dialogRef.current.querySelectorAll('button:not(:disabled), a[href], [tabindex="0"]')].filter(node => node.getClientRects().length && getComputedStyle(node).visibility === 'visible' && !node.closest('[inert]'));
+        const first = controls[0];
+        const last = controls.at(-1);
+        if (event.shiftKey && (document.activeElement === first || !controls.includes(document.activeElement))) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && (document.activeElement === last || !controls.includes(document.activeElement))) { event.preventDefault(); first?.focus(); }
+        return;
+      }
+      if (/INPUT|TEXTAREA|SELECT/.test(event.target.tagName)) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (isTransitioningRef.current) return;
+        if (mobileView() && isMobileDetailView) setIsMobileDetailView(false);
+        else handleCloseBook();
+      } else if (bookState === 'open' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        event.preventDefault();
+        if (event.key === 'ArrowUp') handleSelectProject((selectedProjectIndex + projects.length - 1) % projects.length);
+        if (event.key === 'ArrowDown') handleSelectProject((selectedProjectIndex + 1) % projects.length);
+        if (event.key === 'ArrowRight') handleTurnSpread(1);
+        if (event.key === 'ArrowLeft') handleTurnSpread(-1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, bookState, isMobileDetailView, selectedProjectIndex, currentSpread, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
+  }, [isOpen, bookState, isMobileDetailView, selectedProjectIndex, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
+
+  const handleTouchEnd = event => {
+    if (!touchRef.current || !mobileView() || busy) return;
+    const end = event.changedTouches[0];
+    const dx = end.clientX - touchRef.current.x;
+    const dy = end.clientY - touchRef.current.y;
+    touchRef.current = null;
+    if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.5) handleTurnSpread(dx < 0 ? 1 : -1);
+  };
 
   if (!isOpen) return null;
 
   return (
     <div
+      ref={dialogRef}
       className="ramen-book-overlay"
+      aria-busy={busy}
       onClick={handleCloseBook}
       role="dialog"
       aria-modal="true"
@@ -330,6 +249,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
             type="button"
             className="ramen-menu-close-trigger"
             onClick={handleCloseBook}
+            disabled={busy}
             title="Close Book (ESC)"
             aria-label="Close menu"
           >
@@ -345,6 +265,8 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         ref={bookContainerRef}
         className={`ramen-book-container state-${bookState} ${isMobileDetailView ? 'mobile-detail-active' : ''}`}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={event => { touchRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }}
+        onTouchEnd={handleTouchEnd}
       >
         {/* Leather Binding Hardcover Trim & Stacked Paper Layers */}
         <div className="hardcover-leather-edge" aria-hidden="true" />
@@ -367,10 +289,10 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           className="book-front-cover-leaf"
           onClick={bookState === 'closed' ? handleOpenBook : undefined}
           title={bookState === 'closed' ? 'Click to Open Menu' : undefined}
-          role={bookState === 'closed' ? 'button' : undefined}
-          tabIndex={bookState === 'closed' ? 0 : -1}
+          inert={bookState !== 'closed' ? true : undefined}
           aria-label="Front cover of Ichiraku Ramen Menu. Click to open."
         >
+          <div className="cover-inner-face" aria-hidden="true" inert />
           <div className="cover-leather-face">
             <div className="cover-gold-filigree-frame">
               <div className="corner-accent top-left">✦</div>
@@ -400,7 +322,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
               </div>
 
               {/* Tactile Open Menu Action Button */}
-              {bookState === 'closed' && (
+              {(
                 <div className="cover-open-action">
                   <button
                     type="button"
@@ -421,21 +343,16 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           </div>
         </div>
 
-        {/* 3D Page Turn Leaf (Rendered during spread flip) */}
-        <div ref={turningLeafRef} className="book-turning-leaf" aria-hidden="true">
-          <div className="turning-page-front" />
-          <div className="turning-page-back" />
-        </div>
+        <div ref={turningLeafRef} className="book-mesh-surface" aria-hidden="true" />
 
         {/* ====================================================================
             2. TWO-PAGE OPEN INTERIOR SPREAD
             ==================================================================== */}
-        <div ref={interiorSpreadRef} className="book-interior-spread">
+        <div ref={interiorSpreadRef} className="book-interior-spread" inert={bookState !== 'open' || busy ? true : undefined}>
           {/* ================= SPREAD 1: SIGNATURE PROJECTS ================= */}
-          {currentSpread === 1 && (
-            <>
+          <div data-spread="1" className={`book-spread ${currentSpread === 1 ? 'is-current' : ''}`} inert={currentSpread !== 1 ? true : undefined} aria-hidden={currentSpread !== 1}>
               {/* LEFT PAGE: PROJECT DISHES MENU */}
-              <section className="book-page page-left" aria-label="Our Signature Projects">
+              <section tabIndex={-1} className="book-page page-left" aria-label="Our Signature Projects">
                 {/* Decorative Sakura Branch Illustration (Top-Right) */}
                 <div className="page-decor-sakura-branch" aria-hidden="true">
                   <svg viewBox="0 0 160 120" width="130" height="95" fill="none">
@@ -491,21 +408,21 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
 
                 <div className="page-title-group">
                   <h2 className="menu-heading-serif">Our Signature Projects</h2>
-                  <p className="menu-subhead-italic">A curated selection of our finest creations.</p>
+                  <p className="menu-subhead-italic">A curated selection of my finest creations.</p>
                 </div>
 
                 {/* 4 Menu Dish Cards */}
-                <div className="menu-dishes-stack" role="list">
+                <div className="menu-dishes-stack" role="group" aria-label="Select a project">
                   {projects.map((proj, idx) => {
                     const isSelected = idx === selectedProjectIndex;
                     return (
-                      <article
+                      <button
+                        type="button"
                         key={proj.id}
                         className={`menu-dish-item ${isSelected ? 'is-active' : ''}`}
                         onClick={() => handleSelectProject(idx)}
-                        role="button"
-                        tabIndex={0}
-                        aria-selected={isSelected}
+                        disabled={busy}
+                        aria-pressed={isSelected}
                       >
                         {/* Real Project Miniature Preview Thumbnail */}
                         <div className="dish-thumbnail-box">
@@ -517,6 +434,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                         <div className="dish-text-block">
                           <h3 className="dish-name-heading">{proj.title}</h3>
                           <p className="dish-flavor-subtitle">{proj.dishName}</p>
+                          <p className="dish-category">{proj.techStack.slice(0, 3).join(' · ')}</p>
                         </div>
 
                         {/* View Details Action Indicator */}
@@ -524,7 +442,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                           <span className="view-details-txt">View Details</span>
                           <span className="view-arrow-badge" aria-hidden="true">→</span>
                         </div>
-                      </article>
+                      </button>
                     );
                   })}
                 </div>
@@ -562,6 +480,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                     <button
                       type="button"
                       className="page-turn-btn next-btn"
+                      disabled={busy}
                       onClick={() => handleTurnSpread(1)}
                       title="Next Page: Architecture & Philosophy"
                     >
@@ -730,14 +649,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   </div>
                 </footer>
               </section>
-            </>
-          )}
+          </div>
 
           {/* ================= SPREAD 2: ARCHITECTURE & PHILOSOPHY ================= */}
-          {currentSpread === 2 && (
-            <>
+          <div data-spread="2" className={`book-spread ${currentSpread === 2 ? 'is-current' : ''}`} inert={currentSpread !== 2 ? true : undefined} aria-hidden={currentSpread !== 2}>
               {/* LEFT PAGE: CHEF'S SPECIAL & 3D WORLD */}
-              <section className="book-page page-left" aria-label="Chef's Special & Architecture">
+              <section tabIndex={-1} className="book-page page-left" aria-label="Chef's Special & Architecture">
                 <div className="page-header-row center-header">
                   <span className="section-rule" />
                   <span className="section-badge-text">CHEF'S SPECIAL</span>
@@ -749,6 +666,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   <p className="menu-subhead-italic">Hokage Grand Bowl • Spatial Engine</p>
                 </div>
 
+                <div className="mobile-back-row"><button type="button" className="mobile-back-action-btn" onClick={() => setIsMobileDetailView(!isMobileDetailView)}>{isMobileDetailView ? '← Architecture' : 'Read the philosophy →'}</button></div>
                 <div className="spread2-content-body">
                   <p className="spread2-lead">
                     This interactive 3D portfolio is engineered from the ground up to push the boundaries
@@ -760,7 +678,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                     <ul>
                       <li><strong>O(1) Spatial Hash Grid:</strong> Ultra-fast ground sampling and wall collision across 1,000+ mesh vertices.</li>
                       <li><strong>Adaptive Watchdog:</strong> Dynamic resolution scaling (DPR) monitoring frame rate with seamless 2D fallback.</li>
-                      <li><strong>Proximity & Frustum Culling:</strong> Distance-based character skeletal animation gating to guarantee 60 FPS.</li>
+                      <li><strong>Proximity & Frustum Culling:</strong> Distance-based character skeletal animation gating to reduce per-frame animation work.</li>
                     </ul>
                   </div>
 
@@ -768,9 +686,11 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                     <button
                       type="button"
                       className="spread2-fast-travel-btn"
+                      disabled={busy}
                       onClick={() => {
+                        if (busy) return;
+                        afterCloseRef.current = () => onFastTravel([-24.8, 0.02, -13.2]);
                         handleCloseBook();
-                        onFastTravel([-24.8, 0.02, -13.2]);
                       }}
                     >
                       🍜 Teleport to Ramen Shop in 3D Village
@@ -783,6 +703,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                     <button
                       type="button"
                       className="page-turn-btn prev-btn"
+                      disabled={busy}
                       onClick={() => handleTurnSpread(-1)}
                       title="Previous Page: Signature Projects"
                     >
@@ -812,6 +733,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   <p className="menu-subhead-italic">Principles Behind Every Project</p>
                 </div>
 
+                <div className="mobile-back-row"><button type="button" className="mobile-back-action-btn" onClick={() => setIsMobileDetailView(!isMobileDetailView)}>{isMobileDetailView ? '← Architecture' : 'Read the philosophy →'}</button></div>
                 <div className="spread2-content-body">
                   <div className="philosophy-pillar">
                     <h4>01 • Relentless Problem Solving</h4>
@@ -835,10 +757,11 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   </div>
                 </footer>
               </section>
-            </>
-          )}
+          </div>
         </div>
       </div>
+      <span className="book-status" role="status">{busy ? 'Book transition in progress' : bookState === 'closed' ? 'Book closed' : `Spread ${currentSpread} of 2. ${currentProject.title} selected.`}</span>
+      {turnNotice && <p className="book-notice" role="status">{turnNotice}</p>}
     </div>
   );
 }
@@ -847,153 +770,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
 // REALISTIC HIGH-RES PROJECT SCREEN VIEWPORT
 // ============================================================================
 function ProjectScreenContent({ project }) {
-  if (project.id === 'travelflow-ai') {
-    return (
-      <div className="laptop-screen-inner travel-screen">
-        {/* Top App Header */}
-        <div className="travel-web-header">
-          <div className="travel-logo">
-            <span className="travel-icon">✈</span>
-            <span className="travel-name">TravelFlow AI</span>
-          </div>
-          <div className="travel-nav-links">
-            <span className="nav-link">Plan</span>
-            <span className="nav-link">Explore</span>
-            <span className="nav-link">About</span>
-          </div>
-          <span className="travel-cta-btn">Start Planning ✦</span>
-        </div>
-
-        {/* Hero Section with Coastal Greek/Japanese Scenery */}
-        <div className="travel-hero-body">
-          <div className="travel-hero-copy">
-            <h3 className="travel-headline">Wherever you go,<br />we've got you.</h3>
-            <p className="travel-subheadline">
-              AI powered travel plans, personalized for your next adventure.
-            </p>
-
-            {/* Travel Search Pill Bar */}
-            <div className="travel-search-bar">
-              <span className="search-pin">📍</span>
-              <span className="search-input-txt">Tokyo, Kyoto</span>
-              <span className="search-arrow">→</span>
-              <span className="search-dest-txt">5 Days</span>
-              <span className="search-submit">Search</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (project.id === 'wastewise') {
-    return (
-      <div className="laptop-screen-inner waste-screen">
-        <div className="waste-web-header">
-          <div className="waste-logo">
-            <span>♻</span>
-            <span>WasteWise AI • Live Classifier</span>
-          </div>
-          <span className="waste-live-pill">● 30 FPS INFERENCE</span>
-        </div>
-
-        <div className="waste-screen-body">
-          <div className="waste-camera-view">
-            <div className="waste-bbox">
-              <span className="bbox-tag">PET-1 Recyclable Bottle (98.4%)</span>
-            </div>
-            <div className="camera-grid-lines" />
-            <div className="waste-action-tag">Recommended: Rinse & deposit in Blue Bin</div>
-          </div>
-
-          <div className="waste-hud-sidebar">
-            <div className="hud-metric">
-              <span className="hud-lbl">Diversion Rate</span>
-              <strong className="hud-val">94.8%</strong>
-            </div>
-            <div className="hud-metric">
-              <span className="hud-lbl">Carbon Saved</span>
-              <strong className="hud-val">+1,420 kg</strong>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (project.id === 'callkavach') {
-    return (
-      <div className="laptop-screen-inner kavach-screen">
-        <div className="kavach-web-header">
-          <div className="kavach-logo">
-            <span>🛡</span>
-            <span>CallKavach • Threat Shield</span>
-          </div>
-          <span className="kavach-active-pill">ACTIVE SHIELD</span>
-        </div>
-
-        <div className="kavach-screen-body">
-          <div className="kavach-threat-banner">
-            <span className="threat-pill">⚠️ FRAUD THREAT DETECTED (96%)</span>
-            <p>Caller is executing urgent bank impersonation coercion tactics.</p>
-          </div>
-
-          <div className="kavach-waveform-visual">
-            <span className="bar b1" />
-            <span className="bar b2" />
-            <span className="bar b3" />
-            <span className="bar b4" />
-            <span className="bar b5" />
-            <span className="bar b6" />
-            <span className="bar b7" />
-          </div>
-
-          <div className="kavach-tags-row">
-            <span className="kavach-tag">URGENCY TRAP</span>
-            <span className="kavach-tag">OTP SOLICITATION</span>
-            <span className="kavach-tag">AUTO-TERMINATED</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Racket Sports Intelligence
-  return (
-    <div className="laptop-screen-inner racket-screen">
-      <div className="racket-web-header">
-        <div className="racket-logo">
-          <span>🏸</span>
-          <span>Racket Sports Intelligence</span>
-        </div>
-        <span className="racket-status">HOMOGRAPHY ACTIVE</span>
-      </div>
-
-      <div className="racket-screen-body">
-        <div className="tennis-court-canvas">
-          <div className="court-net" />
-          <div className="player-tracker p1" style={{ top: '30%', left: '46%' }}>
-            <span>P1 (19.2 km/h)</span>
-          </div>
-          <div className="player-tracker p2" style={{ top: '68%', left: '52%' }}>
-            <span>P2 (15.8 km/h)</span>
-          </div>
-          <div className="court-heat-wash" />
-        </div>
-
-        <div className="racket-hud-stats">
-          <div className="rh-item">
-            <span>Smash Speed</span>
-            <strong>194 km/h</strong>
-          </div>
-          <div className="rh-item">
-            <span>Court Coverage</span>
-            <strong>92.1%</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  if (project.image || project.screenshot) return <img src={project.image || project.screenshot} alt={`${project.title} project preview`} style={{ width: '100%', display: 'block' }} />;
+  return <div className="project-feature-preview">
+    <small>PROJECT CAPABILITIES</small>
+    <h3>{project.title}</h3>
+    <ul>{project.features.slice(0, 3).map(feature => <li key={feature}>{feature}</li>)}</ul>
+  </div>;
 }
 
 // ============================================================================

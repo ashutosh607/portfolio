@@ -12,7 +12,7 @@ html, body, #root {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: #120b07;
+  background-color: #050505;
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-  color: #f5f0eb;
+  color: #f5f1eb;
 }
