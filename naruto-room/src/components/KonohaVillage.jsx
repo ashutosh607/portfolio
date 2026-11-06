@@ -19,9 +19,77 @@ const signBoardGeom = new THREE.BoxGeometry(1.24, 0.52, 0.05);
 const ringGeom = new THREE.RingGeometry(1.15, 1.45, 24);
 const innerDiscGeom = new THREE.CircleGeometry(1.15, 24);
 
+// Hanging Japanese Chōchin (提灯) paper lantern geometries for destination gates
+const hangerArmGeom = new THREE.BoxGeometry(0.04, 0.04, 0.26);
+const chochinBodyGeom = new THREE.SphereGeometry(0.115, 12, 10);
+const chochinCapGeom = new THREE.CylinderGeometry(0.065, 0.065, 0.032, 10);
+const chochinHaloGeom = new THREE.SphereGeometry(0.28, 12, 10);
+const lanternPoolGeom = new THREE.CircleGeometry(2.8, 24);
+
+// Traditional Standing Japanese Wooden Street Lanterns (行灯 Andon / 燈籠 Tōrō)
+const streetPostGeom = new THREE.CylinderGeometry(0.065, 0.085, 2.15, 8);
+const streetBaseGeom = new THREE.BoxGeometry(0.34, 0.12, 0.34);
+const streetChamberGeom = new THREE.BoxGeometry(0.28, 0.38, 0.28);
+const streetRoofGeom = new THREE.ConeGeometry(0.32, 0.20, 4);
+const streetHaloGeom = new THREE.SphereGeometry(0.55, 12, 10);
+
 const postMat = new THREE.MeshLambertMaterial({ color: '#2c1a11' });
 const frameMat = new THREE.MeshLambertMaterial({ color: '#8b261b' });
 const capMat = new THREE.MeshLambertMaterial({ color: '#1a1412' });
+
+const chochinDayMat = new THREE.MeshLambertMaterial({
+  color: '#c42b1c',
+  emissive: '#59120b',
+  emissiveIntensity: 0.2,
+});
+const chochinNightMat = new THREE.MeshBasicMaterial({ color: '#ff8533' });
+const chochinHaloMat = new THREE.MeshBasicMaterial({
+  color: '#ff7315',
+  transparent: true,
+  opacity: 0.3,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+
+const shojiDayMat = new THREE.MeshLambertMaterial({
+  color: '#f5ead6',
+  emissive: '#d9b382',
+  emissiveIntensity: 0.15,
+});
+const shojiNightMat = new THREE.MeshBasicMaterial({ color: '#ffbe6b' });
+const streetHaloMat = new THREE.MeshBasicMaterial({
+  color: '#ff9436',
+  transparent: true,
+  opacity: 0.26,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+});
+const lanternPoolMat = new THREE.MeshBasicMaterial({
+  color: '#ff8c38',
+  transparent: true,
+  opacity: 0.16,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  side: THREE.DoubleSide,
+});
+
+// Curated Japanese street lantern positions along Konoha's main avenues & pathways
+const STREET_LANTERN_POSITIONS = [
+  [-19.5, 0.0, 2.2],   // Main Street East
+  [-26.2, 0.0, 2.2],   // Main Street West
+  [-20.2, 0.0, -6.5],  // Central Avenue East
+  [-26.6, 0.0, -6.5],  // Path to Ichiraku Ramen
+  [-26.0, 0.0, -16.8], // North of Ichiraku Ramen
+  [-13.8, 0.0, -11.5], // Crossroad toward Mission Gate
+  [-6.2, 0.0, -7.2],   // West of Mission Gate
+  [2.2, 0.0, -7.2],    // East of Mission Gate
+  [-16.8, 0.0, -23.5], // Avenue toward Hokage's Office
+  [-23.2, 0.0, -28.5], // Courtyard West of Hokage's Office
+  [9.5, 0.0, -17.5],   // Lower road toward Hokage Monument
+  [21.5, 0.0, -27.0],  // Upper road toward Hokage Monument
+  [17.5, 0.0, 14.5],   // Path toward Training Grounds
+  [33.5, 0.0, 31.5],   // Approach to Training Grounds
+];
 
 // Procedural high-resolution canvas texture for the physical 3D wooden sign plaque
 function createSignboardTexture(loc) {
@@ -100,12 +168,14 @@ const KonohaVillage = React.memo(function KonohaVillage({
   onNearbyLocationChange,
   isInteractionBlocked = false,
   enableShadows = true,
+  isNightMode = false,
 }) {
   const groupRef = useRef();
   const offsetGroupRef = useRef();
   const colliderBuiltRef = useRef(false);
   const colliderRef = useRef(null);
   const markerRefs = useRef({});
+  const streetLanternRefs = useRef([]);
   const lastCheckRef = useRef(0);
   const prevNearIdRef = useRef(null);
 
@@ -137,11 +207,24 @@ const KonohaVillage = React.memo(function KonohaVillage({
       const tex = createSignboardTexture(loc);
       map[loc.id] = new THREE.MeshLambertMaterial({
         map: tex,
+        emissiveMap: tex,
+        emissive: new THREE.Color('#ffdfb8'),
+        emissiveIntensity: 0,
         color: '#ffffff',
       });
     });
     return map;
   }, []);
+
+  // Warmly illuminate signboard plaques at night as if lit by their hanging Chōchin lanterns
+  useEffect(() => {
+    Object.values(signboardMaterials).forEach((mat) => {
+      if (mat) {
+        mat.emissiveIntensity = isNightMode ? 0.44 : 0.0;
+        mat.needsUpdate = true;
+      }
+    });
+  }, [isNightMode, signboardMaterials]);
 
   useEffect(() => {
     if (!fbx || !offsetGroupRef.current) return;
@@ -205,6 +288,17 @@ const KonohaVillage = React.memo(function KonohaVillage({
           }
         }
       });
+
+      // Snap Japanese street lanterns accurately to the ground surface
+      STREET_LANTERN_POSITIONS.forEach((lPos, idx) => {
+        const el = streetLanternRefs.current[idx];
+        if (el) {
+          const gy = sampleGroundY(spatialCollider, lPos[0], lPos[2], 2.2, -1.5);
+          if (gy !== null) {
+            el.position.y = gy;
+          }
+        }
+      });
     }
   }, [fbx, villageMaterial, onTerrainReady, enableShadows]);
 
@@ -256,20 +350,23 @@ const KonohaVillage = React.memo(function KonohaVillage({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [nearbyLocId, isInteractionBlocked, onOpenModal]);
 
+  const activeChochinMat = isNightMode ? chochinNightMat : chochinDayMat;
+  const activeShojiMat = isNightMode ? shojiNightMat : shojiDayMat;
+
   return (
     <group ref={groupRef} name="KonohaWorld">
-      {/* ================= NATURAL DAYLIGHT LIGHTING ================= */}
+      {/* ================= DYNAMIC DAYLIGHT / JAPANESE NIGHT LIGHTING ================= */}
       <hemisphereLight
-        skyColor="#7cb5ea"
-        groundColor="#9e8568"
-        intensity={0.85}
+        skyColor={isNightMode ? '#5c84cc' : '#7cb5ea'}
+        groundColor={isNightMode ? '#4a3222' : '#9e8568'}
+        intensity={isNightMode ? 1.05 : 0.85}
       />
 
-      {/* Main Directional Sunlight */}
+      {/* Main Directional Light (Warm Sunlight by Day / Silver-Blue Moonlight by Night) */}
       <directionalLight
-        position={[50, 80, 35]}
-        color="#fff5e4"
-        intensity={2.0}
+        position={isNightMode ? [22, 76, -55] : [50, 80, 35]}
+        color={isNightMode ? '#a8c7f7' : '#fff5e4'}
+        intensity={isNightMode ? 1.38 : 2.0}
         castShadow={enableShadows}
         shadow-mapSize={[512, 512]}
         shadow-camera-near={15}
@@ -281,15 +378,37 @@ const KonohaVillage = React.memo(function KonohaVillage({
         shadow-bias={-0.0005}
       />
 
-      {/* Soft Ambient Fill for deep building shadows */}
-      <ambientLight color="#d6e8fa" intensity={0.6} />
+      {/* Soft Ambient Fill so architecture & textures remain clear and never pitch-black */}
+      <ambientLight
+        color={isNightMode ? '#364b70' : '#d6e8fa'}
+        intensity={isNightMode ? 0.68 : 0.6}
+      />
+
+      {/* Warm Japanese Lantern Rim Light & Ichiraku Shop Glow at Night */}
+      {isNightMode && (
+        <>
+          <directionalLight
+            position={[-38, 26, 42]}
+            color="#ff9844"
+            intensity={0.44}
+          />
+          {/* Cozy warm counter glow inside Ichiraku Ramen stall */}
+          <pointLight
+            position={[-24.8, 2.5, -13.2]}
+            color="#ff8524"
+            intensity={4.2}
+            distance={24}
+            decay={1.5}
+          />
+        </>
+      )}
 
       {/* ================= ACTUAL KONOHA FBX MODEL ================= */}
       <group ref={offsetGroupRef} position={KONOHA_OFFSET}>
         <primitive object={fbx} />
       </group>
 
-      {/* ================= 6 INTERACTIVE DESTINATION SHRINES & DIRECTIONAL SIGNS ================= */}
+      {/* ================= 6 INTERACTIVE DESTINATION SHRINES & HANGING CHŌCHIN LANTERNS ================= */}
       {KONOHA_LOCATIONS.map((loc) => {
         const sPos = loc.shrinePosition || loc.position;
         const isNearby = nearbyLocId === loc.id;
@@ -320,6 +439,45 @@ const KonohaVillage = React.memo(function KonohaVillage({
               material={signboardMaterials[loc.id] || frameMat}
             />
 
+            {/* Left & Right Wooden Lantern Hanger Arms */}
+            <mesh position={[-0.58, 2.08, 0.14]} geometry={hangerArmGeom} material={postMat} />
+            <mesh position={[0.58, 2.08, 0.14]} geometry={hangerArmGeom} material={postMat} />
+
+            {/* Left Hanging Chōchin Paper Lantern (提灯) */}
+            <group position={[-0.58, 1.85, 0.24]}>
+              <mesh position={[0, 0.15, 0]} geometry={chochinCapGeom} material={capMat} />
+              <mesh scale={[1, 1.35, 1]} geometry={chochinBodyGeom} material={activeChochinMat} />
+              <mesh position={[0, -0.15, 0]} geometry={chochinCapGeom} material={capMat} />
+              {isNightMode && <mesh geometry={chochinHaloGeom} material={chochinHaloMat} />}
+            </group>
+
+            {/* Right Hanging Chōchin Paper Lantern (提灯) */}
+            <group position={[0.58, 1.85, 0.24]}>
+              <mesh position={[0, 0.15, 0]} geometry={chochinCapGeom} material={capMat} />
+              <mesh scale={[1, 1.35, 1]} geometry={chochinBodyGeom} material={activeChochinMat} />
+              <mesh position={[0, -0.15, 0]} geometry={chochinCapGeom} material={capMat} />
+              {isNightMode && <mesh geometry={chochinHaloGeom} material={chochinHaloMat} />}
+            </group>
+
+            {/* Night Mode Warm Lantern Point Light & Ground Pool */}
+            {isNightMode && (
+              <>
+                <pointLight
+                  position={[0, 2.3, 0.65]}
+                  color="#ff9238"
+                  intensity={3.2}
+                  distance={19}
+                  decay={1.6}
+                />
+                <mesh
+                  rotation={[-Math.PI / 2, 0, 0]}
+                  position={[0, 0.02, 0.2]}
+                  geometry={lanternPoolGeom}
+                  material={lanternPoolMat}
+                />
+              </>
+            )}
+
             {/* Glowing Interactive Ground Ring */}
             <mesh
               rotation={[-Math.PI / 2, 0, 0]}
@@ -329,7 +487,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
               <meshBasicMaterial
                 color={loc.color}
                 transparent
-                opacity={isNearby ? 0.85 : 0.45}
+                opacity={isNearby ? 0.9 : isNightMode ? 0.68 : 0.45}
                 side={THREE.DoubleSide}
                 depthWrite={false}
               />
@@ -344,7 +502,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
               <meshBasicMaterial
                 color={loc.color}
                 transparent
-                opacity={isNearby ? 0.28 : 0.1}
+                opacity={isNearby ? 0.32 : isNightMode ? 0.18 : 0.1}
                 side={THREE.DoubleSide}
                 depthWrite={false}
               />
@@ -352,6 +510,38 @@ const KonohaVillage = React.memo(function KonohaVillage({
           </group>
         );
       })}
+
+      {/* ================= TRADITIONAL JAPANESE WOODEN STREET LANTERNS (行灯 / 燈籠) ================= */}
+      {STREET_LANTERN_POSITIONS.map((lPos, idx) => (
+        <group
+          key={`street-lantern-${idx}`}
+          ref={(el) => {
+            if (el) streetLanternRefs.current[idx] = el;
+          }}
+          position={[lPos[0], lPos[1] || 0, lPos[2]]}
+        >
+          <mesh position={[0, 0.06, 0]} geometry={streetBaseGeom} material={capMat} />
+          <mesh position={[0, 1.12, 0]} geometry={streetPostGeom} material={postMat} />
+          <mesh position={[0, 2.28, 0]} geometry={streetChamberGeom} material={activeShojiMat} />
+          <mesh
+            position={[0, 2.54, 0]}
+            rotation={[0, Math.PI / 4, 0]}
+            geometry={streetRoofGeom}
+            material={capMat}
+          />
+          {isNightMode && (
+            <>
+              <mesh position={[0, 2.28, 0]} geometry={streetHaloGeom} material={streetHaloMat} />
+              <mesh
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, 0.025, 0]}
+                geometry={lanternPoolGeom}
+                material={lanternPoolMat}
+              />
+            </>
+          )}
+        </group>
+      ))}
     </group>
   );
 });

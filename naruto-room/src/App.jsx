@@ -96,6 +96,15 @@ function AppContent() {
   const [activeKeys, setActiveKeys] = useState({});
   const [resetCount, setResetCount] = useState(0);
   const [isLiteMode, setIsLiteMode] = useState(detectInitialLiteMode);
+  const [isNightMode, setIsNightMode] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    try {
+      const saved = window.localStorage.getItem('shinobi_night_mode');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
   const [is2DMode, setIs2DMode] = useState(false);
 
   // Character & Destination Proximity State
@@ -155,6 +164,18 @@ function AppContent() {
 
   const handleToggleLiteMode = useCallback(() => {
     setIsLiteMode((prev) => !prev);
+  }, []);
+
+  const handleToggleNightMode = useCallback(() => {
+    setIsNightMode((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem('shinobi_night_mode', String(next));
+      } catch {
+        // Ignore storage errors
+      }
+      return next;
+    });
   }, []);
 
   const handleAutoDowngrade = useCallback(() => {
@@ -235,15 +256,18 @@ function AppContent() {
           onAutoDowngrade={handleAutoDowngrade}
         />
 
-        {/* Anime Sky & Distant Mountain Atmospheric Fog */}
-        <color attach="background" args={['#8ec3eb']} />
-        <fog attach="fog" args={['#a3c9e8', 60, 210]} />
+        {/* Anime Sky & Distant Mountain Atmospheric Fog (Day vs Japanese Night) */}
+        <color attach="background" args={[isNightMode ? '#090e1c' : '#8ec3eb']} />
+        <fog
+          attach="fog"
+          args={isNightMode ? ['#0e162b', 54, 198] : ['#a3c9e8', 60, 210]}
+        />
 
         <Suspense fallback={null}>
-          {/* Dynamic Sky Atmosphere: Clouds, Ninja Birds & Swirling Leaves */}
-          <Atmosphere isLiteMode={isLiteMode} />
+          {/* Dynamic Sky Atmosphere: Clouds, Moon, Stars, Ninja Birds & Leaves/Fireflies */}
+          <Atmosphere isLiteMode={isLiteMode} isNightMode={isNightMode} />
 
-          {/* Actual Konoha Village Environment, 6 Interactive Shrines & O(1) Spatial Collider */}
+          {/* Actual Konoha Village Environment, 6 Interactive Shrines, Lanterns & O(1) Spatial Collider */}
           <KonohaVillage
             onTerrainReady={handleTerrainReady}
             playerPosRef={narutoPosRef}
@@ -251,6 +275,7 @@ function AppContent() {
             onNearbyLocationChange={setNearbyLocation}
             isInteractionBlocked={isMovementPaused || Boolean(nearbyCharacterInfo?.character)}
             enableShadows={enableShadows}
+            isNightMode={isNightMode}
           />
 
           {/* Interactive Naruto Characters Integrated with Dialogue */}
@@ -306,6 +331,8 @@ function AppContent() {
         isDialogueActive={isMovementPaused}
         isLiteMode={isLiteMode}
         onToggleLiteMode={handleToggleLiteMode}
+        isNightMode={isNightMode}
+        onToggleNightMode={handleToggleNightMode}
         onSwitchTo2D={() => setIs2DMode(true)}
         touchInputRef={touchInputRef}
       />

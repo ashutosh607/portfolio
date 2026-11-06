@@ -76,6 +76,8 @@ const KonohaHUD = React.memo(function KonohaHUD({
   isDialogueActive = false,
   isLiteMode = false,
   onToggleLiteMode,
+  isNightMode = true,
+  onToggleNightMode,
   onSwitchTo2D,
   touchInputRef,
 }) {
@@ -132,13 +134,16 @@ const KonohaHUD = React.memo(function KonohaHUD({
     }
   }, [nearestLocation, minDistance, currentPosition, showWelcomeCard]);
 
-  // Keyboard shortcuts: 'H' toggles controls panel, 'Escape' closes open HUD drawers/popovers
+  // Keyboard shortcuts: 'H' toggles controls panel, 'N' toggles Day/Night mode, 'Escape' closes open HUD drawers/popovers
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.repeat) return;
       if (e.code === 'KeyH' && !isDialogueActive && !activeModal) {
         e.preventDefault();
         setIsControlsOpen((prev) => !prev);
+      } else if (e.code === 'KeyN' && !isDialogueActive && !activeModal && onToggleNightMode) {
+        e.preventDefault();
+        onToggleNightMode();
       } else if (e.code === 'Escape') {
         if (isDestinationsOpen) setIsDestinationsOpen(false);
         if (isControlsOpen) setIsControlsOpen(false);
@@ -147,7 +152,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isDialogueActive, activeModal, isDestinationsOpen, isControlsOpen, isMenuOpen]);
+  }, [isDialogueActive, activeModal, isDestinationsOpen, isControlsOpen, isMenuOpen, onToggleNightMode]);
 
   const setTouchKey = useCallback(
     (key, val) => {
@@ -336,8 +341,62 @@ const KonohaHUD = React.memo(function KonohaHUD({
           })}
         </nav>
 
-        {/* Right: Destinations Trigger & Compact Menu Pill */}
+        {/* Right: Day/Night Toggle, Destinations Trigger & Compact Menu Pill */}
         <div className="shinobi-nav-right">
+          {onToggleNightMode && (
+            <button
+              type="button"
+              className={`shinobi-theme-toggle ${isNightMode ? 'is-night' : 'is-day'}`}
+              onClick={onToggleNightMode}
+              title={
+                isNightMode
+                  ? 'Switch to Daylight Village (Press N)'
+                  : 'Switch to Japanese Night Mode (Press N)'
+              }
+              aria-label={isNightMode ? 'Switch to Day Mode' : 'Switch to Night Mode'}
+            >
+              {isNightMode ? (
+                <svg
+                  viewBox="0 0 24 24"
+                  className="theme-toggle-svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  className="theme-toggle-svg"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+              )}
+              <span className="theme-toggle-label">{isNightMode ? 'Night' : 'Day'}</span>
+              <span className="theme-toggle-kanji" aria-hidden="true">
+                {isNightMode ? '夜' : '昼'}
+              </span>
+            </button>
+          )}
+
           <button
             type="button"
             className={`shinobi-dest-trigger ${isDestinationsOpen ? 'is-open' : ''}`}
@@ -524,6 +583,21 @@ const KonohaHUD = React.memo(function KonohaHUD({
                 <span>🍃 {showWelcomeCard ? 'Hide Introduction Card' : 'Show Introduction Card'}</span>
                 <span className="popover-action-tag">Intro</span>
               </button>
+
+              {onToggleNightMode && (
+                <button
+                  type="button"
+                  className="popover-action-row"
+                  onClick={() => {
+                    onToggleNightMode();
+                  }}
+                >
+                  <span>{isNightMode ? '🏮 Village Time of Day' : '☀️ Village Time of Day'}</span>
+                  <span className="popover-action-tag">
+                    {isNightMode ? 'Night • 夜' : 'Day • 昼'}
+                  </span>
+                </button>
+              )}
 
               {onToggleLiteMode && (
                 <button
