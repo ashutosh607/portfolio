@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useGLTF, useAnimations } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import {
+  INITIAL_SPAWN,
   VILLAGE_BOUNDS,
   WALK_SPEED,
   SPRINT_SPEED,
@@ -46,22 +47,22 @@ const Naruto = React.memo(function Naruto({
 
   // Character physical state
   const physics = useRef({
-    x: -16.31,
-    y: -0.07,
-    z: -6.8,
-    groundY: -0.07,
+    x: INITIAL_SPAWN.position[0],
+    y: INITIAL_SPAWN.position[1],
+    z: INITIAL_SPAWN.position[2],
+    groundY: INITIAL_SPAWN.position[1],
     velocityY: 0,
     isGrounded: true,
-    rotation: Math.PI, // start facing forward down the main street towards well and Hokage Monument (-Z)
+    rotation: INITIAL_SPAWN.facing, // face the visitor on initial arrival
     chakra: 100,
     speed: 0, // for smooth acceleration
   });
 
   // Throttler ref to prevent flooding React state on every single animation frame
   const lastReportRef = useRef({
-    x: -16.31,
-    y: -0.07,
-    z: -6.8,
+    x: INITIAL_SPAWN.position[0],
+    y: INITIAL_SPAWN.position[1],
+    z: INITIAL_SPAWN.position[2],
     state: 'idle',
     chakra: 100,
     lastPosTime: 0,
@@ -89,24 +90,24 @@ const Naruto = React.memo(function Naruto({
   // Reset character position if requested
   useEffect(() => {
     if (resetSignal) {
-      physics.current.x = -16.31;
-      physics.current.y = -0.07;
-      physics.current.z = -6.8;
-      physics.current.groundY = -0.07;
+      physics.current.x = INITIAL_SPAWN.position[0];
+      physics.current.y = INITIAL_SPAWN.position[1];
+      physics.current.z = INITIAL_SPAWN.position[2];
+      physics.current.groundY = INITIAL_SPAWN.position[1];
       physics.current.velocityY = 0;
       physics.current.isGrounded = true;
-      physics.current.rotation = Math.PI;
+      physics.current.rotation = INITIAL_SPAWN.facing;
       physics.current.speed = 0;
       if (group.current) {
-        group.current.position.set(-16.31, -0.07, -6.8);
-        group.current.rotation.y = Math.PI;
+        group.current.position.set(...INITIAL_SPAWN.position);
+        group.current.rotation.y = INITIAL_SPAWN.facing;
       }
       if (playerPosRef) {
-        playerPosRef.current[0] = -16.31;
-        playerPosRef.current[1] = -0.07;
-        playerPosRef.current[2] = -6.8;
+        playerPosRef.current[0] = INITIAL_SPAWN.position[0];
+        playerPosRef.current[1] = INITIAL_SPAWN.position[1];
+        playerPosRef.current[2] = INITIAL_SPAWN.position[2];
       }
-      onPositionUpdate?.([-16.31, -0.07, -6.8]);
+      onPositionUpdate?.([...INITIAL_SPAWN.position]);
     }
   }, [resetSignal, onPositionUpdate, playerPosRef]);
 

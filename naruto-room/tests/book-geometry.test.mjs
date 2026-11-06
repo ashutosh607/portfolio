@@ -33,3 +33,15 @@ test('moving paper is curved, continuous and finite across both turn directions'
     }
   }
 });
+
+test('free corners curl asymmetrically while both resting faces stay aligned', () => {
+  const top = sheetPoint(1, 0.5, 0.35, 500, 650);
+  const bottom = sheetPoint(1, -0.5, 0.35, 500, 650);
+  assert.ok(Math.abs(top[0] - bottom[0]) > 40, 'the free edge should sweep diagonally');
+  for (const progress of [0, 1]) {
+    const a = sheetPoint(1, 0.5, progress, 500, 650);
+    const b = sheetPoint(1, -0.5, progress, 500, 650);
+    assert.ok(Math.abs(a[0] - b[0]) < 1e-7);
+    assert.ok(Math.abs(a[2]) < 1e-7 && Math.abs(b[2]) < 1e-7);
+  }
+});

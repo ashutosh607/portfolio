@@ -130,12 +130,18 @@ export const KONOHA_LOCATIONS = [
 ];
 
 // Featured Projects (Ichiraku Ramen Menu Dishes)
+// Photo slots (`frontPagePhoto` for the left menu card, `projectPhoto` for the right detail showcase)
+// can be set directly here (e.g. '/projects/travelflow-thumb.jpg') or updated dynamically via the future Admin Panel.
+export const ADMIN_PROJECTS_STORAGE_KEY = 'shinobi_portfolio_projects';
+
 export const PORTFOLIO_PROJECTS = [
   {
     id: 'travelflow-ai',
     dishName: 'Miso Tonkotsu Special',
     title: 'TravelFlow AI',
     category: 'AI & FULL-STACK • INTELLIGENT ITINERARY ENGINE',
+    frontPagePhoto: '',
+    projectPhoto: '',
     shortDesc:
       'AI-powered travel planning and itinerary orchestration platform that generates personalized, budget-aware multi-day routes in real time.',
     problemSolved:
@@ -156,6 +162,8 @@ export const PORTFOLIO_PROJECTS = [
     dishName: 'Shoyu Leaf Ramen',
     title: 'WasteWise',
     category: 'COMPUTER VISION & SUSTAINABILITY • ML',
+    frontPagePhoto: '',
+    projectPhoto: '',
     shortDesc:
       'Smart waste classification and sustainability tracking system powered by deep learning image recognition to automate recycling sorting.',
     problemSolved:
@@ -176,6 +184,8 @@ export const PORTFOLIO_PROJECTS = [
     dishName: 'Spicy ANBU Ramen',
     title: 'CallKavach',
     category: 'AI SECURITY & NLP • FRAUD DETECTION',
+    frontPagePhoto: '',
+    projectPhoto: '',
     shortDesc:
       'Real-time scam and phishing call protection shield that analyzes conversational patterns to warn users of social engineering attacks.',
     problemSolved:
@@ -196,6 +206,8 @@ export const PORTFOLIO_PROJECTS = [
     dishName: 'Sage Chakra Ramen',
     title: 'Racket Sports Intelligence',
     category: 'COMPUTER VISION • SPORTS ANALYTICS',
+    frontPagePhoto: '',
+    projectPhoto: '',
     shortDesc:
       'Automated video analysis system for racket sports that tracks player movement, shuttle/ball trajectory, and shot mechanics from match footage.',
     problemSolved:
@@ -216,6 +228,8 @@ export const PORTFOLIO_PROJECTS = [
     dishName: 'Hokage Grand Bowl',
     title: 'Konoha 3D Interactive Portfolio',
     category: '3D WEBGL • REACT THREE FIBER • SPATIAL ENGINE',
+    frontPagePhoto: '',
+    projectPhoto: '',
     shortDesc:
       'This explorable 3D Hidden Leaf Village portfolio featuring O(1) spatial-grid terrain physics, skeletal character interactions, and adaptive FPS scaling.',
     problemSolved:
@@ -232,6 +246,55 @@ export const PORTFOLIO_PROJECTS = [
     accent: '#d35400',
   },
 ];
+
+/**
+ * Returns the portfolio projects merged with any saved overrides from the future Admin Panel
+ * (`localStorage.getItem('shinobi_portfolio_projects')`).
+ */
+export function getPortfolioProjects() {
+  if (typeof window === 'undefined') return PORTFOLIO_PROJECTS;
+  try {
+    const raw = window.localStorage.getItem(ADMIN_PROJECTS_STORAGE_KEY);
+    if (!raw) return PORTFOLIO_PROJECTS;
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      const overrideMap = new Map(parsed.filter(Boolean).map((item) => [item.id, item]));
+      return PORTFOLIO_PROJECTS.map((proj) => ({
+        ...proj,
+        ...(overrideMap.get(proj.id) || {}),
+      }));
+    }
+    if (parsed && typeof parsed === 'object') {
+      return PORTFOLIO_PROJECTS.map((proj) => ({
+        ...proj,
+        ...(parsed[proj.id] || {}),
+      }));
+    }
+  } catch {
+    // Ignore storage parse errors and fall back to static config
+  }
+  return PORTFOLIO_PROJECTS;
+}
+
+/**
+ * Helper for the future Admin Panel to attach/update `frontPagePhoto`, `projectPhoto`,
+ * or project text fields and notify open components.
+ */
+export function savePortfolioProjectOverride(projectId, updates) {
+  if (typeof window === 'undefined' || !projectId) return;
+  try {
+    const raw = window.localStorage.getItem(ADMIN_PROJECTS_STORAGE_KEY);
+    const current = raw ? JSON.parse(raw) : {};
+    const map = Array.isArray(current)
+      ? Object.fromEntries(current.filter(Boolean).map((item) => [item.id, item]))
+      : { ...current };
+    map[projectId] = { ...(map[projectId] || {}), id: projectId, ...updates };
+    window.localStorage.setItem(ADMIN_PROJECTS_STORAGE_KEY, JSON.stringify(map));
+    window.dispatchEvent(new CustomEvent('shinobi-projects-updated'));
+  } catch (err) {
+    console.warn('Unable to save project override:', err);
+  }
+}
 
 // 7 Interactive Skill Scrolls (Training Grounds)
 export const SKILL_SCROLLS = [

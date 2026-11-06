@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import gsap from 'gsap';
 import { flushSync } from 'react-dom';
 import { PageTurnSurface } from './PageTurnSurface';
-import { PORTFOLIO_PROJECTS } from '../config/locations';
+import { getPortfolioProjects } from '../config/locations';
 import './RamenBookModal.css';
 
 // 4 Signature dishes as specified in the redesign requirements
@@ -20,6 +20,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   const [isMobileDetailView, setIsMobileDetailView] = useState(false);
   const [busy, setBusy] = useState(false);
   const [turnNotice, setTurnNotice] = useState('');
+  const [projectsVersion, setProjectsVersion] = useState(0);
   const bookContainerRef = useRef(null);
   const frontCoverRef = useRef(null);
   const interiorSpreadRef = useRef(null);
@@ -32,7 +33,25 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   const generationRef = useRef(0);
   const touchRef = useRef(null);
   const afterCloseRef = useRef(null);
-  const projects = useMemo(() => SIGNATURE_PROJECT_IDS.map(id => PORTFOLIO_PROJECTS.find(project => project.id === id)).filter(Boolean).map((project, index) => ({ ...project, menuIndex: `0${index + 1}` })), []);
+
+  useEffect(() => {
+    const handleAdminProjectUpdate = () => setProjectsVersion(v => v + 1);
+    window.addEventListener('storage', handleAdminProjectUpdate);
+    window.addEventListener('shinobi-projects-updated', handleAdminProjectUpdate);
+    return () => {
+      window.removeEventListener('storage', handleAdminProjectUpdate);
+      window.removeEventListener('shinobi-projects-updated', handleAdminProjectUpdate);
+    };
+  }, []);
+
+  const projects = useMemo(() => {
+    const allProjects = getPortfolioProjects();
+    return SIGNATURE_PROJECT_IDS
+      .map(id => allProjects.find(project => project.id === id))
+      .filter(Boolean)
+      .map((project, index) => ({ ...project, menuIndex: `0${index + 1}` }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectsVersion]);
   const currentProject = projects[selectedProjectIndex] || projects[0];
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobileView = () => window.matchMedia('(max-width: 860px)').matches;
@@ -47,6 +66,15 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     setBusy(false);
   }, []);
 
+  function prepareInnerCover(container, page) {
+    if (!container || !page) return;
+    const face = container.querySelector('.cover-inner-face');
+    if (!face) return;
+    const copy = page.cloneNode(true);
+    copy.removeAttribute('tabindex');
+    face.replaceChildren(copy);
+  }
+
   useEffect(() => {
     if (!isOpen) return;
     const generation = generationRef;
@@ -60,7 +88,34 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     setSelectedProjectIndex(Math.max(0, projects.findIndex(project => project.id === initialProjectId)));
     setIsMobileDetailView(false);
     unlock();
-    const focusFrame = requestAnimationFrame(() => dialogRef.current?.querySelector('.cover-open-trigger-btn')?.focus({ preventScroll: true }));
+
+    const container = bookContainerRef.current;
+    const cover = frontCoverRef.current;
+    const isMob = mobileView();
+
+    if (container && cover) {
+      gsap.set(container, {
+        xPercent: isMob ? 0 : -25,
+        y: 0,
+        '--open-progress': 0,
+      });
+      gsap.set(cover, {
+        rotateY: 0,
+        z: 0,
+        force3D: true,
+      });
+    }
+
+    const focusFrame = requestAnimationFrame(() => {
+      if (frontCoverRef.current && interiorSpreadRef.current) {
+        prepareInnerCover(
+          frontCoverRef.current,
+          interiorSpreadRef.current.querySelector('[data-spread="1"] .page-left')
+        );
+      }
+      dialogRef.current?.querySelector('.cover-open-trigger-btn')?.focus({ preventScroll: true });
+    });
+
     return () => {
       generation.current++;
       cancelAnimationFrame(focusFrame);
@@ -72,49 +127,175 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     };
   }, [isOpen, initialProjectId, projects, unlock]);
 
-  function prepareInnerCover(container, page) {
-    const face = container.querySelector('.cover-inner-face');
-    const copy = page.cloneNode(true);
-    copy.removeAttribute('tabindex');
-    face.replaceChildren(copy);
-  }
-
   const handleOpenBook = useCallback(() => {
     if (bookState !== 'closed' || !lock()) return;
-    setBookState('opening');
     const container = bookContainerRef.current;
     const cover = frontCoverRef.current;
-    prepareInnerCover(cover, interiorSpreadRef.current.querySelector('[data-spread="1"] .page-left'));
-    timelineRef.current = gsap.timeline({ onComplete: () => {
-      setBookState('open');
-      unlock();
-      requestAnimationFrame(() => interiorSpreadRef.current?.querySelector('.menu-dish-item')?.focus({ preventScroll: true }));
-    } });
-    const duration = reducedMotion() ? 0.01 : 1.12;
-    timelineRef.current.to(container, { '--book-lift': '-5px', duration: reducedMotion() ? 0 : 0.18, ease: 'power2.out' })
-      .to(cover, { rotateY: -180, duration, ease: 'power2.inOut' })
-      .to(container, { '--book-offset': '0%', duration, ease: 'power2.inOut' }, '<')
-      .to(container, { '--open-progress': 1, duration, ease: 'power2.inOut' }, '<')
-      .to(container, { '--book-lift': '0px', duration: reducedMotion() ? 0 : 0.18, ease: 'power2.out' });
+    const leftPage = interiorSpreadRef.current?.querySelector('[data-spread="1"] .page-left');
+
+    if (cover && leftPage && !cover.querySelector('.cover-inner-face .book-page')) {
+      prepareInnerCover(cover, leftPage);
+    }
+
+    setBookState('opening');
+    const isMob = mobileView();
+    const isReduced = reducedMotion();
+    const duration = isReduced ? 0.01 : isMob ? 0.72 : 0.96;
+
+    timelineRef.current?.kill();
+    const tl = gsap.timeline({
+      defaults: { overwrite: 'auto' },
+      onComplete: () => {
+        setBookState('open');
+        unlock();
+        requestAnimationFrame(() =>
+          interiorSpreadRef.current?.querySelector('.menu-dish-item')?.focus({ preventScroll: true })
+        );
+      },
+    });
+    timelineRef.current = tl;
+
+    if (isMob) {
+      tl.to(
+        cover,
+        {
+          rotateY: -180,
+          duration,
+          ease: 'power3.inOut',
+          force3D: true,
+        },
+        0
+      ).to(
+        container,
+        {
+          '--open-progress': 1,
+          duration,
+          ease: 'power3.inOut',
+        },
+        0
+      );
+    } else {
+      // Simultaneous 3D cover swing, container centering, and subtle physical lift arc (no initial delay)
+      tl.to(
+        cover,
+        {
+          rotateY: -180,
+          duration,
+          ease: 'power3.inOut',
+          force3D: true,
+        },
+        0
+      )
+        .to(
+          container,
+          {
+            xPercent: 0,
+            '--open-progress': 1,
+            duration,
+            ease: 'power3.inOut',
+            force3D: true,
+          },
+          0
+        )
+        .to(
+          container,
+          {
+            keyframes: [
+              { y: isReduced ? 0 : -6, duration: duration * 0.45, ease: 'sine.out' },
+              { y: 0, duration: duration * 0.55, ease: 'sine.inOut' },
+            ],
+          },
+          0
+        );
+    }
   }, [bookState, lock, unlock]);
 
   const handleCloseBook = useCallback(() => {
     if (isTransitioningRef.current) return;
-    if (bookState === 'closed') { onClose(); return; }
-    if (!lock()) return;
-    prepareInnerCover(frontCoverRef.current, interiorSpreadRef.current.querySelector(`[data-spread="${currentSpread}"] .page-left`));
-    setBookState('closing');
-    const duration = reducedMotion() ? 0.01 : 1.12;
-    timelineRef.current = gsap.timeline({ onComplete: () => {
-      unlock();
-      setBookState('closed');
-      const action = afterCloseRef.current;
-      afterCloseRef.current = null;
+    if (bookState === 'closed') {
       onClose();
-      action?.();
-    } });
-    timelineRef.current.to(frontCoverRef.current, { rotateY: 0, duration, ease: 'power2.inOut' })
-      .to(bookContainerRef.current, { '--book-offset': '-25%', '--open-progress': 0, duration, ease: 'power2.inOut' }, '<');
+      return;
+    }
+    if (!lock()) return;
+
+    const container = bookContainerRef.current;
+    const cover = frontCoverRef.current;
+    prepareInnerCover(
+      cover,
+      interiorSpreadRef.current?.querySelector(`[data-spread="${currentSpread}"] .page-left`)
+    );
+
+    setBookState('closing');
+    const isMob = mobileView();
+    const isReduced = reducedMotion();
+    const duration = isReduced ? 0.01 : isMob ? 0.65 : 0.88;
+
+    timelineRef.current?.kill();
+    const tl = gsap.timeline({
+      defaults: { overwrite: 'auto' },
+      onComplete: () => {
+        unlock();
+        setBookState('closed');
+        const action = afterCloseRef.current;
+        afterCloseRef.current = null;
+        onClose();
+        action?.();
+      },
+    });
+    timelineRef.current = tl;
+
+    if (isMob) {
+      tl.to(
+        cover,
+        {
+          rotateY: 0,
+          duration,
+          ease: 'power3.inOut',
+          force3D: true,
+        },
+        0
+      ).to(
+        container,
+        {
+          '--open-progress': 0,
+          duration,
+          ease: 'power3.inOut',
+        },
+        0
+      );
+    } else {
+      tl.to(
+        cover,
+        {
+          rotateY: 0,
+          duration,
+          ease: 'power3.inOut',
+          force3D: true,
+        },
+        0
+      )
+        .to(
+          container,
+          {
+            xPercent: -25,
+            '--open-progress': 0,
+            duration,
+            ease: 'power3.inOut',
+            force3D: true,
+          },
+          0
+        )
+        .to(
+          container,
+          {
+            keyframes: [
+              { y: isReduced ? 0 : -4, duration: duration * 0.45, ease: 'sine.out' },
+              { y: 0, duration: duration * 0.55, ease: 'sine.inOut' },
+            ],
+          },
+          0
+        );
+    }
   }, [bookState, currentSpread, onClose, lock, unlock]);
 
   const handleSelectProject = useCallback(index => {
@@ -140,9 +321,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     const mobile = mobileView();
     const finish = () => {
       if (generation !== generationRef.current) return;
-      setCurrentSpread(nextSpread);
-      setIsMobileDetailView(false);
-      setBookState('open');
+      // Commit the resting spread before removing its animated surface.
+      flushSync(() => {
+        setCurrentSpread(nextSpread);
+        setIsMobileDetailView(false);
+        setBookState('open');
+      });
       turningLeafRef.current.style.visibility = 'hidden';
       unlock();
       requestAnimationFrame(() => {
@@ -163,7 +347,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       turningLeafRef.current.style.visibility = 'visible';
       const motion = { progress: direction > 0 ? 0 : 1 };
       timelineRef.current = gsap.timeline({ onComplete: finish }).to(motion, {
-        progress: direction > 0 ? 1 : 0, duration: 1.15, ease: 'power2.inOut',
+        progress: direction > 0 ? 1 : 0, duration: 1.25, ease: 'sine.inOut',
         onUpdate: () => surfaceRef.current?.render(motion.progress),
       });
     } catch (error) {
@@ -424,9 +608,9 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                         disabled={busy}
                         aria-pressed={isSelected}
                       >
-                        {/* Real Project Miniature Preview Thumbnail */}
+                        {/* Front Page Project Photo Slot (Admin Panel / Config Ready) */}
                         <div className="dish-thumbnail-box">
-                          <ProjectThumbnailVisual projectId={proj.id} />
+                          <ProjectThumbnailVisual project={proj} />
                           <span className="dish-index-pill">{proj.menuIndex}</span>
                         </div>
 
@@ -625,20 +809,9 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                       <div className="sumie-rock-base" />
                     </div>
 
-                    {/* Realistic Laptop Device Display */}
-                    <div className="laptop-device-wrapper">
-                      <div className="laptop-display-frame">
-                        <div className="laptop-screen-bezel">
-                          <div className="laptop-webcam-dot" />
-                          <div className="laptop-screen-viewport">
-                            <ProjectScreenContent project={currentProject} />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="laptop-keyboard-chassis">
-                        <div className="laptop-notch" />
-                      </div>
-                      <div className="laptop-shadow-shelf" />
+                    {/* Project Photo Showcase Frame (Admin Panel / Config Ready) */}
+                    <div className="project-photo-showcase-wrapper">
+                      <ProjectPhotoShowcase project={currentProject} />
                     </div>
                   </div>
                 </div>
@@ -767,70 +940,100 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
 }
 
 // ============================================================================
-// REALISTIC HIGH-RES PROJECT SCREEN VIEWPORT
+// RIGHT PAGE: PROJECT PHOTO SHOWCASE SLOT (ADMIN PANEL & CONFIG READY)
 // ============================================================================
-function ProjectScreenContent({ project }) {
-  if (project.image || project.screenshot) return <img src={project.image || project.screenshot} alt={`${project.title} project preview`} style={{ width: '100%', display: 'block' }} />;
-  return <div className="project-feature-preview">
-    <small>PROJECT CAPABILITIES</small>
-    <h3>{project.title}</h3>
-    <ul>{project.features.slice(0, 3).map(feature => <li key={feature}>{feature}</li>)}</ul>
-  </div>;
+function ProjectPhotoShowcase({ project }) {
+  const projectPhotoSrc =
+    project?.projectPhoto ||
+    project?.previewImage ||
+    project?.screenshot ||
+    project?.image ||
+    '';
+
+  if (projectPhotoSrc) {
+    return (
+      <div className="project-photo-frame has-attached-photo">
+        <img
+          src={projectPhotoSrc}
+          alt={`${project.title} project preview`}
+          className="project-attached-photo"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="project-photo-frame is-placeholder-slot">
+      {/* Top Photo Slot Frame Area */}
+      <div className="project-photo-dropzone-preview">
+        <div className="photo-slot-badge-pill">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <rect x="3" y="5" width="18" height="14" rx="2" />
+            <circle cx="8.5" cy="10.5" r="1.5" />
+            <path d="M21 15l-4.5-4.5L9 18" />
+          </svg>
+          <span>PROJECT PHOTO SLOT</span>
+        </div>
+        <p className="photo-slot-title">{project.title}</p>
+        <span className="photo-slot-hint">
+          Attach <code>projectPhoto</code> via Admin Panel or <code>locations.js</code>
+        </span>
+      </div>
+
+      {/* Concise Editorial Capabilities List inside the Frame */}
+      {Array.isArray(project?.features) && project.features.length > 0 && (
+        <div className="project-capabilities-digest">
+          <span className="capabilities-kicker">KEY HIGHLIGHTS</span>
+          <ul className="capabilities-compact-list">
+            {project.features.slice(0, 3).map((item, idx) => (
+              <li key={idx}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ============================================================================
-// REAL PROJECT THUMBNAIL VISUALS (FOR THE LEFT MENU CARDS)
+// LEFT PAGE: FRONT PAGE CARD PHOTO SLOT (ADMIN PANEL & CONFIG READY)
 // ============================================================================
-function ProjectThumbnailVisual({ projectId }) {
-  if (projectId === 'travelflow-ai') {
+function ProjectThumbnailVisual({ project }) {
+  const frontPhotoSrc =
+    project?.frontPagePhoto ||
+    project?.thumbnailImage ||
+    project?.image ||
+    '';
+
+  if (frontPhotoSrc) {
     return (
-      <div className="mini-thumb-canvas travel-thumb">
-        <div className="mini-laptop-mockup">
-          <div className="mini-laptop-screen">
-            <div className="mini-travel-scenery" />
-            <span className="mini-app-badge">✈ TravelFlow</span>
-          </div>
-          <div className="mini-laptop-base" />
-        </div>
+      <div className="dish-photo-slot has-attached-photo">
+        <img
+          src={frontPhotoSrc}
+          alt={`${project.title} thumbnail`}
+          className="dish-attached-photo"
+        />
       </div>
     );
   }
 
-  if (projectId === 'wastewise') {
-    return (
-      <div className="mini-thumb-canvas waste-thumb">
-        <div className="mini-tablet-mockup">
-          <div className="mini-tablet-screen">
-            <div className="mini-waste-feed" />
-            <span className="mini-app-badge">♻ WasteWise</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (projectId === 'callkavach') {
-    return (
-      <div className="mini-thumb-canvas kavach-thumb">
-        <div className="mini-phone-mockup">
-          <div className="mini-phone-screen">
-            <div className="mini-shield-pulse" />
-            <span className="mini-app-badge">🛡 Kavach</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Racket Sports Intelligence
   return (
-    <div className="mini-thumb-canvas racket-thumb">
-      <div className="mini-court-mockup">
-        <div className="mini-court-screen">
-          <div className="mini-court-lines" />
-          <span className="mini-app-badge">🏸 RacketAI</span>
-        </div>
-      </div>
+    <div className="dish-photo-slot is-placeholder-slot">
+      <svg
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        className="dish-photo-slot-icon"
+        aria-hidden="true"
+      >
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <circle cx="8.5" cy="10.5" r="1.5" />
+        <path d="M21 15l-4.5-4.5L9 18" />
+      </svg>
+      <span className="dish-photo-slot-label">Photo Slot</span>
     </div>
   );
 }

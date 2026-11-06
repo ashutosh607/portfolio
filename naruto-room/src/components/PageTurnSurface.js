@@ -49,12 +49,12 @@ export function sheetPoint(u, v, progress, width, height) {
   const steps = 32;
   for (let i = 0; i < steps; i++) {
     const s = u * (i + 0.5) / steps;
-    const angle = Math.PI * progress + bend * (0.95 * Math.sin(Math.PI * s) - 0.32 * (1 - s) + 0.2 * v * s);
+    const angle = Math.PI * progress + bend * (1.15 * Math.sin(Math.PI * s) - 0.65 * (1 - s) + 0.65 * v * s);
     x += Math.cos(angle) * width * u / steps;
     z += Math.sin(angle) * width * u / steps;
   }
   z += bend * 0.035 * width * Math.sin(Math.PI * u) * (v * v);
-  return [x, v * height + bend * width * 0.025 * Math.sin(Math.PI * u), Math.max(0, z)];
+  return [x, v * height + bend * width * 0.04 * Math.sin(Math.PI * u), Math.max(0, z)];
 }
 
 export class PageTurnSurface {
@@ -88,11 +88,28 @@ export class PageTurnSurface {
     this.front.castShadow = this.back.castShadow = true;
     this.scene.add(this.front, this.back);
     this.shadowGeometry = new THREE.PlaneGeometry(1, 1);
-    this.shadowMaterial = new THREE.ShadowMaterial({ opacity: 0.24 });
+    this.shadowMaterial = new THREE.ShadowMaterial({ opacity: 0.08 });
     this.shadow = new THREE.Mesh(this.shadowGeometry, this.shadowMaterial);
     this.shadow.receiveShadow = true;
     this.shadow.position.z = -1;
     this.scene.add(this.shadow);
+    // A diffuse contact shadow complements the sharp silhouette from the key light.
+    const shadowCanvas = document.createElement('canvas');
+    shadowCanvas.width = shadowCanvas.height = 128;
+    const context = shadowCanvas.getContext('2d');
+    const gradient = context.createRadialGradient(64, 64, 8, 64, 64, 64);
+    gradient.addColorStop(0, 'rgba(42, 23, 10, 0.38)');
+    gradient.addColorStop(0.45, 'rgba(42, 23, 10, 0.17)');
+    gradient.addColorStop(1, 'rgba(42, 23, 10, 0)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 128, 128);
+    this.contactTexture = new THREE.CanvasTexture(shadowCanvas);
+    this.contactMaterial = new THREE.MeshBasicMaterial({ map: this.contactTexture, transparent: true, depthWrite: false, opacity: 0 });
+    this.contactShadow = new THREE.Mesh(this.shadowGeometry, this.contactMaterial);
+    this.contactShadow.position.z = -0.5;
+    this.scene.add(this.contactShadow);
+    this.front.frustumCulled = this.back.frustumCulled = false;
+
   }
 
   async prepare(frontPage, backPage, mobile, direction) {
@@ -123,20 +140,27 @@ export class PageTurnSurface {
 
   render(progress) {
     if (this.disposed) return;
-    for (const geometry of [this.geometry, this.backGeometry]) {
-      const position = geometry.attributes.position;
-      for (let i = 0; i < position.count; i++) {
-        const col = i % 65;
-        const row = Math.floor(i / 65);
-        const [x, y, z] = sheetPoint(col / 64, 0.5 - row / 12, progress, this.width, this.height);
-        // Mobile uses a single viewport; the bound edge slides continuously.
-        const offset = this.mobile ? this.width * (progress - 0.5) : 0;
-        position.setXYZ(i, x + offset, y, z + (geometry === this.geometry ? 0.18 : -0.18));
-      }
-      position.needsUpdate = true;
-      geometry.computeVertexNormals();
-      geometry.computeBoundingSphere();
+    const frontPosition = this.geometry.attributes.position;
+    const backPosition = this.backGeometry.attributes.position;
+    const offset = this.mobile ? this.width * (progress - 0.5) : 0;
+    // Compute each point once for both faces. Normals are shared, UVs remain distinct.
+    for (let i = 0; i < frontPosition.count; i++) {
+      const col = i % 65;
+      const row = Math.floor(i / 65);
+      const [x, y, z] = sheetPoint(col / 64, 0.5 - row / 12, progress, this.width, this.height);
+      frontPosition.setXYZ(i, x + offset, y, z + 0.18);
+      backPosition.setXYZ(i, x + offset, y, z - 0.18);
     }
+    frontPosition.needsUpdate = backPosition.needsUpdate = true;
+    this.geometry.computeVertexNormals();
+    this.backGeometry.attributes.normal.array.set(this.geometry.attributes.normal.array);
+    this.backGeometry.attributes.normal.needsUpdate = true;
+    const lift = Math.sin(Math.PI * progress);
+    const center = sheetPoint(0.55, 0, progress, this.width, this.height);
+    this.contactShadow.position.x = center[0] + offset + lift * this.width * 0.12;
+    this.contactShadow.scale.set(this.width * (0.35 + lift * 0.9), this.height * 1.15, 1);
+    this.contactMaterial.opacity = lift * 0.65;
+    this.shadowMaterial.opacity = lift * 0.08;
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -145,6 +169,8 @@ export class PageTurnSurface {
     this.frontMaterial.map?.dispose();
     this.backMaterial.map?.dispose();
     [this.geometry, this.backGeometry, this.shadowGeometry, this.frontMaterial, this.backMaterial, this.shadowMaterial].forEach(item => item.dispose());
+    this.contactTexture.dispose();
+    this.contactMaterial.dispose();
     this.light.shadow.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();

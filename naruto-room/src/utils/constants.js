@@ -1,3 +1,11 @@
+// Opening pose: Main Street, facing the visitor with the monument behind Naruto.
+export const INITIAL_SPAWN = {
+  position: [-23.22, -0.19, 10.39],
+  facing: 0,
+  cameraYaw: 0,
+  cameraPitch: -0.12,
+};
+
 // Konoha Village environment and movement physics constants
 
 export const VILLAGE_BOUNDS = {

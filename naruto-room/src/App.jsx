@@ -12,6 +12,7 @@ import CinematicDialogue from './components/CinematicDialogue';
 import PortfolioModals from './components/PortfolioModals';
 import FallbackPortfolio2D from './components/FallbackPortfolio2D';
 import './App.css';
+import { INITIAL_SPAWN } from './utils/constants';
 
 // Detect lower-end / mobile / integrated GPU hardware on startup to default to Lite mode when appropriate
 function detectInitialLiteMode() {
@@ -89,7 +90,7 @@ export default function App() {
 
 function AppContent() {
   const [terrainMesh, setTerrainMesh] = useState(null);
-  const [narutoPos, setNarutoPos] = useState([-16.31, -0.07, -6.8]);
+  const [narutoPos, setNarutoPos] = useState(() => [...INITIAL_SPAWN.position]);
   const [characterState, setCharacterState] = useState('idle');
   const [chakra, setChakra] = useState(100);
   const [activeKeys, setActiveKeys] = useState({});
@@ -107,9 +108,9 @@ function AppContent() {
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
 
   // Shared ref for camera yaw angle so Naruto steers relative to camera orientation
-  const cameraAngleRef = useRef(0);
+  const cameraAngleRef = useRef(INITIAL_SPAWN.cameraYaw);
   // Shared mutable position ref for 60fps tracking without React re-renders
-  const narutoPosRef = useRef([-16.31, -0.07, -6.8]);
+  const narutoPosRef = useRef([...INITIAL_SPAWN.position]);
   // Shared mutable touch input ref for mobile controls
   const touchInputRef = useRef({
     forward: false,
@@ -208,7 +209,11 @@ function AppContent() {
     <div className="app-viewport">
       {/* 3D Scene Canvas */}
       <Canvas
-        frameloop={activeModal === 'projects' ? 'demand' : 'always'}
+        frameloop={
+          activeModal === 'projects' || activeModal === 'about' || activeModal === 'contact'
+            ? 'demand'
+            : 'always'
+        }
         shadows={enableShadows}
         dpr={isLiteMode ? [0.8, 1.0] : [1, 1.35]}
         camera={{ position: [0, 3.2, 5.5], fov: 46, near: 0.3, far: 250 }}

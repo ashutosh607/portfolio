@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import RamenBookModal from './RamenBookModal';
+import AboutModal from './AboutModal';
+import ContactModal from './ContactModal';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
@@ -15,17 +17,26 @@ const PortfolioModals = React.memo(function PortfolioModals({
 }) {
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeScrollId, setActiveScrollId] = useState('frontend');
-  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [resumeOrigin, setResumeOrigin] = useState('about');
 
   // Reset sub-selection when modal changes
   useEffect(() => {
     setSelectedProject(null);
+    if (activeModal === 'about' || activeModal === 'contact') {
+      setResumeOrigin(activeModal);
+    }
   }, [activeModal]);
 
-  // ESC key to close modal or exit sub-view
+  // ESC key to close modal or exit sub-view (RamenBookModal, AboutModal & ContactModal handle ESC with their own GSAP exit animations)
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.code === 'Escape' && activeModal && activeModal !== 'projects') {
+      if (
+        e.code === 'Escape' &&
+        activeModal &&
+        activeModal !== 'projects' &&
+        activeModal !== 'about' &&
+        activeModal !== 'contact'
+      ) {
         if (selectedProject) {
           setSelectedProject(null);
         } else {
@@ -39,6 +50,14 @@ const PortfolioModals = React.memo(function PortfolioModals({
 
   if (!activeModal) return null;
 
+  const travelToDestination = (locId) => {
+    const loc = KONOHA_LOCATIONS.find((l) => l.id === locId);
+    if (loc && onFastTravel) {
+      onFastTravel(loc.position);
+      onClose();
+    }
+  };
+
   // Custom Interactive Japanese Ramen Book for Ichiraku Projects Menu
   if (activeModal === 'projects') {
     return (
@@ -51,6 +70,37 @@ const PortfolioModals = React.memo(function PortfolioModals({
     );
   }
 
+  // Full-Screen Dark Editorial About Me Experience (Hokage's Office)
+  if (activeModal === 'about') {
+    return (
+      <AboutModal
+        isOpen={true}
+        onClose={onClose}
+        onOpenResume={() => {
+          setResumeOrigin('about');
+          onOpenModal?.('resume');
+        }}
+      />
+    );
+  }
+
+  // Full-Screen Dark Editorial Hokage Monument Contact Experience (Location 06)
+  if (activeModal === 'contact') {
+    return (
+      <ContactModal
+        isOpen={true}
+        onClose={onClose}
+        onOpenResume={() => {
+          setResumeOrigin('contact');
+          onOpenModal?.('resume');
+        }}
+        onTeleportToMonument={
+          onFastTravel ? () => travelToDestination('hokage-monument') : null
+        }
+      />
+    );
+  }
+
   const handleInspectProjectById = (projectId) => {
     const found = PORTFOLIO_PROJECTS.find((p) => p.id === projectId);
     if (found) {
@@ -59,20 +109,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
     } else {
       onOpenModal?.('projects');
     }
-  };
-
-  const travelToDestination = (locId) => {
-    const loc = KONOHA_LOCATIONS.find((l) => l.id === locId);
-    if (loc && onFastTravel) {
-      onFastTravel(loc.position);
-      onClose();
-    }
-  };
-
-  const handleCopyEmail = () => {
-    navigator.clipboard?.writeText('ashutosh.shinobi.dev@gmail.com');
-    setCopiedEmail(true);
-    setTimeout(() => setCopiedEmail(false), 2200);
   };
 
   return (
@@ -128,9 +164,9 @@ const PortfolioModals = React.memo(function PortfolioModals({
             {activeModal === 'resume' && (
               <button
                 className="modal-back-button"
-                onClick={() => onOpenModal?.('about')}
+                onClick={() => onOpenModal?.(resumeOrigin || 'about')}
               >
-                ← Back to About
+                ← Back to {resumeOrigin === 'contact' ? 'Contact' : 'About'}
               </button>
             )}
             <button className="modal-close-button" onClick={onClose} title="Close">
@@ -358,100 +394,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
             </div>
           )}
 
-          {/* ================= 03. ABOUT ME MODAL (HOKAGE'S OFFICE) ================= */}
-          {activeModal === 'about' && (
-            <div className="modal-section-content about-content">
-              <div className="about-bio-card">
-                <div className="bio-lead-avatar">
-                  <span className="avatar-monogram">木</span>
-                  <div className="avatar-meta">
-                    <h3>Ashutosh</h3>
-                    <span className="bio-rank">
-                      AI/ML Developer • Full-Stack Developer • Problem Solver
-                    </span>
-                  </div>
-                  <button
-                    className="ninja-hud-button"
-                    style={{ marginLeft: 'auto' }}
-                    onClick={() => onOpenModal?.('resume')}
-                  >
-                    📄 View Printable Resume
-                  </button>
-                </div>
-
-                <div className="about-grid-sections">
-                  <div className="resume-block">
-                    <h4 className="block-title">👋 DEVELOPER INTRODUCTION</h4>
-                    <p className="block-text">
-                      Hello! I'm <strong>Ashutosh</strong>, a developer focused on building practical
-                      AI/ML systems, full-stack web applications, and interactive 3D browser
-                      experiences. I enjoy taking complex ideas—from real-time fraud detection to
-                      computer vision analytics—and turning them into clean, usable products.
-                    </p>
-                  </div>
-
-                  <div className="resume-block">
-                    <h4 className="block-title">🎓 EDUCATIONAL BACKGROUND</h4>
-                    <p className="block-text">
-                      <strong>Bachelor of Technology in Computer Science & Engineering</strong> —
-                      Building a strong foundation in Data Structures, Algorithms, Machine Learning,
-                      Computer Vision, Database Systems, and Full-Stack Software Engineering.
-                    </p>
-                  </div>
-
-                  <div className="resume-block">
-                    <h4 className="block-title">🧠 JOURNEY INTO AI & MACHINE LEARNING</h4>
-                    <p className="block-text">
-                      My journey into AI started with curiosity about how machines perceive visual and
-                      language patterns. That led me to build computer vision pipelines like{' '}
-                      <strong>Racket Sports Intelligence</strong> and <strong>WasteWise</strong>, as
-                      well as real-time NLP/LLM systems like <strong>CallKavach</strong> and{' '}
-                      <strong>TravelFlow AI</strong>.
-                    </p>
-                  </div>
-
-                  <div className="resume-block">
-                    <h4 className="block-title">🌐 WEB & 3D DEVELOPMENT EXPERIENCE</h4>
-                    <p className="block-text">
-                      Great models need intuitive interfaces. I build responsive full-stack web
-                      applications using <strong>React, Node.js, FastAPI, and Python</strong>, and craft
-                      performant 3D web worlds using <strong>Three.js and React Three Fiber</strong>.
-                    </p>
-                  </div>
-
-                  <div className="resume-block">
-                    <h4 className="block-title">🚀 FUTURE GOALS & WHAT I WANT TO BUILD NEXT</h4>
-                    <p className="block-text">
-                      I am excited to build autonomous multimodal AI agents, low-latency edge vision
-                      tools, and interactive web applications that bridge advanced machine learning with
-                      everyday human workflows.
-                    </p>
-                  </div>
-
-                  <div className="resume-block">
-                    <h4 className="block-title">🍃 PERSONAL INTERESTS</h4>
-                    <p className="block-text">
-                      Exploring creative 3D graphics & shaders, participating in hackathons, analyzing
-                      racket sports strategy, and anime world-building.
-                    </p>
-                  </div>
-                </div>
-
-                {onFastTravel && (
-                  <div className="travel-prompt-banner">
-                    <span>Visit the Hokage's Administrative Courtyard in the village:</span>
-                    <button
-                      className="fast-travel-button"
-                      onClick={() => travelToDestination('hokage-office')}
-                    >
-                      📜 Teleport to Hokage's Office
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           {/* ================= 04. SKILLS MODAL (TRAINING GROUNDS) ================= */}
           {activeModal === 'skills' && (
             <div className="modal-section-content">
@@ -613,107 +555,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
             </div>
           )}
 
-          {/* ================= 06. CONTACT MODAL (HOKAGE MONUMENT) ================= */}
-          {activeModal === 'contact' && (
-            <div className="modal-section-content">
-              <div className="contact-monument-hero">
-                <span className="monument-crest">⛰️ 火影岩 • HOKAGE MONUMENT</span>
-                <h3 className="contact-main-quote">
-                  "Every great mission starts with a conversation."
-                </h3>
-                <p className="contact-sub-quote">
-                  "Let's build our next mission." — Reach out for software engineering roles, AI/ML
-                  collaborations, or project inquiries.
-                </p>
-              </div>
-
-              <div className="contact-cards-grid">
-                <div className="contact-channel-card">
-                  <span className="channel-icon">✉️</span>
-                  <div className="channel-info">
-                    <strong>Email Messenger Hawk</strong>
-                    <span>Direct inbox for opportunities & collaborations</span>
-                  </div>
-                  <div className="channel-actions">
-                    <a
-                      href="mailto:ashutosh.shinobi.dev@gmail.com"
-                      className="intro-primary-btn link-btn"
-                    >
-                      Send Email
-                    </a>
-                    <button className="intro-tertiary-btn" onClick={handleCopyEmail}>
-                      {copiedEmail ? '✓ Copied!' : 'Copy Email'}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="contact-channel-card">
-                  <span className="channel-icon">💻</span>
-                  <div className="channel-info">
-                    <strong>GitHub Repositories</strong>
-                    <span>Explore open-source code, AI models & 3D projects</span>
-                  </div>
-                  <div className="channel-actions">
-                    <a
-                      href="https://github.com/ashutosh"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="intro-secondary-btn link-btn"
-                    >
-                      Open GitHub ↗
-                    </a>
-                  </div>
-                </div>
-
-                <div className="contact-channel-card">
-                  <span className="channel-icon">🔗</span>
-                  <div className="channel-info">
-                    <strong>LinkedIn Network</strong>
-                    <span>Connect professionally and view updates</span>
-                  </div>
-                  <div className="channel-actions">
-                    <a
-                      href="https://www.linkedin.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="intro-secondary-btn link-btn"
-                    >
-                      Connect on LinkedIn ↗
-                    </a>
-                  </div>
-                </div>
-
-                <div className="contact-channel-card">
-                  <span className="channel-icon">📄</span>
-                  <div className="channel-info">
-                    <strong>Shinobi Credentials & Resume</strong>
-                    <span>View or print full technical resume as PDF</span>
-                  </div>
-                  <div className="channel-actions">
-                    <button
-                      className="intro-primary-btn"
-                      onClick={() => onOpenModal?.('resume')}
-                    >
-                      Open / Print Resume
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {onFastTravel && (
-                <div className="travel-prompt-banner">
-                  <span>Stand before the Hokage Monument Plaza in Konoha:</span>
-                  <button
-                    className="fast-travel-button"
-                    onClick={() => travelToDestination('hokage-monument')}
-                  >
-                    ⛰️ Teleport to Hokage Monument
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* ================= RESUME MODAL ================= */}
           {activeModal === 'resume' && (
             <div className="modal-section-content">
@@ -793,11 +634,10 @@ const PortfolioModals = React.memo(function PortfolioModals({
                     <h4 className="block-title">EDUCATION</h4>
                     <div className="resume-sub-item">
                       <span className="item-title">
-                        Bachelor of Technology in Computer Science & Engineering
+                        B.Tech in Artificial Intelligence &amp; Machine Learning
                       </span>
                       <span className="item-desc">
-                        Focus on Artificial Intelligence, Machine Learning, Computer Vision & Full-Stack
-                        Systems.
+                        Dwarkadas J. Sanghvi College of Engineering (DJSCE)
                       </span>
                     </div>
                   </section>

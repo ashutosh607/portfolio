@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { CAMERA_CONFIG } from '../utils/constants';
+import { CAMERA_CONFIG, INITIAL_SPAWN } from '../utils/constants';
 import { KONOHA_LOCATIONS } from '../config/locations';
 
 const CameraController = React.memo(function CameraController({
@@ -12,8 +12,8 @@ const CameraController = React.memo(function CameraController({
   const { camera, gl } = useThree();
 
   const orbitRef = useRef({
-    yaw: 0, // 0 means camera is behind Naruto looking down -Z (main street)
-    pitch: CAMERA_CONFIG.defaultPitch,
+    yaw: INITIAL_SPAWN.cameraYaw, // look toward the monument from Main Street
+    pitch: INITIAL_SPAWN.cameraPitch,
     distance: CAMERA_CONFIG.defaultDistance,
     isDragging: false,
     lastX: 0,
@@ -21,8 +21,8 @@ const CameraController = React.memo(function CameraController({
   });
 
   // Reusable pre-allocated vectors (zero GC allocations per frame)
-  const smoothLookTarget = useRef(new THREE.Vector3(-16.31, -0.07 + CAMERA_CONFIG.targetHeight, -6.8));
-  const smoothCamPos = useRef(new THREE.Vector3(-16.31, -0.07 + 1.8, -6.8 + CAMERA_CONFIG.defaultDistance));
+  const smoothLookTarget = useRef(new THREE.Vector3(INITIAL_SPAWN.position[0], INITIAL_SPAWN.position[1] + CAMERA_CONFIG.targetHeight, INITIAL_SPAWN.position[2]));
+  const smoothCamPos = useRef(new THREE.Vector3(INITIAL_SPAWN.position[0], INITIAL_SPAWN.position[1] + CAMERA_CONFIG.targetHeight + Math.sin(INITIAL_SPAWN.cameraPitch) * CAMERA_CONFIG.defaultDistance, INITIAL_SPAWN.position[2] + Math.cos(INITIAL_SPAWN.cameraPitch) * CAMERA_CONFIG.defaultDistance));
   const desiredTarget = useRef(new THREE.Vector3());
   const desiredCamPos = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
@@ -198,7 +198,7 @@ const CameraController = React.memo(function CameraController({
     const { yaw, pitch, distance } = orbitRef.current;
     const dt = Math.min(delta, 0.05);
 
-    const pos = playerPosRef?.current || [-16.31, -0.07, -6.8];
+    const pos = playerPosRef?.current || INITIAL_SPAWN.position;
     const targetX = pos[0];
     const targetY = pos[1] + CAMERA_CONFIG.targetHeight;
     const targetZ = pos[2];
