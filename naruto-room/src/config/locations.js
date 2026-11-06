@@ -54,12 +54,12 @@ export const KONOHA_LOCATIONS = [
     icon: '📜',
     modalKey: 'about',
     description: 'The administrative heart of Konoha. Developer background, AI/ML journey, and goals.',
-    // Grand Hokage Residence entrance courtyard straight in front of entrance double doors & stairs
-    position: [-17.60, -0.02, -33.00],
-    arrivalFacing: Math.PI, // Straight North facing the Hokage Residence entrance and Lady Tsunade
-    cameraYaw: 0,
-    shrinePosition: [-20.40, -0.02, -34.50],
-    shrineRotation: 0, // Properly standing straight facing incoming shinobi
+    // Placed at [32.07, 3.35, -35.27] with Lady Tsunade standing beside it properly straight
+    position: [32.07, 3.35, -37.50],
+    arrivalFacing: 0, // Facing South towards the Hokage Office Gate and Lady Tsunade
+    cameraYaw: Math.PI,
+    shrinePosition: [32.07, 3.35, -35.27],
+    shrineRotation: Math.PI, // Properly standing straight facing incoming shinobi
     radius: 6.5,
     badge: 'ABOUT',
     color: '#27ae60',
@@ -117,13 +117,13 @@ export const KONOHA_LOCATIONS = [
     icon: '⛰️',
     modalKey: 'contact',
     description: 'Overlooking the stone faces of Konoha. Start our next mission together.',
-    // Placed at [31.90, 3.35, -35.08] overlooking the Hokage Monument rock faces
-    position: [28.39, 3.36, -34.45],
-    arrivalFacing: 0, // Facing North towards the Hokage Monument Board and the stone faces
-    cameraYaw: Math.PI,
-    shrinePosition: [31.90, 3.35, -35.08],
-    shrineRotation: Math.PI, // Standing straight facing approaching shinobi
-    radius: 6.5,
+    // Far Northern Monument Overlook
+    position: [0.0, -0.07, -58.0],
+    arrivalFacing: Math.PI, // Straight North facing the monument faces
+    cameraYaw: 0,
+    shrinePosition: [0.0, -0.07, -61.0],
+    shrineRotation: 0, // Straight
+    radius: 5.5,
     badge: 'CONTACT',
     color: '#d35400',
   },
