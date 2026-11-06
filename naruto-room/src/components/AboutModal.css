@@ -612,7 +612,7 @@
   transform: translateY(-2px);
 }
 
-.about-btn-return {
+.about-btn-contact {
   background: #A63C38;
   border: 1px solid #A63C38;
   color: #F5F0E9;
@@ -629,13 +629,38 @@
   transition: background-color 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
 }
 
-.about-btn-return:hover {
+.about-btn-contact:hover {
   background: #C75A50;
   border-color: #C75A50;
   transform: translateY(-2px);
 }
 
+.about-btn-return {
+  background: rgba(27, 20, 23, 0.45);
+  border: 1px solid #49332F;
+  color: #B8AAA6;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+}
+
+.about-btn-return:hover {
+  background: rgba(73, 51, 47, 0.4);
+  border-color: #E8D1B8;
+  color: #F5F0E9;
+  transform: translateY(-2px);
+}
+
 .about-btn-resume:focus-visible,
+.about-btn-contact:focus-visible,
 .about-btn-return:focus-visible {
   outline: 2px solid #E8D1B8;
   outline-offset: 3px;

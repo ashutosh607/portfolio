@@ -82,6 +82,9 @@ const PortfolioModals = React.memo(function PortfolioModals({
           setResumeOrigin('about');
           onOpenModal?.('resume');
         }}
+        onOpenContact={() => {
+          onOpenModal?.('contact');
+        }}
       />
     );
   }

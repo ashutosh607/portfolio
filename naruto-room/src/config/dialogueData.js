@@ -109,9 +109,9 @@ export const CHARACTERS_DATA = [
     title: 'Fifth Hokage • Legendary Sannin',
     locationLabel: "Hokage's Office Gate",
     modelPath: '/models/tsunade/source/Tsunade.glb',
-    // Standing beside the Hokage Office Gate at [31.90, 3.35, -35.08], properly standing straight facing visitors
-    position: [33.30, 3.35, -35.08],
-    rotation: [0, 2.9, 0],
+    // Standing beside the Hokage Office Gate at [-20.40, -0.02, -34.50], properly standing straight facing visitors
+    position: [-18.80, -0.02, -34.50],
+    rotation: [0, -0.4, 0],
     scale: 0.0915, // Calibrated height: ~1.65m
     modelRotation: [0, 0, 0],
     modelOffset: [0, 0, 0],

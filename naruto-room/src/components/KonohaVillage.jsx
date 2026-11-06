@@ -181,9 +181,11 @@ const KonohaVillage = React.memo(function KonohaVillage({
         { x: -0.86, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sakura
         { x: -23.37, z: 7.10, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Left Post
         { x: -22.21, z: 7.10, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Right Post
-        { x: 31.32, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Left Post
-        { x: 32.48, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Right Post
-        { x: 33.30, z: -35.08, radiusSq: 0.16, minY: 2.0, maxY: 5.5 }, // Lady Tsunade
+        { x: -20.98, z: -34.50, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Hokage Office Gate Left Post
+        { x: -19.82, z: -34.50, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Hokage Office Gate Right Post
+        { x: -18.80, z: -34.50, radiusSq: 0.16, minY: -1.0, maxY: 2.5 }, // Lady Tsunade
+        { x: 31.32, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Monument Board Left Post
+        { x: 32.48, z: -35.08, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Monument Board Right Post
         { x: 42.82, z: 46.89, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Training Grounds Board Left Post
         { x: 43.98, z: 46.89, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Training Grounds Board Right Post
         { x: 44.84, z: 46.89, radiusSq: 0.20, minY: -1.0, maxY: 3.0 }, // Master Jiraiya

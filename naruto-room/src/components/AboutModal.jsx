@@ -155,7 +155,7 @@ const DRIVE_VALUES = [
   },
 ];
 
-export default function AboutModal({ isOpen, onClose, onOpenResume }) {
+export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContact }) {
   const overlayRef = useRef(null);
   const bgRef = useRef(null);
   const closeBtnRef = useRef(null);
@@ -651,6 +651,31 @@ export default function AboutModal({ isOpen, onClose, onOpenResume }) {
                 </svg>
                 <span>View Resume</span>
               </button>
+
+              {onOpenContact && (
+                <button
+                  type="button"
+                  className="about-btn-contact"
+                  onClick={() => triggerClose(() => onOpenContact?.())}
+                  title="Open Hokage Monument Contact page"
+                >
+                  <span>Get in Touch</span>
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="13 6 19 12 13 18" />
+                  </svg>
+                </button>
+              )}
 
               <button
                 type="button"
