@@ -87,7 +87,7 @@ function drawTrackedText(ctx, text, centerX, centerY, trackingPx) {
   }
 }
 
-export default function LoadingScreen() {
+export default function LoadingScreen({ onComplete }) {
   const { active, progress } = useProgress();
   const [isUnmounted, setIsUnmounted] = useState(false);
   const [isUnveiling, setIsUnveiling] = useState(false);
@@ -150,11 +150,13 @@ export default function LoadingScreen() {
         onComplete: () => {
           if (rafRef.current) cancelAnimationFrame(rafRef.current);
           setIsUnmounted(true);
+          onComplete?.();
         },
       });
     } else {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       setIsUnmounted(true);
+      onComplete?.();
     }
   }, []);
 
@@ -671,6 +673,7 @@ export default function LoadingScreen() {
           isFinishedRef.current = true;
           if (rafRef.current) cancelAnimationFrame(rafRef.current);
           setIsUnmounted(true);
+          onComplete?.();
         },
       });
       timelineRef.current = tl;
@@ -741,6 +744,7 @@ export default function LoadingScreen() {
           tl.call(
             () => {
               setIsUnveiling(true);
+              onComplete?.();
             },
             null,
             dissolveStartT + 0.18

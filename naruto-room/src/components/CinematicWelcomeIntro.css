@@ -1,0 +1,89 @@
+/* ==========================================================================
+   CINEMATIC WELCOME INTRO (Landing Word-by-Word Sequence)
+   ========================================================================== */
+
+.cinematic-welcome-overlay {
+  position: fixed;
+  top: clamp(84px, 18vh, 155px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 880px;
+  z-index: 85;
+  pointer-events: none;
+  user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.cinematic-welcome-slot {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  background: transparent;
+}
+
+.cinematic-welcome-sentence {
+  grid-area: 1 / 1;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+  color: #FFFDF9;
+  font-family: 'Cinzel Decorative', 'Cinzel', 'Shojumaru', Georgia, serif;
+  font-size: clamp(1.45rem, 2.5vw, 2.35rem);
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  line-height: 1.48;
+  text-shadow:
+    0 0 28px rgba(184, 58, 53, 0.45),
+    0 2px 14px rgba(0, 0, 0, 0.96),
+    0 1px 3px rgba(0, 0, 0, 1),
+    0 0 12px rgba(255, 255, 255, 0.28);
+  opacity: 0;
+  visibility: hidden;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  transform: translateY(0);
+  will-change: opacity, transform;
+}
+
+.cinematic-welcome-sentence.is-active {
+  visibility: visible;
+}
+
+.cinematic-welcome-word {
+  display: inline-block;
+  margin-right: 0.28em;
+  opacity: 0;
+  transform: translateY(12px);
+  filter: blur(6px);
+  will-change: opacity, transform, filter;
+  color: inherit;
+}
+
+.cinematic-welcome-word:last-child {
+  margin-right: 0;
+}
+
+@media (max-width: 768px) {
+  .cinematic-welcome-overlay {
+    top: clamp(74px, 15vh, 110px);
+    width: 94%;
+  }
+
+  .cinematic-welcome-sentence {
+    font-size: clamp(1.15rem, 4.2vw, 1.45rem);
+    line-height: 1.4;
+    letter-spacing: 0.035em;
+  }
+}
+

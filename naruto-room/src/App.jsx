@@ -9,6 +9,7 @@ import CameraController from './components/CameraController';
 import KonohaHUD from './components/KonohaHUD';
 import InteractionHUD from './components/InteractionHUD';
 import LoadingScreen from './components/LoadingScreen';
+import CinematicWelcomeIntro from './components/CinematicWelcomeIntro';
 import CinematicDialogue from './components/CinematicDialogue';
 import PortfolioModals from './components/PortfolioModals';
 import FallbackPortfolio2D from './components/FallbackPortfolio2D';
@@ -141,6 +142,15 @@ function AppContent() {
     }
   });
   const [is2DMode, setIs2DMode] = useState(false);
+  const [sceneLoaded, setSceneLoaded] = useState(false);
+
+  // Safety fallback: ensure sceneLoaded triggers even if assets load instantaneously
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      setSceneLoaded(true);
+    }, 2800);
+    return () => clearTimeout(safetyTimer);
+  }, []);
 
   // Unified Smart Interaction State (All nearby NPCs & interactive locations)
   const [activeDialogueCharacter, setActiveDialogueCharacter] = useState(null);
@@ -290,6 +300,30 @@ function AppContent() {
   const isMovementPaused = Boolean(activeDialogueCharacter || activeModal);
   const enableShadows = !isLiteMode;
 
+  const isAnyMovementKeyPressed = Boolean(
+    activeKeys.KeyW ||
+    activeKeys.KeyA ||
+    activeKeys.KeyS ||
+    activeKeys.KeyD ||
+    activeKeys.ArrowUp ||
+    activeKeys.ArrowDown ||
+    activeKeys.ArrowLeft ||
+    activeKeys.ArrowRight
+  );
+
+  const distFromSpawn = Math.hypot(
+    narutoPos[0] - INITIAL_SPAWN.position[0],
+    narutoPos[2] - INITIAL_SPAWN.position[2]
+  );
+
+  const isVisitorMoving = Boolean(
+    characterState !== 'idle' ||
+    isAnyMovementKeyPressed ||
+    distFromSpawn > 0.8 ||
+    activeDialogueCharacter ||
+    activeModal
+  );
+
   return (
     <div className="app-viewport">
       {/* 3D Scene Canvas */}
@@ -384,7 +418,13 @@ function AppContent() {
       </Canvas>
 
       {/* Asset Loading Screen */}
-      <LoadingScreen />
+      <LoadingScreen onComplete={() => setSceneLoaded(true)} />
+
+      {/* Cinematic Word-by-Word Sky Welcome Intro */}
+      <CinematicWelcomeIntro
+        isSceneLoaded={sceneLoaded}
+        isVisitorMoving={isVisitorMoving}
+      />
 
       {/* Minimal Cinematic Shinobi HUD */}
       <KonohaHUD

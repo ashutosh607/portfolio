@@ -31,7 +31,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
   onSwitchTo2D,
   touchInputRef,
 }) {
-  const [showWelcomeCard, setShowWelcomeCard] = useState(true);
   const [isDestinationsOpen, setIsDestinationsOpen] = useState(false);
   const [isControlsOpen, setIsControlsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -67,7 +66,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
     return { locationsWithDist: list, nearestLocation: nearest, minDistance: minD };
   }, [currentPosition]);
 
-  // Mark location as visited when player gets within 8.5m, and auto-dismiss intro card after walking away from spawn
+  // Mark location as visited when player gets within 8.5m
   useEffect(() => {
     if (nearestLocation && minDistance <= 8.5) {
       setVisitedIds((prev) => {
@@ -77,12 +76,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
         return next;
       });
     }
-
-    const distFromSpawn = Math.hypot(currentPosition[0] - -16.31, currentPosition[2] - -6.8);
-    if (distFromSpawn > 5.0 && showWelcomeCard) {
-      setShowWelcomeCard(false);
-    }
-  }, [nearestLocation, minDistance, currentPosition, showWelcomeCard]);
+  }, [nearestLocation, minDistance]);
 
   // Keyboard shortcuts: 'H' toggles controls panel, 'N' toggles Day/Night mode, 'Escape' closes open HUD drawers/popovers
   useEffect(() => {
@@ -242,7 +236,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
             className="shinobi-brand-btn"
             onClick={() => {
               onResetPosition?.();
-              setShowWelcomeCard(true);
             }}
             title="Return to Konoha Main Street • Ashutosh Shinobi Portfolio"
           >
@@ -522,11 +515,11 @@ const KonohaHUD = React.memo(function KonohaHUD({
                 type="button"
                 className="popover-action-row"
                 onClick={() => {
-                  setShowWelcomeCard((prev) => !prev);
                   setIsMenuOpen(false);
+                  onOpenModal?.('intro');
                 }}
               >
-                <span>🍃 {showWelcomeCard ? 'Hide Introduction Card' : 'Show Introduction Card'}</span>
+                <span>🍃 Village Tour & Intro</span>
                 <span className="popover-action-tag">Intro</span>
               </button>
 
@@ -586,85 +579,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
             </div>
           </aside>
         </>
-      )}
-
-      {/* ================= 3. REFINED INTRODUCTION PANEL (LEFT) ================= */}
-      {showWelcomeCard && !isDialogueActive && !activeModal && (
-        <section className="shinobi-welcome-panel" aria-label="Introduction">
-          {/* Decorative Watermark Kanji & Cloud Line Art */}
-          <div className="welcome-watermark-kanji" aria-hidden="true">
-            <span>木</span>
-            <span>ノ</span>
-            <span>葉</span>
-          </div>
-
-          <div className="welcome-location-header">
-            <span className="welcome-pin-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
-              </svg>
-            </span>
-            <div className="welcome-location-meta">
-              <span className="welcome-loc-eyebrow">CURRENT LOCATION</span>
-              <strong className="welcome-loc-title">
-                {nearestLocation ? nearestLocation.name.toUpperCase() : 'KONOHA MAIN STREET'}
-              </strong>
-            </div>
-            <button
-              type="button"
-              className="welcome-dismiss-btn"
-              onClick={() => setShowWelcomeCard(false)}
-              title="Minimize introduction panel"
-              aria-label="Minimize introduction panel"
-            >
-              ✕
-            </button>
-          </div>
-
-          <h1 className="welcome-serif-heading">Hello, I'm Ashutosh.</h1>
-          <p className="welcome-serif-quote">
-            "A shinobi of code, building things worth discovering."
-          </p>
-
-          <div className="welcome-roles-line">
-            <span>AI/ML Developer</span>
-            <span className="role-pipe" aria-hidden="true">|</span>
-            <span>Full-Stack Developer</span>
-            <span className="role-pipe" aria-hidden="true">|</span>
-            <span>Problem Solver</span>
-          </div>
-
-          <div className="welcome-actions-row">
-            <button
-              type="button"
-              className="welcome-btn-vermilion"
-              onClick={() => setShowWelcomeCard(false)}
-            >
-              <svg viewBox="0 0 100 100" className="btn-leaf-svg" aria-hidden="true">
-                <path
-                  d="M 50 50 m 0 -5 a 5 5 0 1 1 -5 5 a 12 12 0 1 1 12 12 a 20 20 0 1 1 -20 -20 a 28 28 0 1 1 28 28 l 12 -5"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="8"
-                  strokeLinecap="round"
-                />
-              </svg>
-              <span>Explore My World</span>
-            </button>
-
-            <button
-              type="button"
-              className="welcome-btn-outline"
-              onClick={() => {
-                setShowWelcomeCard(false);
-                onOpenModal?.('projects');
-              }}
-            >
-              <span>View My Projects</span>
-              <span className="btn-arrow-right" aria-hidden="true">→</span>
-            </button>
-          </div>
-        </section>
       )}
 
       {/* ================= 4. SLIDE-OUT DESTINATIONS DRAWER (RIGHT / MOBILE BOTTOM SHEET) ================= */}
