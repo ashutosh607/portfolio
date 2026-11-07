@@ -1,17 +1,27 @@
-import React, { useState } from 'react';
+import MissionScroll from './mission-scroll/MissionScroll';
+import React, { useEffect, useState } from 'react';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
   SKILL_SCROLLS,
-  MISSION_DOSSIERS,
 } from '../config/locations';
 
 export default function FallbackPortfolio2D({ onSwitchTo3D, webglError = null }) {
   const [activeSection, setActiveSection] = useState('all');
+  const [boardOpen, setBoardOpen] = useState(() => Boolean(history.state?.missionScroll));
+  useEffect(() => {
+    const restoreMissionBoard = event => { if (event.state?.missionScroll) setBoardOpen(true); };
+    window.addEventListener('popstate', restoreMissionBoard);
+    return () => window.removeEventListener('popstate', restoreMissionBoard);
+  }, []);
   const [selectedDish, setSelectedDish] = useState(null);
 
   return (
     <div className="fallback-2d-viewport">
+      {boardOpen && <MissionScroll onClose={() => setBoardOpen(false)} onContact={() => {
+        setBoardOpen(false);
+        setActiveSection('hokage-monument');
+      }}/>}
       {/* Top Sticky Navigation */}
       <header className="fallback-2d-header">
         <div className="fallback-brand">
@@ -33,7 +43,7 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError = null })
             <button
               key={loc.id}
               className={activeSection === loc.id ? 'active' : ''}
-              onClick={() => setActiveSection(loc.id)}
+              onClick={() => loc.id === 'mission-board' ? setBoardOpen(true) : setActiveSection(loc.id)}
             >
               {loc.number} {loc.shortName}
             </button>
@@ -169,23 +179,8 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError = null })
         {(activeSection === 'all' || activeSection === 'mission-board') && (
           <section className="fallback-section-card">
             <div className="fallback-sec-tag">05 • MISSION BOARD — EXPERIENCE & HACKATHONS</div>
-            <h2>Ranked Shinobi Missions</h2>
-            <div className="missions-list">
-              {MISSION_DOSSIERS.map((m) => (
-                <div key={m.id} className={`mission-item-card ${m.rankClass}`}>
-                  <div className="mission-top-bar">
-                    <span className="mission-badge">{m.rank} MISSION</span>
-                    <span className="mission-date-pill">{m.date}</span>
-                  </div>
-                  <h4 className="mission-title">{m.title}</h4>
-                  <div className="mission-meta-line">
-                    <strong>{m.organization}</strong> • <span>Role: {m.role}</span>
-                  </div>
-                  <p className="mission-summary">{m.description}</p>
-                  <span className="mission-reward">✓ Outcome: {m.outcome}</span>
-                </div>
-              ))}
-            </div>
+            <h2>Experience &amp; Mission Dossiers</h2>
+            <button className="ninja-hud-button" onClick={() => setBoardOpen(true)}>Open Mission Board</button>
           </section>
         )}
 

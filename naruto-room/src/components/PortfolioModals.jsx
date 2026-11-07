@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import RamenBookModal from './RamenBookModal';
 import AboutModal from './AboutModal';
+import MissionScroll from './mission-scroll/MissionScroll';
 import ContactModal from './ContactModal';
 import ResumeViewerModal from './ResumeViewerModal';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
   SKILL_SCROLLS,
-  MISSION_DOSSIERS,
 } from '../config/locations';
 
 const PortfolioModals = React.memo(function PortfolioModals({
@@ -37,6 +37,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
         activeModal !== 'projects' &&
         activeModal !== 'about' &&
         activeModal !== 'contact' &&
+        activeModal !== 'achievements' &&
         activeModal !== 'resume'
       ) {
         if (selectedProject) {
@@ -51,6 +52,9 @@ const PortfolioModals = React.memo(function PortfolioModals({
   }, [activeModal, selectedProject, onClose]);
 
   if (!activeModal) return null;
+  if (activeModal === 'achievements') {
+    return <MissionScroll onClose={onClose} onContact={() => onOpenModal('contact')} />;
+  }
 
   const travelToDestination = (locId) => {
     const loc = KONOHA_LOCATIONS.find((l) => l.id === locId);
@@ -151,7 +155,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
               {activeModal === 'projects' && '🍜 LOCATION 02 • ICHIRAKU RAMEN MENU'}
               {activeModal === 'about' && "📜 LOCATION 03 • HOKAGE'S OFFICE ARCHIVE"}
               {activeModal === 'skills' && '⚔️ LOCATION 04 • TRAINING GROUNDS SCROLLS'}
-              {activeModal === 'achievements' && '🏆 LOCATION 05 • KONOHA MISSION BOARD'}
               {activeModal === 'contact' && '⛰️ LOCATION 06 • HOKAGE MONUMENT'}
               {activeModal === 'resume' && '🎖️ SHINOBI CREDENTIALS & RESUME'}
             </span>
@@ -163,7 +166,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
                   : 'Ichiraku Ramen • Featured Projects Menu')}
               {activeModal === 'about' && 'About Ashutosh • Developer Story & Goals'}
               {activeModal === 'skills' && 'Technical Skills & Jutsu Scrolls'}
-              {activeModal === 'achievements' && 'Shinobi Experience & Mission Dossiers'}
               {activeModal === 'contact' && 'Every Great Mission Starts With a Conversation'}
               {activeModal === 'resume' && 'Credentials & Professional Resume'}
             </h2>
@@ -518,54 +520,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
                     onClick={() => travelToDestination('training-grounds')}
                   >
                     ⚔️ Teleport to Training Grounds
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ================= 05. EXPERIENCE / MISSION BOARD MODAL ================= */}
-          {activeModal === 'achievements' && (
-            <div className="modal-section-content">
-              <p className="section-intro">
-                "Pinned mission dossiers from hackathons, AI/ML builds, and engineering deployments."
-              </p>
-
-              <div className="missions-list">
-                {MISSION_DOSSIERS.map((m) => (
-                  <div key={m.id} className={`mission-item-card ${m.rankClass}`}>
-                    <div className="mission-top-bar">
-                      <span className="mission-badge">{m.rank} MISSION</span>
-                      <span className="mission-date-pill">{m.date}</span>
-                    </div>
-                    <h4 className="mission-title">{m.title}</h4>
-                    <div className="mission-meta-line">
-                      <strong>{m.organization}</strong> • <span>Role: {m.role}</span>
-                    </div>
-                    <p className="mission-summary">{m.description}</p>
-                    <div className="mission-bottom-row">
-                      <span className="mission-reward">✓ Outcome: {m.outcome}</span>
-                      {m.projectLink && (
-                        <button
-                          className="inspect-dish-btn"
-                          onClick={() => handleInspectProjectById(m.projectLink)}
-                        >
-                          Inspect Project →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {onFastTravel && (
-                <div className="travel-prompt-banner">
-                  <span>Visit the Mission Board in Konoha:</span>
-                  <button
-                    className="fast-travel-button"
-                    onClick={() => travelToDestination('mission-board')}
-                  >
-                    🏆 Teleport to Mission Board
                   </button>
                 </div>
               )}

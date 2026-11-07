@@ -1,4 +1,4 @@
-import React, { Suspense, useRef, useState, useCallback, Component } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { AdaptiveDpr } from '@react-three/drei';
 import KonohaVillage from './components/KonohaVillage';
@@ -113,7 +113,14 @@ function AppContent() {
   const [nearbyLocation, setNearbyLocation] = useState(null);
 
   // Portfolio Section Modals State ('intro' | 'projects' | 'skills' | 'about' | 'resume' | 'achievements' | 'contact' | null)
-  const [activeModal, setActiveModal] = useState(null);
+  const [activeModal, setActiveModal] = useState(() => history.state?.missionScroll ? 'achievements' : null);
+  useEffect(() => {
+    const restoreMissionBoard = event => {
+      if (!is2DMode && event.state?.missionScroll) setActiveModal('achievements');
+    };
+    window.addEventListener('popstate', restoreMissionBoard);
+    return () => window.removeEventListener('popstate', restoreMissionBoard);
+  }, [is2DMode]);
   const [fastTravelTarget, setFastTravelTarget] = useState(null);
 
   // Shared ref for camera yaw angle so Naruto steers relative to camera orientation
@@ -233,6 +240,7 @@ function AppContent() {
         frameloop={
           activeModal === 'projects' ||
           activeModal === 'about' ||
+          activeModal === 'achievements' ||
           activeModal === 'contact' ||
           activeModal === 'resume'
             ? 'demand'
