@@ -790,31 +790,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
         </>
       )}
 
-      {/* ================= 5. CONTEXTUAL INTERACTION PROMPT (ONLY WHEN NEARBY) ================= */}
-      {!isDialogueActive &&
-        !activeModal &&
-        (nearbyCharacterInfo?.character || nearbyLocation) && (
-          <div
-            className="shinobi-context-prompt"
-            onClick={() => {
-              if (nearbyCharacterInfo?.character) {
-                onStartDialogue?.(nearbyCharacterInfo.character);
-              } else if (nearbyLocation) {
-                handleOpenDestination(nearbyLocation);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-          >
-            <span className="context-key-cap">E</span>
-            <span className="context-prompt-label">
-              {nearbyCharacterInfo?.character
-                ? `Talk to ${nearbyCharacterInfo.character.name}`
-                : `Explore ${nearbyLocation.name}`}
-            </span>
-          </div>
-        )}
-
       {/* ================= 6. FLOATING CONTROLS GUIDE (TOGGLED BY 'H' OR BUTTON) ================= */}
       {isControlsOpen && !isDialogueActive && (
         <aside className="shinobi-controls-popover" role="dialog" aria-label="Controls Guide">
@@ -1015,34 +990,8 @@ const KonohaHUD = React.memo(function KonohaHUD({
 
         {/* Bottom-Right: Desktop Shortcuts OR Mobile Right-Hand Action Pad */}
         <div className="shinobi-bottom-right">
-          {/* Mobile Right Action Pad: Talk/Explore, Sprint, Jump */}
+          {/* Mobile Right Action Pad: Sprint & Jump */}
           <div className="shinobi-mobile-actionpad">
-            {/* Contextual Action Button (Talk / Explore) */}
-            {(nearbyCharacterInfo?.character || nearbyLocation) && (
-              <button
-                type="button"
-                className="mobile-interact-btn pulse-glow"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={() => {
-                  if (nearbyCharacterInfo?.character) {
-                    onStartDialogue?.(nearbyCharacterInfo.character);
-                  } else if (nearbyLocation) {
-                    handleOpenDestination(nearbyLocation);
-                  }
-                }}
-                aria-label="Interact"
-              >
-                <span className="action-btn-icon">
-                  {nearbyCharacterInfo?.character ? '💬' : '📜'}
-                </span>
-                <span className="action-btn-text">
-                  {nearbyCharacterInfo?.character
-                    ? `Talk to ${nearbyCharacterInfo.character.name.split(' ')[0]}`
-                    : `Explore ${nearbyLocation.shortName || nearbyLocation.name}`}
-                </span>
-              </button>
-            )}
-
             <div className="mobile-action-buttons-row">
               {/* Sprint Button (Hold or Tap to toggle) */}
               <button

@@ -7,12 +7,20 @@ import VillageCharacters from './components/VillageCharacters';
 import Atmosphere from './components/Atmosphere';
 import CameraController from './components/CameraController';
 import KonohaHUD from './components/KonohaHUD';
+import InteractionHUD from './components/InteractionHUD';
 import LoadingScreen from './components/LoadingScreen';
 import CinematicDialogue from './components/CinematicDialogue';
 import PortfolioModals from './components/PortfolioModals';
 import FallbackPortfolio2D from './components/FallbackPortfolio2D';
 import './App.css';
 import { INITIAL_SPAWN } from './utils/constants';
+import {
+  buildInteractableRegistry,
+  detectNearbyTargets,
+  pickBestTargetUid,
+} from './utils/interactionSystem';
+
+const INTERACTABLE_REGISTRY = buildInteractableRegistry();
 
 // Detect lower-end / mobile / integrated GPU hardware on startup to default to Lite mode when appropriate
 function detectInitialLiteMode() {
@@ -47,6 +55,33 @@ function AdaptiveQualityMonitor({ isLiteMode, onAutoDowngrade }) {
       } else {
         s.checks = 0;
       }
+    }
+  });
+
+  return null;
+}
+
+// 10Hz Smart Target Detector inside Canvas: detects all nearby NPCs & locations with hysteresis and zero idle re-renders
+function SmartInteractionTracker({ playerPosRef, onNearbyTargetsChange }) {
+  const lastCheckRef = useRef(0);
+  const prevSigRef = useRef('');
+  const prevSetRef = useRef(new Set());
+
+  useFrame((state) => {
+    const now = state.clock.getElapsedTime();
+    if (now - lastCheckRef.current < 0.1) return;
+    lastCheckRef.current = now;
+
+    const p = playerPosRef?.current;
+    if (!p) return;
+
+    const detected = detectNearbyTargets(INTERACTABLE_REGISTRY, p, prevSetRef.current);
+    const nextSig = detected.map((item) => item.uid).join('|');
+
+    if (nextSig !== prevSigRef.current) {
+      prevSigRef.current = nextSig;
+      prevSetRef.current = new Set(detected.map((item) => item.uid));
+      onNearbyTargetsChange(detected);
     }
   });
 
@@ -107,15 +142,17 @@ function AppContent() {
   });
   const [is2DMode, setIs2DMode] = useState(false);
 
-  // Character & Destination Proximity State
+  // Unified Smart Interaction State (All nearby NPCs & interactive locations)
   const [activeDialogueCharacter, setActiveDialogueCharacter] = useState(null);
-  const [nearbyCharacterInfo, setNearbyCharacterInfo] = useState(null);
-  const [nearbyLocation, setNearbyLocation] = useState(null);
+  const [nearbyTargets, setNearbyTargets] = useState([]);
+  const [selectedTargetUid, setSelectedTargetUid] = useState(null);
 
   // Portfolio Section Modals State ('intro' | 'projects' | 'skills' | 'about' | 'resume' | 'achievements' | 'contact' | null)
-  const [activeModal, setActiveModal] = useState(() => history.state?.missionScroll ? 'achievements' : null);
+  const [activeModal, setActiveModal] = useState(() =>
+    history.state?.missionScroll ? 'achievements' : null
+  );
   useEffect(() => {
-    const restoreMissionBoard = event => {
+    const restoreMissionBoard = (event) => {
       if (!is2DMode && event.state?.missionScroll) setActiveModal('achievements');
     };
     window.addEventListener('popstate', restoreMissionBoard);
@@ -125,8 +162,8 @@ function AppContent() {
 
   // Shared ref for camera yaw angle so Naruto steers relative to camera orientation
   const cameraAngleRef = useRef(INITIAL_SPAWN.cameraYaw);
-  // Shared mutable position ref for 60fps tracking without React re-renders
-  const narutoPosRef = useRef([...INITIAL_SPAWN.position]);
+  // Shared mutable position + yaw ref for 60fps tracking without React re-renders
+  const narutoPosRef = useRef([...INITIAL_SPAWN.position, INITIAL_SPAWN.facing]);
   // Shared mutable touch input ref for mobile controls
   const touchInputRef = useRef({
     forward: false,
@@ -189,7 +226,7 @@ function AppContent() {
     setIsLiteMode(true);
   }, []);
 
-  // Dialogue callbacks
+  // Dialogue & Modal callbacks
   const handleStartDialogue = useCallback((char) => {
     setActiveDialogueCharacter(char);
   }, []);
@@ -224,6 +261,22 @@ function AppContent() {
 
   const handleFastTravel = useCallback((coords) => {
     setFastTravelTarget([...coords]);
+  }, []);
+
+  // Update nearby targets list & preserve stable selected target
+  const handleNearbyTargetsChange = useCallback((detectedList) => {
+    setNearbyTargets(detectedList);
+    setSelectedTargetUid((prevUid) => pickBestTargetUid(detectedList, prevUid));
+  }, []);
+
+  // Activate the selected target (either talk to NPC or open location modal)
+  const handleActivateTarget = useCallback((target) => {
+    if (!target) return;
+    if (target.type === 'npc' && target.data) {
+      setActiveDialogueCharacter(target.data);
+    } else if (target.type === 'location' && target.data?.modalKey) {
+      setActiveModal(target.data.modalKey);
+    }
   }, []);
 
   if (is2DMode) {
@@ -266,6 +319,12 @@ function AppContent() {
           onAutoDowngrade={handleAutoDowngrade}
         />
 
+        {/* Smart 10Hz Multi-Target Proximity Detector */}
+        <SmartInteractionTracker
+          playerPosRef={narutoPosRef}
+          onNearbyTargetsChange={handleNearbyTargetsChange}
+        />
+
         {/* Anime Sky & Distant Mountain Atmospheric Fog (Day vs Japanese Night) */}
         <color attach="background" args={[isNightMode ? '#090e1c' : '#8ec3eb']} />
         <fog
@@ -280,10 +339,8 @@ function AppContent() {
           {/* Actual Konoha Village Environment, 6 Interactive Shrines, Lanterns & O(1) Spatial Collider */}
           <KonohaVillage
             onTerrainReady={handleTerrainReady}
-            playerPosRef={narutoPosRef}
-            onOpenModal={handleOpenModal}
-            onNearbyLocationChange={setNearbyLocation}
-            isInteractionBlocked={isMovementPaused || Boolean(nearbyCharacterInfo?.character)}
+            selectedTargetUid={selectedTargetUid}
+            isInteractionBlocked={isMovementPaused}
             enableShadows={enableShadows}
             isNightMode={isNightMode}
           />
@@ -292,9 +349,8 @@ function AppContent() {
           <VillageCharacters
             terrainMesh={terrainMesh}
             playerPosRef={narutoPosRef}
-            onStartDialogue={handleStartDialogue}
+            selectedTargetUid={selectedTargetUid}
             isDialogueActive={Boolean(activeDialogueCharacter)}
-            onNearbyCharacterChange={setNearbyCharacterInfo}
             enableShadows={enableShadows}
           />
 
@@ -318,6 +374,7 @@ function AppContent() {
             playerPosRef={narutoPosRef}
             cameraAngleRef={cameraAngleRef}
             fastTravelTarget={fastTravelTarget}
+            dialogueTarget={activeDialogueCharacter?.position || null}
           />
         </Suspense>
       </Canvas>
@@ -332,8 +389,6 @@ function AppContent() {
         chakra={chakra}
         currentPosition={narutoPos}
         onResetPosition={handleResetPosition}
-        nearbyCharacterInfo={nearbyCharacterInfo}
-        nearbyLocation={nearbyLocation}
         onStartDialogue={handleStartDialogue}
         onOpenModal={handleOpenModal}
         activeModal={activeModal}
@@ -345,6 +400,15 @@ function AppContent() {
         onToggleNightMode={handleToggleNightMode}
         onSwitchTo2D={() => setIs2DMode(true)}
         touchInputRef={touchInputRef}
+      />
+
+      {/* Minimal Adventure RPG Interaction UI (Single Bottom-Center Pill OR Multi-Target Bottom-Right Dock) */}
+      <InteractionHUD
+        nearbyTargets={nearbyTargets}
+        selectedUid={selectedTargetUid}
+        onSelectTarget={setSelectedTargetUid}
+        onActivateTarget={handleActivateTarget}
+        isBlocked={isMovementPaused}
       />
 
       {/* Cinematic RPG Dialogue Box */}

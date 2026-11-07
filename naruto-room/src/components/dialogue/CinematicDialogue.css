@@ -1,0 +1,568 @@
+/**
+ * Konoha 3D Portfolio — Borderless Cinematic RPG Dialogue Interface
+ *
+ * Palette:
+ * - Background gradient: rgba(12, 9, 13, 0.88) -> transparent
+ * - Primary text:        #F5E9DD
+ * - Secondary text:      #C8B6A9
+ * - Deep burgundy:       #7D2428
+ * - Red accent:          #B83A35
+ * - Warm gold:           #D4A979
+ */
+
+/* ================= 1. FULL-VIEWPORT FLOATING ROOT ================= */
+.dlg-cinematic-root {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Bottom-only atmospheric gradient (preserves full 3D village visibility above) */
+.dlg-bottom-gradient {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 36vh;
+  min-height: 250px;
+  max-height: 360px;
+  background: linear-gradient(
+    0deg,
+    rgba(12, 9, 13, 0.92) 0%,
+    rgba(12, 9, 13, 0.82) 42%,
+    rgba(12, 9, 13, 0.45) 74%,
+    rgba(12, 9, 13, 0) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ================= 2. MAIN DIALOGUE STAGE (BOTTOM 22-25%) ================= */
+.dlg-stage-container {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 42px max(24px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Subtle Japanese cloud motif on top-right of dialogue stage */
+.dlg-cloud-accent-svg {
+  position: absolute;
+  right: 56px;
+  top: -8px;
+  width: 120px;
+  height: 34px;
+  opacity: 0.32;
+  pointer-events: none;
+}
+
+/* Primary Horizontal Row: Portrait (Left) + Nameplate & Speech (Right) */
+.dlg-main-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 26px;
+  position: relative;
+}
+
+/* ================= 3. CHARACTER PORTRAIT (140-170px Desktop) ================= */
+.dlg-portrait-stage {
+  position: relative;
+  width: 154px;
+  height: 154px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: -6px;
+}
+
+.dlg-ink-brush-ring {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  pointer-events: none;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.6));
+}
+
+.dlg-portrait-medallion {
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, #2A1519 0%, #120B0E 100%);
+  border: 1.5px solid rgba(184, 58, 53, 0.55);
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.7),
+    inset 0 0 18px rgba(125, 36, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.dlg-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.dlg-portrait-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: radial-gradient(circle at 50% 40%, #2E161A 0%, #120B0E 100%);
+}
+
+.dlg-fallback-emblem {
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dlg-clan-emblem-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+
+.dlg-fallback-kanji {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #C8B6A9;
+  opacity: 0.85;
+}
+
+/* ================= 4. RIGHT COLUMN: NAMEPLATE & SPEECH ================= */
+.dlg-speech-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 6px;
+}
+
+.dlg-nameplate-row {
+  display: flex;
+  align-items: center;
+}
+
+.dlg-nameplate-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 24px 6px 14px;
+  background: linear-gradient(
+    90deg,
+    rgba(125, 36, 40, 0.92) 0%,
+    rgba(92, 24, 28, 0.78) 68%,
+    rgba(45, 14, 18, 0) 100%
+  );
+  border-left: 3px solid #B83A35;
+  border-radius: 3px 0 0 3px;
+}
+
+.dlg-nameplate-leaf-svg {
+  width: 17px;
+  height: 17px;
+  color: #F5E9DD;
+  flex-shrink: 0;
+}
+
+.dlg-speaker-name {
+  font-family: 'Cinzel', serif;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  color: #F5E9DD;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+}
+
+.dlg-speaker-japanese {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  color: #C8B6A9;
+  margin-left: 4px;
+  opacity: 0.9;
+}
+
+.dlg-speaker-you-pill {
+  font-family: 'Outfit', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(212, 169, 121, 0.2);
+  border: 1px solid rgba(212, 169, 121, 0.5);
+  color: #D4A979;
+  margin-left: 4px;
+}
+
+/* ================= 5. DIALOGUE SPEECH TEXT (22-26px Desktop) ================= */
+.dlg-text-stage {
+  max-width: 820px;
+  min-height: 64px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.dlg-speech-paragraph {
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(21px, 1.85vw, 25px);
+  font-weight: 600;
+  line-height: 1.42;
+  letter-spacing: 0.3px;
+  color: #F5E9DD;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+}
+
+.dlg-visible-text {
+  color: #F5E9DD;
+}
+
+.dlg-ghost-text {
+  opacity: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+.dlg-typewriter-caret {
+  width: 2px;
+  height: 0.88em;
+  background: #D4A979;
+  margin-left: 3px;
+  vertical-align: -0.08em;
+  animation: dlgCaretPulse 0.7s ease-in-out infinite;
+}
+
+@keyframes dlgCaretPulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.2; }
+}
+
+/* ================= 6. CONTROLS, CHOICES & HORIZON BAR ================= */
+.dlg-controls-layer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+/* RPG Action Choices Row */
+.dlg-choices-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-left: 180px;
+  margin-bottom: 2px;
+}
+
+.dlg-choice-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(26, 15, 19, 0.88);
+  border: 1px solid rgba(184, 58, 53, 0.45);
+  color: #F5E9DD;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.2, 0.9, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+.dlg-choice-pill:hover {
+  background: linear-gradient(135deg, #7D2428 0%, #5B191C 100%);
+  border-color: #D4A979;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(125, 36, 40, 0.5);
+}
+
+.dlg-choice-diamond {
+  color: #D4A979;
+  font-size: 11px;
+}
+
+.dlg-choice-arrow {
+  color: #C8B6A9;
+  font-size: 13px;
+  transition: transform 0.2s ease;
+}
+
+.dlg-choice-pill:hover .dlg-choice-arrow {
+  transform: translateX(3px);
+  color: #F5E9DD;
+}
+
+.dlg-choice-leave {
+  background: rgba(18, 12, 15, 0.78);
+  border-color: rgba(200, 182, 169, 0.28);
+  color: #C8B6A9;
+}
+
+.dlg-choice-leave:hover {
+  background: rgba(42, 24, 28, 0.9);
+  border-color: rgba(200, 182, 169, 0.55);
+  color: #F5E9DD;
+}
+
+/* Bottom Bar: Wave Line + Next Chevron + Fast Forward */
+.dlg-bottom-bar {
+  position: relative;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dlg-horizon-wave-svg {
+  position: absolute;
+  left: 90px;
+  right: 150px;
+  bottom: 10px;
+  width: calc(100% - 240px);
+  height: 20px;
+  pointer-events: none;
+}
+
+/* Minimal Downward Next Chevron */
+.dlg-next-chevron-btn {
+  position: relative;
+  z-index: 3;
+  background: transparent;
+  border: none;
+  color: #F5E9DD;
+  padding: 6px 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: dlgChevronFloat 1.8s ease-in-out infinite;
+}
+
+.dlg-chevron-svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8));
+}
+
+@keyframes dlgChevronFloat {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateY(3.5px);
+    opacity: 1;
+  }
+}
+
+/* Right Fast Forward & Close Actions */
+.dlg-right-actions {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+}
+
+.dlg-fast-forward-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: rgba(58, 18, 22, 0.86);
+  border: 1px solid rgba(184, 58, 53, 0.55);
+  color: #F5E9DD;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+
+.dlg-fast-forward-pill:hover {
+  background: #7D2428;
+  border-color: #D4A979;
+  transform: translateY(-1px);
+}
+
+.dlg-ff-icon-svg {
+  width: 13px;
+  height: 13px;
+  color: #D4A979;
+}
+
+.dlg-mini-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(20, 13, 16, 0.72);
+  border: 1px solid rgba(200, 182, 169, 0.28);
+  color: #C8B6A9;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dlg-mini-close-btn:hover {
+  background: #7D2428;
+  border-color: #B83A35;
+  color: #F5E9DD;
+}
+
+/* ================= 7. RESPONSIVE DESIGN (TABLET & MOBILE) ================= */
+@media (max-width: 1024px) {
+  .dlg-stage-container {
+    padding: 0 24px max(18px, env(safe-area-inset-bottom));
+  }
+
+  .dlg-portrait-stage {
+    width: 124px;
+    height: 124px;
+  }
+
+  .dlg-portrait-medallion {
+    width: 106px;
+    height: 106px;
+  }
+
+  .dlg-choices-strip {
+    padding-left: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dlg-bottom-gradient {
+    height: 44vh;
+    min-height: 240px;
+  }
+
+  .dlg-stage-container {
+    padding: 0 16px max(16px, env(safe-area-inset-bottom));
+  }
+
+  .dlg-main-row {
+    gap: 14px;
+    align-items: center;
+  }
+
+  .dlg-portrait-stage {
+    width: 82px;
+    height: 82px;
+    margin-bottom: 0;
+  }
+
+  .dlg-portrait-medallion {
+    width: 70px;
+    height: 70px;
+  }
+
+  .dlg-fallback-emblem {
+    width: 38px;
+    height: 38px;
+  }
+
+  .dlg-fallback-kanji {
+    display: none;
+  }
+
+  .dlg-nameplate-banner {
+    padding: 4px 14px 4px 10px;
+    gap: 7px;
+  }
+
+  .dlg-speaker-name {
+    font-size: 13.5px;
+    letter-spacing: 1.5px;
+  }
+
+  .dlg-speaker-japanese {
+    font-size: 10.5px;
+  }
+
+  .dlg-text-stage {
+    min-height: 52px;
+  }
+
+  .dlg-speech-paragraph {
+    font-size: 17px;
+    line-height: 1.38;
+  }
+
+  .dlg-choices-strip {
+    padding-left: 0;
+    gap: 8px;
+  }
+
+  .dlg-choice-pill {
+    padding: 7px 13px;
+    font-size: 12px;
+  }
+
+  .dlg-horizon-wave-svg {
+    left: 10px;
+    right: 120px;
+    width: calc(100% - 130px);
+  }
+
+  .dlg-fast-forward-pill {
+    padding: 6px 13px;
+    font-size: 11.5px;
+  }
+
+  .dlg-cloud-accent-svg {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dlg-next-chevron-btn,
+  .dlg-typewriter-caret,
+  .dlg-choice-pill,
+  .dlg-fast-forward-pill {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+

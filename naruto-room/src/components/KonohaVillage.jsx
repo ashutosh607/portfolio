@@ -1,7 +1,6 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFBX, useTexture } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
 import { KONOHA_OFFSET } from '../utils/constants';
 import { KONOHA_LOCATIONS } from '../config/locations';
 import { buildTerrainCollider, sampleGroundY } from '../utils/terrainCollider';
@@ -16,8 +15,14 @@ const postCapGeom = new THREE.ConeGeometry(0.12, 0.12, 4);
 const topFrameGeom = new THREE.BoxGeometry(1.36, 0.10, 0.12);
 const bottomFrameGeom = new THREE.BoxGeometry(1.36, 0.08, 0.10);
 const signBoardGeom = new THREE.BoxGeometry(1.24, 0.52, 0.05);
-const ringGeom = new THREE.RingGeometry(1.15, 1.45, 24);
-const innerDiscGeom = new THREE.CircleGeometry(1.15, 24);
+const selectedGateMarkerGeom = new THREE.RingGeometry(0.72, 0.82, 28);
+const selectedGateMarkerMat = new THREE.MeshBasicMaterial({
+  color: '#A84434',
+  transparent: true,
+  opacity: 0.32,
+  side: THREE.DoubleSide,
+  depthWrite: false,
+});
 
 // Hanging Japanese Chōchin (提灯) paper lantern geometries for destination gates
 const hangerArmGeom = new THREE.BoxGeometry(0.04, 0.04, 0.26);
@@ -150,10 +155,10 @@ function createSignboardTexture(loc) {
   ctx.font = '600 32px "Segoe UI", Arial, sans-serif';
   ctx.fillText(loc.role || '', 512, 405);
 
-  // Action hint
-  ctx.fillStyle = loc.color || '#a93226';
-  ctx.font = 'bold 24px "Segoe UI", Arial, sans-serif';
-  ctx.fillText('▼ [E] PRESS OR CLICK TO OPEN ▼', 512, 465);
+  // Subtle traditional Konoha crest caption
+  ctx.fillStyle = '#8b5a36';
+  ctx.font = '600 22px "Segoe UI", Arial, sans-serif';
+  ctx.fillText('木ノ葉隠れの里 • KONOHA LANDMARK', 512, 462);
 
   const tex = new THREE.CanvasTexture(canvas);
   tex.anisotropy = 4;
@@ -163,9 +168,7 @@ function createSignboardTexture(loc) {
 
 const KonohaVillage = React.memo(function KonohaVillage({
   onTerrainReady,
-  playerPosRef,
-  onOpenModal,
-  onNearbyLocationChange,
+  selectedTargetUid = null,
   isInteractionBlocked = false,
   enableShadows = true,
   isNightMode = false,
@@ -176,10 +179,6 @@ const KonohaVillage = React.memo(function KonohaVillage({
   const colliderRef = useRef(null);
   const markerRefs = useRef({});
   const streetLanternRefs = useRef([]);
-  const lastCheckRef = useRef(0);
-  const prevNearIdRef = useRef(null);
-
-  const [nearbyLocId, setNearbyLocId] = useState(null);
 
   // Load actual Konoha FBX model & texture atlas
   const fbx = useFBX('/models/konoha/source/untitled.fbx');
@@ -302,54 +301,6 @@ const KonohaVillage = React.memo(function KonohaVillage({
     }
   }, [fbx, villageMaterial, onTerrainReady, enableShadows]);
 
-  // Throttled 10Hz check for nearby destination shrines & directional sign visibility
-  useFrame((state) => {
-    const now = state.clock.getElapsedTime();
-    if (now - lastCheckRef.current < 0.12) return;
-    lastCheckRef.current = now;
-
-    const p = playerPosRef?.current;
-    if (!p) return;
-
-    let closestLoc = null;
-    let minD = Infinity;
-
-    for (let i = 0; i < KONOHA_LOCATIONS.length; i++) {
-      const loc = KONOHA_LOCATIONS[i];
-      const sPos = loc.shrinePosition || loc.position;
-      const distShrine = Math.hypot(p[0] - sPos[0], p[2] - sPos[2]);
-      const distSpawn = Math.hypot(p[0] - loc.position[0], p[2] - loc.position[2]);
-      const dist = Math.min(distShrine, distSpawn);
-
-      if (dist <= 4.2 && dist < minD) {
-        minD = dist;
-        closestLoc = loc;
-      }
-    }
-
-    const nextId = closestLoc?.id || null;
-    if (nextId !== prevNearIdRef.current) {
-      prevNearIdRef.current = nextId;
-      setNearbyLocId(nextId);
-      onNearbyLocationChange?.(closestLoc);
-    }
-  });
-
-  // Global 'KeyE' listener for destination shrines when no dialogue/modal is blocking
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.code === 'KeyE' && nearbyLocId && !isInteractionBlocked) {
-        const loc = KONOHA_LOCATIONS.find((l) => l.id === nearbyLocId);
-        if (loc && loc.modalKey) {
-          e.preventDefault();
-          onOpenModal?.(loc.modalKey);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [nearbyLocId, isInteractionBlocked, onOpenModal]);
-
   const activeChochinMat = isNightMode ? chochinNightMat : chochinDayMat;
   const activeShojiMat = isNightMode ? shojiNightMat : shojiDayMat;
 
@@ -411,7 +362,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
       {/* ================= 6 INTERACTIVE DESTINATION SHRINES & HANGING CHŌCHIN LANTERNS ================= */}
       {KONOHA_LOCATIONS.map((loc) => {
         const sPos = loc.shrinePosition || loc.position;
-        const isNearby = nearbyLocId === loc.id;
+        const isSelected = selectedTargetUid === `loc:${loc.id}` && !isInteractionBlocked;
 
         return (
           <group
@@ -478,35 +429,15 @@ const KonohaVillage = React.memo(function KonohaVillage({
               </>
             )}
 
-            {/* Glowing Interactive Ground Ring */}
-            <mesh
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[0, 0.04, 0]}
-              geometry={ringGeom}
-            >
-              <meshBasicMaterial
-                color={loc.color}
-                transparent
-                opacity={isNearby ? 0.9 : isNightMode ? 0.68 : 0.45}
-                side={THREE.DoubleSide}
-                depthWrite={false}
+            {/* Subtle single ground marker shown ONLY beneath the currently selected target */}
+            {isSelected && (
+              <mesh
+                rotation={[-Math.PI / 2, 0, 0]}
+                position={[0, 0.03, 0]}
+                geometry={selectedGateMarkerGeom}
+                material={selectedGateMarkerMat}
               />
-            </mesh>
-
-            {/* Soft Ground Aura Disc */}
-            <mesh
-              rotation={[-Math.PI / 2, 0, 0]}
-              position={[0, 0.03, 0]}
-              geometry={innerDiscGeom}
-            >
-              <meshBasicMaterial
-                color={loc.color}
-                transparent
-                opacity={isNearby ? 0.32 : isNightMode ? 0.18 : 0.1}
-                side={THREE.DoubleSide}
-                depthWrite={false}
-              />
-            </mesh>
+            )}
           </group>
         );
       })}

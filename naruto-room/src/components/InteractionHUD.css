@@ -1,0 +1,256 @@
+/* ============================================================================
+   MINIMAL RPG INTERACTION UI (SINGLE PILL & CONTEXTUAL NEARBY DOCK)
+   ============================================================================ */
+
+.rpg-interaction-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 42;
+  user-select: none;
+}
+
+/* ----------------------------------------------------------------------------
+   1. SINGLE INTERACTION PILL (Bottom-Center, 32-38px height)
+   ---------------------------------------------------------------------------- */
+.rpg-single-pill {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  height: 36px;
+  padding: 0 14px 0 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: #201B1B;
+  color: #F1E5D7;
+  border: 1px solid rgba(241, 229, 215, 0.16);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.32);
+  font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  line-height: 1;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.rpg-single-pill:hover {
+  background: #272020;
+  border-color: rgba(168, 68, 52, 0.65);
+}
+
+.rpg-single-pill:active {
+  transform: translateX(-50%) translateY(1px);
+}
+
+.rpg-key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #A84434;
+  color: #F1E5D7;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+.rpg-single-label {
+  color: #F1E5D7;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------------------------------
+   2. MULTIPLE NEARBY INTERACTIONS DOCK (Bottom-Right, 230-260px wide)
+   ---------------------------------------------------------------------------- */
+.rpg-nearby-dock {
+  position: fixed;
+  right: 22px;
+  bottom: 68px;
+  width: 244px;
+  padding: 8px;
+  background: rgba(32, 27, 27, 0.95);
+  border: 1px solid rgba(241, 229, 215, 0.14);
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.36);
+  font-family: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #F1E5D7;
+  pointer-events: auto;
+}
+
+.rpg-dock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 6px 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(241, 229, 215, 0.08);
+}
+
+.rpg-dock-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(241, 229, 215, 0.58);
+}
+
+.rpg-dock-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: rgba(241, 229, 215, 0.72);
+}
+
+.rpg-dock-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #A84434;
+  color: #F1E5D7;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.rpg-dock-list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Animated selection highlight slider behind the active row */
+.rpg-dock-highlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(168, 68, 52, 0.34);
+  border-left: 2.5px solid #A84434;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.rpg-dock-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(241, 229, 215, 0.72);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.14s ease, background-color 0.14s ease;
+}
+
+.rpg-dock-row:hover {
+  color: #F1E5D7;
+  background: rgba(241, 229, 215, 0.04);
+}
+
+.rpg-dock-row.is-selected {
+  color: #F1E5D7;
+  font-weight: 600;
+}
+
+.rpg-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rpg-row-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  background: rgba(241, 229, 215, 0.08);
+  color: rgba(241, 229, 215, 0.65);
+  font-size: 10.5px;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.rpg-dock-row.is-selected .rpg-row-num {
+  background: #A84434;
+  color: #F1E5D7;
+}
+
+.rpg-row-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rpg-row-action-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #F1E5D7;
+  opacity: 0;
+  transition: opacity 0.14s ease;
+}
+
+.rpg-dock-row.is-selected .rpg-row-action-tag {
+  opacity: 0.78;
+}
+
+/* ----------------------------------------------------------------------------
+   3. MOBILE RESPONSIVE LAYOUT (Bottom-Center Selector, Touch-Friendly)
+   ---------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .rpg-single-pill {
+    bottom: 24px;
+    height: 36px;
+    padding: 0 15px 0 9px;
+    font-size: 13px;
+  }
+
+  .rpg-nearby-dock {
+    right: auto;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    width: min(236px, calc(100vw - 210px));
+    padding: 7px;
+  }
+
+  .rpg-dock-row {
+    height: 32px;
+    font-size: 12.5px;
+  }
+
+  .rpg-dock-highlight {
+    height: 32px;
+  }
+}
+

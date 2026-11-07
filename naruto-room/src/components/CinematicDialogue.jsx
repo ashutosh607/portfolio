@@ -1,289 +1,324 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import gsap from 'gsap';
+import { resolveSpeakerProfile } from '../config/dialogueData';
+import CharacterPortrait from './dialogue/CharacterPortrait';
+import DialogueNameplate from './dialogue/DialogueNameplate';
+import DialogueText from './dialogue/DialogueText';
+import DialogueControls from './dialogue/DialogueControls';
+import './dialogue/CinematicDialogue.css';
 
-// Character emblems / clan insignias SVG icons for anime RPG dialogue nameplates
-const CHARACTER_EMBLEMS = {
-  kakashi: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Kakashi Mangekyo Sharingan motif */}
-      <circle cx="50" cy="50" r="42" fill="#c0392b" stroke="#111" strokeWidth="4" />
-      <circle cx="50" cy="50" r="14" fill="#111" />
-      <path d="M 50 8 C 50 35 32 45 15 50 C 35 55 45 75 50 92 C 50 65 68 55 85 50 C 65 45 55 25 50 8 Z" fill="#111" />
-    </svg>
-  ),
-  sasuke: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Uchiha Fan crest */}
-      <circle cx="50" cy="50" r="42" fill="#1a252f" stroke="#c0392b" strokeWidth="3" />
-      <path d="M 50 18 A 28 28 0 0 1 78 46 L 22 46 A 28 28 0 0 1 50 18 Z" fill="#c0392b" />
-      <path d="M 22 46 A 28 28 0 0 0 78 46 L 78 52 A 28 28 0 0 1 22 52 Z" fill="#fdfefe" />
-      <rect x="46" y="52" width="8" height="26" fill="#fdfefe" rx="3" />
-    </svg>
-  ),
-  sakura: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Cherry blossom & Byakugou diamond */}
-      <circle cx="50" cy="50" r="42" fill="#e84393" stroke="#2d3436" strokeWidth="3" />
-      {/* Byakugou violet diamond seal */}
-      <polygon points="50,22 64,50 50,78 36,50" fill="#6c5ce7" stroke="#ffffff" strokeWidth="2.5" />
-    </svg>
-  ),
-  hinata: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Hyuga Byakugan / Gentle Fist flame emblem */}
-      <circle cx="50" cy="50" r="42" fill="#4834d4" stroke="#dff9fb" strokeWidth="3" />
-      <circle cx="50" cy="50" r="26" fill="#f5f6fa" stroke="#686de0" strokeWidth="3" />
-      <circle cx="50" cy="50" r="10" fill="#dff9fb" />
-    </svg>
-  ),
-  tsunade: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Kanji 賭 (Gamble) & Hokage seal */}
-      <circle cx="50" cy="50" r="42" fill="#27ae60" stroke="#f39c12" strokeWidth="3" />
-      <text x="50" y="66" textAnchor="middle" fill="#f1c40f" fontSize="46" fontWeight="900" fontFamily="serif">賭</text>
-    </svg>
-  ),
-  jiraiya: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Kanji 油 (Oil) Toad Sage Forehead Plate */}
-      <circle cx="50" cy="50" r="42" fill="#c0392b" stroke="#f1c40f" strokeWidth="3" />
-      <text x="50" y="66" textAnchor="middle" fill="#ffffff" fontSize="46" fontWeight="900" fontFamily="serif">油</text>
-    </svg>
-  ),
-  orochimaru: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Cursed Seal / Snake motif */}
-      <circle cx="50" cy="50" r="42" fill="#2c2c54" stroke="#8e44ad" strokeWidth="3" />
-      {/* 3 Magatama spiral */}
-      <path d="M 50 30 Q 65 30 65 42 Q 65 52 50 50 Q 56 42 50 30 Z" fill="#8e44ad" />
-      <path d="M 36 56 Q 36 70 48 70 Q 58 64 50 50 Q 42 58 36 56 Z" fill="#8e44ad" />
-      <path d="M 64 56 Q 54 70 42 66 Q 42 54 50 50 Q 58 54 64 56 Z" fill="#8e44ad" />
-      <circle cx="50" cy="50" r="5" fill="#f5f6fa" />
-    </svg>
-  ),
-  ashutosh: (
-    <svg viewBox="0 0 100 100" className="char-emblem-svg">
-      {/* Konoha Spiral Leaf Crest */}
-      <circle cx="50" cy="50" r="42" fill="#d35400" stroke="#f39c12" strokeWidth="3" />
-      <path
-        d="M 50 50 m 0 -5 a 5 5 0 1 1 -5 5 a 12 12 0 1 1 12 12 a 20 20 0 1 1 -20 -20 a 28 28 0 1 1 28 28 l 10 -4"
-        fill="none"
-        stroke="#ffffff"
-        strokeWidth="6"
-        strokeLinecap="round"
-      />
-    </svg>
-  ),
-};
-
+/**
+ * Konoha 3D Portfolio — Borderless Cinematic RPG Dialogue System
+ */
 export default function CinematicDialogue({
   character,
   onClose,
   onTriggerAction,
 }) {
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+  const [isTyping, setIsTyping] = useState(true);
   const [activeDialogueList, setActiveDialogueList] = useState([]);
   const [isShowingReply, setIsShowingReply] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
-  const typewriterTimeout = useRef(null);
+  const rootRef = useRef(null);
+  const gradientRef = useRef(null);
+  const portraitRef = useRef(null);
+  const nameplateRef = useRef(null);
+  const textContainerRef = useRef(null);
+  const controlsRef = useRef(null);
 
-  // Initialize dialogue lines
+  const mountTimestampRef = useRef(0);
+  const lastAdvanceTimeRef = useRef(0);
+
+  // Initialize conversation when character changes
   useEffect(() => {
     if (character) {
+      mountTimestampRef.current = performance.now();
       setActiveDialogueList(character.dialogueSequence || []);
       setCurrentLineIndex(0);
+      setIsTyping(true);
       setIsShowingReply(false);
+      setIsClosing(false);
+
+      // Preload character portrait if available
+      if (character.portrait) {
+        const img = new Image();
+        img.src = character.portrait;
+      }
     }
   }, [character]);
 
   const currentLine = activeDialogueList[currentLineIndex] || null;
-  const isFinalLine = currentLineIndex === activeDialogueList.length - 1;
+  const isFinalLine =
+    activeDialogueList.length > 0 &&
+    currentLineIndex >= activeDialogueList.length - 1;
 
-  // Typewriter effect
+  // Resolve active speaker metadata dynamically (supports multi-character switching)
+  const speakerProfile = useMemo(
+    () => resolveSpeakerProfile(currentLine, character),
+    [currentLine, character]
+  );
+
+  // 4-Phase GSAP Opening Animation Sequence
   useEffect(() => {
-    if (!currentLine) return;
+    if (!character || !rootRef.current) return;
 
-    const fullText = currentLine.text;
-    setDisplayedText('');
-    setIsTyping(true);
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
 
-    let charIndex = 0;
-    clearTimeout(typewriterTimeout.current);
+    if (prefersReducedMotion) return;
 
-    const typeNextChar = () => {
-      if (charIndex < fullText.length) {
-        charIndex += 1;
-        setDisplayedText(fullText.slice(0, charIndex));
-        typewriterTimeout.current = setTimeout(typeNextChar, 18);
-      } else {
-        setIsTyping(false);
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline();
+
+      // Phase 1: Subtle bottom gradient (0.25s)
+      tl.fromTo(
+        gradientRef.current,
+        { opacity: 0 },
+        { opacity: 1, duration: 0.25, ease: 'power2.out' }
+      )
+        // Phase 2: Character portrait rises 15px & scales 0.96 -> 1 (0.4s, power3.out)
+        .fromTo(
+          portraitRef.current,
+          { opacity: 0, y: 15, scale: 0.96 },
+          { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' },
+          '-=0.12'
+        )
+        // Phase 3: Nameplate reveals left-to-right (0.25s)
+        .fromTo(
+          nameplateRef.current,
+          { opacity: 0, x: -16 },
+          { opacity: 1, x: 0, duration: 0.25, ease: 'power2.out' },
+          '-=0.26'
+        )
+        // Phase 4: Dialogue text & bottom horizon bar settle in
+        .fromTo(
+          [textContainerRef.current, controlsRef.current],
+          { opacity: 0, y: 8 },
+          { opacity: 1, y: 0, duration: 0.28, stagger: 0.05, ease: 'power2.out' },
+          '-=0.18'
+        );
+    }, rootRef);
+
+    return () => ctx.revert();
+  }, [character]);
+
+  // Smooth Closing Animation (300-450ms)
+  const performAnimatedClose = useCallback(
+    (afterCloseCallback) => {
+      if (isClosing) return;
+      setIsClosing(true);
+      setIsTyping(false);
+
+      const prefersReducedMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches;
+
+      if (prefersReducedMotion || !rootRef.current) {
+        afterCloseCallback?.();
+        onClose?.();
+        return;
       }
-    };
 
-    typeNextChar();
+      const tl = gsap.timeline({
+        onComplete: () => {
+          afterCloseCallback?.();
+          onClose?.();
+        },
+      });
 
-    return () => {
-      clearTimeout(typewriterTimeout.current);
-    };
-  }, [currentLine, currentLineIndex]);
+      tl.to([textContainerRef.current, controlsRef.current], {
+        opacity: 0,
+        y: 6,
+        duration: 0.18,
+        ease: 'power2.in',
+      })
+        .to(
+          nameplateRef.current,
+          { opacity: 0, x: -10, duration: 0.18, ease: 'power2.in' },
+          '-=0.12'
+        )
+        .to(
+          portraitRef.current,
+          { opacity: 0, y: 12, scale: 0.96, duration: 0.22, ease: 'power2.in' },
+          '-=0.14'
+        )
+        .to(
+          gradientRef.current,
+          { opacity: 0, duration: 0.2, ease: 'power2.inOut' },
+          '-=0.15'
+        );
+    },
+    [isClosing, onClose]
+  );
 
-  // Fast forward typewriter or advance to next line
+  // Advance or Complete Current Typewriter Line
   const handleAdvance = useCallback(() => {
-    if (isTyping && currentLine) {
-      // Instant reveal
-      clearTimeout(typewriterTimeout.current);
-      setDisplayedText(currentLine.text);
+    if (isClosing || !currentLine) return;
+
+    const now = performance.now();
+    // Guard against initial E keydown bleed-through or rapid double-triggers
+    if (now - mountTimestampRef.current < 180) return;
+    if (now - lastAdvanceTimeRef.current < 110) return;
+    lastAdvanceTimeRef.current = now;
+
+    if (isTyping) {
+      // First press: Instantly complete the current line
       setIsTyping(false);
     } else if (!isFinalLine) {
+      // Second press: Advance to the next dialogue line
       setCurrentLineIndex((prev) => prev + 1);
+      setIsTyping(true);
     }
-  }, [isTyping, currentLine, isFinalLine]);
+  }, [isClosing, currentLine, isTyping, isFinalLine]);
 
-  // Handle Response Choices
-  const handleSelectChoice = useCallback((choice) => {
-    if (choice.replyDialogue && choice.replyDialogue.length > 0) {
-      // Switch to reply dialogue
-      setIsShowingReply(true);
-      setActiveDialogueList(choice.replyDialogue);
-      setCurrentLineIndex(0);
-    } else if (choice.action === 'close') {
-      onClose();
-    } else if (choice.action) {
-      onTriggerAction(choice.action, choice);
-      onClose();
-    } else {
-      onClose();
-    }
-  }, [onClose, onTriggerAction]);
+  // Fast Forward Button: Jump straight to final line & reveal choices
+  const handleFastForward = useCallback(() => {
+    if (isClosing || activeDialogueList.length === 0) return;
+    setCurrentLineIndex(activeDialogueList.length - 1);
+    setIsTyping(false);
+  }, [isClosing, activeDialogueList.length]);
 
-  // Keyboard navigation: Space/Enter to advance, Escape to close
+  // Handle Conversation Response Choice Selection
+  const handleSelectChoice = useCallback(
+    (choice) => {
+      if (isClosing) return;
+
+      if (choice.replyDialogue && choice.replyDialogue.length > 0) {
+        setIsShowingReply(true);
+        setActiveDialogueList(choice.replyDialogue);
+        setCurrentLineIndex(0);
+        setIsTyping(true);
+      } else if (choice.action === 'close') {
+        performAnimatedClose();
+      } else if (choice.action) {
+        performAnimatedClose(() => {
+          onTriggerAction?.(choice.action, choice);
+        });
+      } else {
+        performAnimatedClose();
+      }
+    },
+    [isClosing, performAnimatedClose, onTriggerAction]
+  );
+
+  // Keyboard Controls: E, Enter, Space to advance; Escape to close
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Do not interfere if focus is inside an input/textarea
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+
       if (e.code === 'Escape') {
         e.preventDefault();
-        onClose();
-      } else if (e.code === 'Space' || e.code === 'Enter') {
+        e.stopPropagation();
+        performAnimatedClose();
+        return;
+      }
+
+      if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
+        // Prevent Space from making Naruto jump or scrolling page
+        e.preventDefault();
+        e.stopPropagation();
+
+        // Ignore held key auto-repeat so holding Space/E never skips multiple lines
+        if (e.repeat) return;
+
         if (!isFinalLine || isTyping) {
-          e.preventDefault();
           handleAdvance();
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, { capture: true });
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
-  }, [handleAdvance, onClose, isFinalLine, isTyping]);
+  }, [handleAdvance, performAnimatedClose, isFinalLine, isTyping]);
 
   if (!character || !currentLine) return null;
 
-  const isAshutoshSpeaker = currentLine.speaker.toLowerCase().includes('ashutosh');
-  const speakerEmblem = isAshutoshSpeaker
-    ? CHARACTER_EMBLEMS.ashutosh
-    : CHARACTER_EMBLEMS[character.id] || CHARACTER_EMBLEMS.ashutosh;
+  const activeChoices = isShowingReply
+    ? []
+    : character.choices || [];
 
   return (
-    <div className="cinematic-dialogue-overlay" onClick={handleAdvance}>
-      {/* Background cinematic vignette & dimming */}
-      <div className="dialogue-backdrop-dim" />
-
-      {/* Main Bottom Dialogue Container */}
+    <div
+      ref={rootRef}
+      className="dlg-cinematic-root"
+      onClick={(e) => {
+        if (e.target.closest('button, a')) return;
+        handleAdvance();
+      }}
+      role="dialog"
+      aria-modal="false"
+      aria-label={`Conversation with ${character.name}`}
+    >
+      {/* 1. Bottom Atmospheric Dark Gradient */}
       <div
-        className="cinematic-dialogue-panel"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-label="Character Dialogue"
-      >
-        {/* Top Header Strip with Konoha styling */}
-        <div className="dialogue-panel-header">
-          <div className="dialogue-header-left">
-            <span className="konoha-sys-label">KONOHA INTERACTION</span>
-            <span className="header-divider">•</span>
-            <span className="character-rank-badge" style={{ borderColor: character.themeColor }}>
-              {character.title}
-            </span>
-            <span className="location-tag">📍 {character.locationLabel}</span>
-          </div>
+        ref={gradientRef}
+        className="dlg-bottom-gradient"
+        aria-hidden="true"
+      />
 
-          <button
-            className="dialogue-close-btn"
-            onClick={onClose}
-            title="End conversation"
-          >
-            ✕ Close
-          </button>
+      {/* 2. Floating Bottom Dialogue Stage */}
+      <div className="dlg-stage-container">
+        {/* Subtle Japanese Cloud Accent on Right */}
+        <svg
+          viewBox="0 0 180 48"
+          className="dlg-cloud-accent-svg"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M 20 34 H 130 C 142 34, 142 22, 130 22 H 75 C 63 22, 63 10, 75 10 H 160"
+            stroke="#D4A979"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M 45 42 H 155"
+            stroke="#B83A35"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+        </svg>
+
+        {/* Main Row: Character Portrait (Left) + Nameplate & Dialogue Text (Right) */}
+        <div className="dlg-main-row">
+          <CharacterPortrait
+            speakerProfile={speakerProfile}
+            portraitRef={portraitRef}
+          />
+
+          <div className="dlg-speech-column">
+            <DialogueNameplate
+              speakerProfile={speakerProfile}
+              nameplateRef={nameplateRef}
+            />
+
+            <DialogueText
+              text={currentLine.text}
+              isTyping={isTyping}
+              onTypingComplete={() => setIsTyping(false)}
+              textContainerRef={textContainerRef}
+            />
+          </div>
         </div>
 
-        {/* Dialogue Body - Tap anywhere to advance text on mobile or desktop */}
-        <div
-          className="dialogue-panel-body"
-          onClick={(e) => {
-            if (e.target.closest('button, a, .ninja-choice-btn')) return;
-            handleAdvance();
-          }}
-        >
-          {/* Speaker Portrait / Emblem Frame */}
-          <div className={`speaker-portrait-box ${isAshutoshSpeaker ? 'is-player' : ''}`}>
-            <div className="portrait-emblem-wrap">
-              {speakerEmblem}
-            </div>
-            <span className="speaker-subtext">
-              {isAshutoshSpeaker ? 'SHINOBI OF CODE' : character.japaneseName || '木ノ葉'}
-            </span>
-          </div>
-
-          {/* Dialogue Text Area */}
-          <div className="dialogue-content-area">
-            {/* Prominent Speaker Name */}
-            <div className="speaker-name-badge">
-              <strong className="speaker-name">{currentLine.speaker.toUpperCase()}</strong>
-              {isAshutoshSpeaker && <span className="player-tag">YOU</span>}
-            </div>
-
-            {/* Subtly Animated Dialogue Speech */}
-            <p className="dialogue-text">
-              "{displayedText}"
-              {isTyping && <span className="typewriter-cursor">▌</span>}
-            </p>
-
-            {/* Bottom Controls / Choices Area */}
-            <div className="dialogue-action-row">
-              {/* If not at the final line or currently typing: Show Advance button */}
-              {(!isFinalLine || isTyping) && (
-                <button
-                  className="dialogue-continue-button"
-                  onClick={handleAdvance}
-                >
-                  <span>{isTyping ? 'Fast Forward' : 'Continue'}</span>
-                  <span className="btn-arrow">▸</span>
-                </button>
-              )}
-
-              {/* Once text finishes on final line: Show response choices */}
-              {isFinalLine && !isTyping && (
-                <div className="dialogue-choices-container">
-                  <div className="choices-prompt">CHOOSE RESPONSE:</div>
-                  <div className="choices-grid">
-                    {(isShowingReply
-                      ? [{ id: 'close', text: 'Farewell', action: 'close' }]
-                      : character.choices || []
-                    ).map((choice) => (
-                      <button
-                        key={choice.id}
-                        className="ninja-choice-btn"
-                        onClick={() => handleSelectChoice(choice)}
-                      >
-                        <span className="choice-shuriken">✦</span>
-                        <span className="choice-text">{choice.text}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Bottom Horizon Wave, Center Next Chevron, Choices & Fast Forward */}
+        <div ref={controlsRef}>
+          <DialogueControls
+            isTyping={isTyping}
+            isFinalLine={isFinalLine}
+            choices={activeChoices}
+            onAdvance={handleAdvance}
+            onFastForward={handleFastForward}
+            onSelectChoice={handleSelectChoice}
+            onClose={() => performAnimatedClose()}
+          />
         </div>
       </div>
     </div>

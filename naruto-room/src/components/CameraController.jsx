@@ -8,6 +8,7 @@ const CameraController = React.memo(function CameraController({
   playerPosRef,
   cameraAngleRef,
   fastTravelTarget,
+  dialogueTarget = null,
 }) {
   const { camera, gl } = useThree();
 
@@ -199,29 +200,37 @@ const CameraController = React.memo(function CameraController({
     const dt = Math.min(delta, 0.05);
 
     const pos = playerPosRef?.current || INITIAL_SPAWN.position;
-    const targetX = pos[0];
-    const targetY = pos[1] + CAMERA_CONFIG.targetHeight;
-    const targetZ = pos[2];
+    let targetX = pos[0];
+    let targetY = pos[1] + CAMERA_CONFIG.targetHeight;
+    let targetZ = pos[2];
+    let activeDist = distance;
+
+    // Subtle cinematic framing toward the active NPC during dialogue
+    if (dialogueTarget) {
+      targetX = pos[0] * 0.68 + dialogueTarget[0] * 0.32;
+      targetZ = pos[2] * 0.68 + dialogueTarget[2] * 0.32;
+      activeDist = Math.max(CAMERA_CONFIG.minDistance, distance - 0.3);
+    }
 
     desiredTarget.current.set(targetX, targetY, targetZ);
-    smoothLookTarget.current.lerp(desiredTarget.current, Math.min(1, dt * 12));
+    smoothLookTarget.current.lerp(desiredTarget.current, Math.min(1, dt * (dialogueTarget ? 5.5 : 12)));
 
     const cosPitch = Math.cos(pitch);
-    const camX = smoothLookTarget.current.x + distance * Math.sin(yaw) * cosPitch;
-    let camY = smoothLookTarget.current.y + distance * Math.sin(pitch);
-    const camZ = smoothLookTarget.current.z + distance * Math.cos(yaw) * cosPitch;
+    const camX = smoothLookTarget.current.x + activeDist * Math.sin(yaw) * cosPitch;
+    let camY = smoothLookTarget.current.y + activeDist * Math.sin(pitch);
+    const camZ = smoothLookTarget.current.z + activeDist * Math.cos(yaw) * cosPitch;
 
     const minCamY = smoothLookTarget.current.y - CAMERA_CONFIG.targetHeight + 0.35;
     camY = Math.max(minCamY, camY);
 
     desiredCamPos.current.set(camX, camY, camZ);
-    smoothCamPos.current.lerp(desiredCamPos.current, Math.min(1, dt * 10));
+    smoothCamPos.current.lerp(desiredCamPos.current, Math.min(1, dt * (dialogueTarget ? 5.5 : 10)));
 
     camera.position.copy(smoothCamPos.current);
 
     lookTarget.current.copy(smoothLookTarget.current);
     if (pitch < 0) {
-      lookTarget.current.y += -pitch * (distance * 1.4 + 3.0);
+      lookTarget.current.y += -pitch * (activeDist * 1.4 + 3.0);
     }
     camera.lookAt(lookTarget.current);
   });

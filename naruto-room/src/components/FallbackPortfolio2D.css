@@ -1,0 +1,1084 @@
+.p2d-root {
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  background-color: #0e0a0d;
+  color: #f4e8da;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
+  selection-background-color: #a92f32;
+}
+
+/* Ambient fixed background */
+.p2d-ambient-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(169, 47, 50, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 82% 24%, rgba(213, 173, 131, 0.08) 0%, transparent 48%),
+    radial-gradient(circle at 50% 88%, rgba(125, 36, 40, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #0d090c 0%, #120d10 50%, #0c080b 100%);
+}
+
+/* Sticky Top Navigation Bar (Matches KonohaHUD) */
+.p2d-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 2rem;
+  background: rgba(16, 11, 14, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(213, 173, 131, 0.18);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+}
+
+.p2d-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.p2d-brand-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(169, 47, 50, 0.35));
+  transition: transform 0.25s ease;
+}
+
+.p2d-brand:hover .p2d-brand-logo {
+  transform: scale(1.05);
+}
+
+.p2d-brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.p2d-brand-name {
+  font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #f5efe7;
+  line-height: 1.1;
+}
+
+.p2d-brand-sub {
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #c4b4ac;
+  margin-top: 2px;
+}
+
+.p2d-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.p2d-nav-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.48rem 0.85rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: #c8b6a9;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: color 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+}
+
+.p2d-nav-item span {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.72rem;
+  color: #d5ad83;
+  opacity: 0.85;
+}
+
+.p2d-nav-item:hover {
+  color: #f5efe7;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.p2d-nav-item.is-active {
+  color: #f5efe7;
+  background: rgba(169, 47, 50, 0.22);
+  border-color: rgba(184, 58, 53, 0.48);
+}
+
+.p2d-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.p2d-resume-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.48rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(213, 173, 131, 0.35);
+  background: rgba(28, 18, 22, 0.85);
+  color: #f4e8da;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.p2d-resume-pill:hover {
+  border-color: #d5ad83;
+  background: rgba(45, 28, 34, 0.95);
+  transform: translateY(-1px);
+}
+
+.p2d-switch-3d-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.52rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(244, 232, 218, 0.9);
+  background: #f4e8da;
+  color: #160e12;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: all 0.22s ease;
+}
+
+.p2d-switch-3d-btn:hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 22px rgba(213, 173, 131, 0.3);
+}
+
+/* Main Content Container */
+.p2d-main {
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 2.2rem 1.75rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4.5rem;
+}
+
+/* WebGL Notice Banner */
+.p2d-webgl-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  border-radius: 12px;
+  background: rgba(169, 47, 50, 0.16);
+  border: 1px solid rgba(184, 58, 53, 0.42);
+  color: #f4e8da;
+  font-size: 0.86rem;
+}
+
+/* Generic Section Shell */
+.p2d-section {
+  scroll-margin-top: 5.5rem;
+  position: relative;
+  border-radius: 22px;
+  border: 1px solid rgba(177, 89, 76, 0.32);
+  background: rgba(20, 13, 17, 0.88);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.52);
+  overflow: hidden;
+}
+
+.p2d-section-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.24;
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.8s ease;
+}
+
+.p2d-section-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(16, 11, 14, 0.94) 0%,
+    rgba(18, 12, 16, 0.84) 55%,
+    rgba(14, 9, 12, 0.92) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.p2d-section-inner {
+  position: relative;
+  z-index: 1;
+  padding: 2.75rem 2.75rem;
+}
+
+/* Section Headers */
+.p2d-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #d5ad83;
+  margin-bottom: 0.65rem;
+}
+
+.p2d-eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #b83a35;
+  box-shadow: 0 0 8px rgba(184, 58, 53, 0.7);
+}
+
+.p2d-section-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  padding-bottom: 1.35rem;
+  border-bottom: 1px solid rgba(177, 89, 76, 0.24);
+}
+
+.p2d-section-title {
+  font-family: 'Cormorant Garamond', 'Cinzel', Georgia, serif;
+  font-size: clamp(2rem, 3.3vw, 2.85rem);
+  font-weight: 700;
+  color: #f4e8da;
+  margin: 0;
+  line-height: 1.12;
+}
+
+.p2d-section-title span {
+  color: #d5ad83;
+  border-bottom: 2px solid rgba(169, 47, 50, 0.75);
+  padding-bottom: 2px;
+}
+
+.p2d-section-subtitle {
+  margin: 0.55rem 0 0;
+  font-size: 0.98rem;
+  color: #c4b4ac;
+  max-width: 680px;
+  line-height: 1.6;
+}
+
+/* Buttons */
+.p2d-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.68rem 1.3rem;
+  border-radius: 10px;
+  border: 1px solid rgba(212, 169, 121, 0.35);
+  background: linear-gradient(135deg, #a92f32 0%, #7d2428 100%);
+  color: #f5efe7;
+  font-size: 0.86rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.p2d-btn-primary:hover {
+  background: linear-gradient(135deg, #c34242 0%, #8f292e 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(169, 47, 50, 0.35);
+}
+
+.p2d-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.68rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(213, 173, 131, 0.32);
+  background: rgba(28, 18, 22, 0.85);
+  color: #f4e8da;
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+
+.p2d-btn-secondary:hover {
+  border-color: #d5ad83;
+  background: rgba(44, 28, 34, 0.95);
+  transform: translateY(-2px);
+}
+
+/* ==========================================
+   SECTION 01 — HERO & VILLAGE DESTINATIONS
+   ========================================== */
+.p2d-hero-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 2.5rem;
+  align-items: center;
+  margin-bottom: 2.75rem;
+}
+
+.p2d-hero-title {
+  font-family: 'Cormorant Garamond', 'Cinzel', Georgia, serif;
+  font-size: clamp(2.5rem, 4.4vw, 3.8rem);
+  font-weight: 700;
+  line-height: 1.08;
+  margin: 0 0 1rem;
+  color: #f5efe7;
+}
+
+.p2d-hero-title em {
+  font-style: normal;
+  color: #d5ad83;
+  border-bottom: 2px solid #a92f32;
+}
+
+.p2d-role-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.p2d-role-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.38rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(34, 21, 26, 0.9);
+  border: 1px solid rgba(177, 89, 76, 0.38);
+  color: #e8d8c8;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.p2d-hero-quote {
+  margin: 0 0 1rem;
+  padding-left: 1rem;
+  border-left: 3px solid #a92f32;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  color: #d5ad83;
+}
+
+.p2d-hero-desc {
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #c8b6a9;
+  margin: 0 0 1.65rem;
+}
+
+.p2d-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.p2d-hero-portrait-card {
+  position: relative;
+  border-radius: 18px;
+  padding: 1rem;
+  background: rgba(25, 16, 20, 0.92);
+  border: 1px solid rgba(213, 173, 131, 0.32);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+}
+
+.p2d-hero-portrait-img-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  aspect-ratio: 4 / 4.3;
+  background: #160e12;
+}
+
+.p2d-hero-portrait-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.p2d-hero-portrait-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.85rem;
+  margin-top: 0.85rem;
+  border-top: 1px solid rgba(177, 89, 76, 0.25);
+}
+
+.p2d-hero-portrait-caption strong {
+  display: block;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.2rem;
+  color: #f4e8da;
+}
+
+.p2d-hero-portrait-caption span {
+  font-size: 0.76rem;
+  color: #c4b4ac;
+}
+
+.p2d-hero-jp-tag {
+  font-size: 0.78rem;
+  color: #d5ad83;
+  letter-spacing: 0.12em;
+}
+
+/* 6 Destinations Grid */
+.p2d-destinations-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.p2d-dest-card {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(177, 89, 76, 0.3);
+  background: rgba(24, 15, 19, 0.92);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.25rem;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.p2d-dest-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(213, 173, 131, 0.55);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+}
+
+.p2d-dest-card-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.22;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.45s ease;
+}
+
+.p2d-dest-card:hover .p2d-dest-card-art {
+  opacity: 0.34;
+  transform: scale(1.04);
+}
+
+.p2d-dest-card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(16, 10, 14, 0.65) 0%, rgba(16, 10, 14, 0.95) 100%);
+  pointer-events: none;
+}
+
+.p2d-dest-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+.p2d-dest-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.65rem;
+}
+
+.p2d-dest-num {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(169, 47, 50, 0.85);
+  color: #f5efe7;
+  letter-spacing: 0.08em;
+}
+
+.p2d-dest-sub {
+  font-size: 0.72rem;
+  color: #d5ad83;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.p2d-dest-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f4e8da;
+  margin: 0 0 0.35rem;
+}
+
+.p2d-dest-desc {
+  font-size: 0.83rem;
+  color: #c4b4ac;
+  line-height: 1.5;
+  margin: 0 0 0.9rem;
+}
+
+.p2d-dest-link {
+  position: relative;
+  z-index: 1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #d5ad83;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ==========================================
+   SECTION 02 — ICHIRAKU PROJECTS SHOWCASE
+   ========================================== */
+.p2d-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.p2d-project-card {
+  border-radius: 16px;
+  border: 1px solid rgba(177, 89, 76, 0.34);
+  background: rgba(25, 16, 20, 0.92);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.p2d-project-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(213, 173, 131, 0.55);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.5);
+}
+
+.p2d-project-thumb-wrap {
+  position: relative;
+  height: 210px;
+  background: #140c10;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(177, 89, 76, 0.25);
+}
+
+.p2d-project-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.p2d-project-card:hover .p2d-project-thumb {
+  transform: scale(1.04);
+}
+
+.p2d-project-rank-badge {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  padding: 0.26rem 0.68rem;
+  border-radius: 999px;
+  background: rgba(18, 12, 15, 0.88);
+  border: 1px solid rgba(213, 173, 131, 0.45);
+  color: #d5ad83;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.p2d-project-jp-badge {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.85rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: 6px;
+  background: rgba(16, 10, 13, 0.84);
+  color: #f4e8da;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.p2d-project-body {
+  padding: 1.45rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.p2d-project-category {
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #d5ad83;
+  margin-bottom: 0.3rem;
+}
+
+.p2d-project-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #f4e8da;
+  margin: 0 0 0.55rem;
+}
+
+.p2d-project-desc {
+  font-size: 0.88rem;
+  color: #c4b4ac;
+  line-height: 1.6;
+  margin: 0 0 1rem;
+}
+
+.p2d-project-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.p2d-project-features li {
+  font-size: 0.8rem;
+  color: #d9cbbd;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.p2d-project-features li::before {
+  content: '✦';
+  color: #b83a35;
+  font-size: 0.68rem;
+}
+
+.p2d-project-tech-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.42rem;
+  margin-top: auto;
+  margin-bottom: 1.2rem;
+}
+
+.p2d-project-tech-pill {
+  padding: 0.24rem 0.62rem;
+  border-radius: 6px;
+  background: rgba(38, 24, 29, 0.9);
+  border: 1px solid rgba(177, 89, 76, 0.3);
+  color: #e8d8c8;
+  font-size: 0.74rem;
+}
+
+.p2d-project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid rgba(177, 89, 76, 0.22);
+}
+
+/* ==========================================
+   SECTION 03 — ABOUT ME (HOKAGE'S OFFICE)
+   ========================================== */
+.p2d-about-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 2.25rem;
+  align-items: start;
+}
+
+.p2d-about-photo-card {
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(25, 16, 20, 0.94);
+  border: 1px solid rgba(213, 173, 131, 0.34);
+}
+
+.p2d-about-photo-img {
+  width: 100%;
+  aspect-ratio: 4 / 4.6;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 11px;
+  display: block;
+  margin-bottom: 0.9rem;
+}
+
+.p2d-about-photo-meta h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.4rem;
+  margin: 0 0 0.2rem;
+  color: #f4e8da;
+}
+
+.p2d-about-photo-meta p {
+  font-size: 0.8rem;
+  color: #d5ad83;
+  margin: 0 0 0.75rem;
+}
+
+.p2d-about-Location-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #c4b4ac;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(169, 47, 50, 0.18);
+  border: 1px solid rgba(169, 47, 50, 0.38);
+}
+
+.p2d-about-bio p {
+  font-size: 0.96rem;
+  line-height: 1.72;
+  color: #dfd1c3;
+  margin: 0 0 1rem;
+}
+
+.p2d-about-snapshot-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.95rem;
+  margin: 1.5rem 0;
+}
+
+.p2d-snapshot-card {
+  padding: 1.05rem 1.15rem;
+  border-radius: 12px;
+  background: rgba(27, 17, 21, 0.9);
+  border: 1px solid rgba(177, 89, 76, 0.3);
+}
+
+.p2d-snapshot-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #d5ad83;
+  margin-bottom: 0.3rem;
+}
+
+.p2d-snapshot-primary {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f4e8da;
+  line-height: 1.4;
+}
+
+.p2d-snapshot-secondary {
+  font-size: 0.8rem;
+  color: #c4b4ac;
+  margin-top: 0.22rem;
+}
+
+.p2d-about-subhead {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.3rem;
+  color: #f4e8da;
+  margin: 1.5rem 0 0.75rem;
+}
+
+.p2d-interests-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.p2d-interest-chip {
+  padding: 0.55rem 0.95rem;
+  border-radius: 10px;
+  background: rgba(28, 18, 22, 0.9);
+  border: 1px solid rgba(177, 89, 76, 0.32);
+  color: #f4e8da;
+  font-size: 0.83rem;
+}
+
+.p2d-interest-chip strong {
+  color: #d5ad83;
+  margin-right: 0.35rem;
+}
+
+.p2d-drives-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.p2d-drive-card {
+  padding: 1rem;
+  border-radius: 12px;
+  background: rgba(28, 18, 22, 0.88);
+  border: 1px solid rgba(177, 89, 76, 0.28);
+}
+
+.p2d-drive-card h4 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.18rem;
+  color: #d5ad83;
+  margin: 0 0 0.25rem;
+}
+
+.p2d-drive-card p {
+  font-size: 0.82rem;
+  color: #c4b4ac;
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* ==========================================
+   SECTION 04 — TECHNICAL SKILLS WORKBENCH
+   ========================================== */
+.p2d-skills-workbench {
+  display: grid;
+  grid-template-columns: 28% 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ==========================================
+   SECTION 05 — MISSIONS & EXPERIENCE
+   ========================================== */
+.p2d-mission-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-bottom: 1.5rem;
+}
+
+.p2d-mission-tab {
+  padding: 0.48rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(177, 89, 76, 0.34);
+  background: rgba(25, 16, 20, 0.85);
+  color: #c4b4ac;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.p2d-mission-tab.is-active {
+  background: linear-gradient(135deg, #a92f32 0%, #7d2428 100%);
+  border-color: rgba(213, 173, 131, 0.5);
+  color: #f5efe7;
+}
+
+.p2d-missions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.p2d-mission-card {
+  border-radius: 15px;
+  border: 1px solid rgba(177, 89, 76, 0.34);
+  background: rgba(25, 16, 20, 0.92);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.p2d-mission-thumb {
+  width: 100%;
+  height: 165px;
+  object-fit: cover;
+  border-bottom: 1px solid rgba(177, 89, 76, 0.25);
+}
+
+.p2d-mission-body {
+  padding: 1.35rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.p2d-mission-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.p2d-mission-category {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #d5ad83;
+}
+
+.p2d-mission-status {
+  font-size: 0.7rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(169, 47, 50, 0.24);
+  border: 1px solid rgba(184, 58, 53, 0.45);
+  color: #f4e8da;
+}
+
+.p2d-mission-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.4rem;
+  color: #f4e8da;
+  margin: 0 0 0.25rem;
+}
+
+.p2d-mission-org {
+  font-size: 0.84rem;
+  color: #d5ad83;
+  margin-bottom: 0.65rem;
+}
+
+.p2d-mission-desc {
+  font-size: 0.86rem;
+  color: #c4b4ac;
+  line-height: 1.6;
+  margin: 0 0 1rem;
+}
+
+/* ==========================================
+   SECTION 06 — HOKAGE MONUMENT CONTACT
+   ========================================== */
+.p2d-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.15rem;
+}
+
+.p2d-contact-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.35rem 1.45rem;
+  border-radius: 14px;
+  background: rgba(25, 16, 20, 0.92);
+  border: 1px solid rgba(177, 89, 76, 0.34);
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+
+.p2d-contact-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(213, 173, 131, 0.55);
+}
+
+.p2d-contact-card-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #d5ad83;
+  margin-bottom: 0.3rem;
+}
+
+.p2d-contact-card-value {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.32rem;
+  font-weight: 700;
+  color: #f4e8da;
+  margin: 0 0 0.25rem;
+  word-break: break-all;
+}
+
+.p2d-contact-card-note {
+  font-size: 0.8rem;
+  color: #c4b4ac;
+  margin: 0;
+}
+
+.p2d-contact-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.p2d-footer {
+  text-align: center;
+  padding: 2rem 1rem 1rem;
+  color: #9e8d84;
+  font-size: 0.82rem;
+  border-top: 1px solid rgba(177, 89, 76, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .p2d-hero-grid,
+  .p2d-about-layout,
+  .p2d-skills-workbench {
+    grid-template-columns: 1fr;
+  }
+
+  .p2d-destinations-grid,
+  .p2d-missions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .p2d-navbar {
+    padding: 0.7rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .p2d-section-inner {
+    padding: 1.65rem 1.25rem;
+  }
+
+  .p2d-projects-grid,
+  .p2d-destinations-grid,
+  .p2d-missions-grid,
+  .p2d-contact-grid,
+  .p2d-about-snapshot-grid,
+  .p2d-drives-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -520,6 +520,7 @@ const Naruto = React.memo(function Naruto({
       playerPosRef.current[0] = p.x;
       playerPosRef.current[1] = p.y;
       playerPosRef.current[2] = p.z;
+      playerPosRef.current[3] = p.rotation;
     }
 
     // Throttled parent state updates for HUD landmark pill (only when moved > 1.2m)
