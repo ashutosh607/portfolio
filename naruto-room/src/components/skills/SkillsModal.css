@@ -1,0 +1,619 @@
+/**
+ * Shinobi Portfolio — Location 04: Training Grounds (Technical Skills Redesign)
+ *
+ * Color System:
+ * Main background:     #120D10
+ * Content panel:       rgba(22, 14, 18, 0.94)
+ * Sidebar cards:       rgba(25, 16, 19, 0.88)
+ * Primary accent:      #A92F32
+ * Hover accent:        #C34242
+ * Primary text:        #F4E8DA
+ * Secondary text:      #C4B4AC
+ * Gold details:        #D5AD83
+ * Borders:             rgba(177, 89, 76, 0.35)
+ */
+
+/* ================= 1. OVERLAY & ENVIRONMENTAL BACKGROUND ================= */
+.skills-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  background-color: #120D10;
+  overflow-x: hidden;
+  overflow-y: auto;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.skills-env-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  transform: translateZ(0);
+}
+
+/* Subtle cinematic dark overlay to ensure high contrast for typography */
+.skills-env-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(18, 13, 16, 0.72) 0%,
+    rgba(18, 13, 16, 0.85) 60%,
+    rgba(12, 8, 10, 0.94) 100%
+  );
+  pointer-events: none;
+}
+
+/* ================= 2. MAIN CONTAINER & HEADER ================= */
+.skills-modal-stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 40px 32px 56px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.skills-top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.skills-header-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skills-loc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 2.4px;
+  color: #D5AD83;
+  text-transform: uppercase;
+}
+
+.skills-shuriken-svg {
+  width: 14px;
+  height: 14px;
+  fill: #A92F32;
+  flex-shrink: 0;
+}
+
+.skills-main-title {
+  margin: 2px 0 0;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #F4E8DA;
+  line-height: 1.15;
+  position: relative;
+  display: inline-block;
+}
+
+.title-brush-stroke {
+  position: absolute;
+  left: 32%;
+  bottom: -9px;
+  width: 160px;
+  height: 9px;
+  pointer-events: none;
+}
+
+.skills-subtitle {
+  margin: 10px 0 0;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(15px, 1.35vw, 17.5px);
+  font-style: italic;
+  font-weight: 500;
+  color: #C4B4AC;
+  letter-spacing: 0.3px;
+  max-width: 680px;
+  line-height: 1.45;
+}
+
+/* Minimalist Circular Close Button */
+.skills-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(25, 16, 19, 0.75);
+  border: 1px solid rgba(177, 89, 76, 0.4);
+  color: #F4E8DA;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+  margin-left: 20px;
+}
+
+.skills-close-btn:hover {
+  background: #A92F32;
+  border-color: #D5AD83;
+  color: #FFFFFF;
+  transform: rotate(90deg) scale(1.06);
+  box-shadow: 0 6px 20px rgba(169, 47, 50, 0.5);
+}
+
+.skills-close-svg {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+}
+
+/* ================= 3. TWO-COLUMN WORKBENCH LAYOUT ================= */
+.skills-workbench-grid {
+  display: grid;
+  grid-template-columns: 27% 73%;
+  gap: 22px;
+  align-items: stretch;
+  flex: 1;
+}
+
+/* ================= 4. LEFT COLUMN: CATEGORIES ================= */
+.skills-nav-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.skills-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skill-nav-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: rgba(25, 16, 19, 0.88);
+  border: 1px solid rgba(177, 89, 76, 0.35);
+  color: #C4B4AC;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+  text-align: left;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+
+.skill-nav-btn::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #A92F32;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.skill-nav-btn:hover {
+  transform: translateX(3px);
+  border-color: rgba(195, 66, 66, 0.65);
+  background: rgba(38, 22, 28, 0.92);
+  color: #F4E8DA;
+}
+
+.skill-nav-btn.is-active {
+  background: linear-gradient(135deg, #A92F32 0%, #7E2024 100%);
+  border-color: rgba(213, 173, 131, 0.6);
+  color: #F4E8DA;
+  box-shadow: 0 4px 18px rgba(169, 47, 50, 0.4);
+}
+
+.skill-nav-btn.is-active::before {
+  opacity: 1;
+  background: #D5AD83;
+}
+
+.nav-btn-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-btn-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.category-svg-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.nav-btn-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.nav-btn-arrow {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.skill-nav-btn:hover .nav-btn-arrow,
+.skill-nav-btn.is-active .nav-btn-arrow {
+  transform: translateX(2px);
+  opacity: 1;
+}
+
+/* ================= 5. RIGHT COLUMN: SKILL DETAILS PANEL ================= */
+.skill-details-panel {
+  background: rgba(22, 14, 18, 0.94);
+  border: 1px solid rgba(177, 89, 76, 0.35);
+  border-radius: 14px;
+  padding: 28px 30px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+}
+
+.skill-details-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.details-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(177, 89, 76, 0.2);
+  padding-bottom: 16px;
+}
+
+.details-title-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.details-japanese-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: #C75A50;
+  text-transform: uppercase;
+}
+
+.details-main-heading {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #F4E8DA;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.heading-icon-inline {
+  width: 26px;
+  height: 26px;
+  color: #A92F32;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.details-jutsu-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(213, 173, 131, 0.4);
+  background: rgba(35, 20, 25, 0.8);
+  color: #D5AD83;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.details-description-text {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #C4B4AC;
+  letter-spacing: 0.2px;
+  max-width: 780px;
+}
+
+/* Section Blocks */
+.details-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.details-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #D5AD83;
+}
+
+.section-header-svg {
+  width: 15px;
+  height: 15px;
+  stroke: #A92F32;
+  flex-shrink: 0;
+}
+
+.section-header-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.8px;
+  color: #F4E8DA;
+  text-transform: uppercase;
+}
+
+/* ================= 6. TECHNOLOGY BADGES ================= */
+.tech-badges-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tech-badge-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: rgba(30, 20, 24, 0.85);
+  border: 1px solid rgba(177, 89, 76, 0.32);
+  color: #F4E8DA;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.tech-badge-item:hover {
+  border-color: #C34242;
+  background: rgba(45, 27, 33, 0.95);
+  transform: translateY(-1.5px);
+  box-shadow: 0 4px 12px rgba(169, 47, 50, 0.25);
+}
+
+.tech-badge-icon-wrap {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.tech-svg-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.tech-badge-name {
+  white-space: nowrap;
+}
+
+/* ================= 7. RELATED PROJECT CARDS ================= */
+.related-projects-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.related-project-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  background: rgba(28, 18, 22, 0.85);
+  border: 1px solid rgba(177, 89, 76, 0.3);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+  position: relative;
+  text-decoration: none;
+}
+
+.related-project-card:hover {
+  transform: translateY(-3px);
+  border-color: #C34242;
+  box-shadow: 0 8px 24px rgba(169, 47, 50, 0.35);
+  background: rgba(38, 24, 29, 0.95);
+}
+
+.project-thumb-frame {
+  width: 100%;
+  height: 96px;
+  position: relative;
+  overflow: hidden;
+  background: #0f0a0c;
+}
+
+.project-thumb-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.related-project-card:hover .project-thumb-image {
+  transform: scale(1.05);
+}
+
+.project-thumb-vignette {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 40%, rgba(22, 14, 18, 0.9) 100%);
+  pointer-events: none;
+}
+
+.project-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  gap: 8px;
+}
+
+.project-card-title {
+  margin: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #F4E8DA;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-card-arrow {
+  color: #D5AD83;
+  font-size: 13px;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.related-project-card:hover .project-card-arrow {
+  transform: translate(2px, -2px);
+  color: #C34242;
+}
+
+/* ================= 8. RESPONSIVE MEDIA QUERIES ================= */
+@media (max-width: 1024px) {
+  .skills-workbench-grid {
+    grid-template-columns: 32% 68%;
+    gap: 16px;
+  }
+
+  .skills-modal-stage {
+    padding: 32px 24px 48px;
+  }
+
+  .related-projects-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .skills-modal-stage {
+    padding: 24px 16px 40px;
+  }
+
+  .skills-top-bar {
+    margin-bottom: 20px;
+  }
+
+  .skills-main-title {
+    font-size: 24px;
+  }
+
+  .title-brush-stroke {
+    width: 120px;
+    left: 20%;
+  }
+
+  /* Switch left column from vertical to horizontal scrollable tabs */
+  .skills-workbench-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .skills-nav-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .skills-nav-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .skill-nav-btn {
+    flex-shrink: 0;
+    width: auto;
+    padding: 10px 14px;
+  }
+
+  .nav-btn-arrow {
+    display: none;
+  }
+
+  .skill-details-panel {
+    padding: 20px 18px;
+  }
+
+  .related-projects-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skills-modal-stage,
+  .skill-nav-btn,
+  .tech-badge-item,
+  .related-project-card,
+  .project-thumb-image,
+  .skills-close-btn {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    transform: none !important;
+  }
+}
+

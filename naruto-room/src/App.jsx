@@ -242,6 +242,7 @@ function AppContent() {
           activeModal === 'about' ||
           activeModal === 'achievements' ||
           activeModal === 'contact' ||
+          activeModal === 'skills' ||
           activeModal === 'resume'
             ? 'demand'
             : 'always'

@@ -4,6 +4,7 @@ import AboutModal from './AboutModal';
 import MissionScroll from './mission-scroll/MissionScroll';
 import ContactModal from './ContactModal';
 import ResumeViewerModal from './ResumeViewerModal';
+import SkillsModal from './skills/SkillsModal';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
@@ -28,7 +29,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
     }
   }, [activeModal]);
 
-  // ESC key to close modal or exit sub-view (RamenBookModal, AboutModal, ContactModal & ResumeViewerModal handle ESC with their own GSAP exit animations)
+  // ESC key to close modal or exit sub-view (RamenBookModal, AboutModal, ContactModal, SkillsModal & ResumeViewerModal handle ESC with their own GSAP exit animations)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (
@@ -37,6 +38,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
         activeModal !== 'projects' &&
         activeModal !== 'about' &&
         activeModal !== 'contact' &&
+        activeModal !== 'skills' &&
         activeModal !== 'achievements' &&
         activeModal !== 'resume'
       ) {
@@ -118,6 +120,32 @@ const PortfolioModals = React.memo(function PortfolioModals({
         onClose={onClose}
         onBack={resumeOrigin ? () => onOpenModal?.(resumeOrigin) : null}
         originName={resumeOrigin === 'contact' ? 'Contact' : 'About'}
+      />
+    );
+  }
+
+  // Location 04 — Training Grounds (Cinematic Technical Skills & Jutsu Scrolls)
+  if (activeModal === 'skills') {
+    return (
+      <SkillsModal
+        isOpen={true}
+        onClose={onClose}
+        onInspectProject={(project) => {
+          if (project?.id === 'konoha-3d-portfolio') {
+            onClose();
+          } else {
+            const found = PORTFOLIO_PROJECTS.find(
+              (p) => p.id === project.id || p.title.toLowerCase() === project.title.toLowerCase()
+            );
+            if (found) {
+              setSelectedProject(found);
+            }
+            onOpenModal?.('projects');
+          }
+        }}
+        onFastTravel={
+          onFastTravel ? () => travelToDestination('training-grounds') : null
+        }
       />
     );
   }
