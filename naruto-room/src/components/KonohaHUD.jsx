@@ -1,57 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { KONOHA_LOCATIONS } from '../config/locations';
 
-// Minimal line-art SVG icons for the 6 destinations
-const LOCATION_SVGS = {
-  'main-street': (
-    <svg viewBox="0 0 24 24" className="dest-line-svg" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 12m-2 0a2 2 0 1 0 4 0a4.5 4.5 0 1 0 -9 0a7 7 0 1 0 14 0a9.5 9.5 0 1 0 -19 0" />
-      <path d="M19 18l3 -1.5" />
-    </svg>
-  ),
-  'ichiraku-ramen': (
-    <svg viewBox="0 0 24 24" className="dest-line-svg" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 12h16a1 1 0 0 1 1 1v.5a7.5 7.5 0 0 1 -15 0v-.5a1 1 0 0 1 1 -1z" />
-      <path d="M8 20h8" />
-      <path d="M7 5l11 3" />
-      <path d="M7 8l11 -2" />
-      <path d="M9 12v-3" />
-      <path d="M13 12v-3" />
-    </svg>
-  ),
-  'hokage-office': (
-    <svg viewBox="0 0 24 24" className="dest-line-svg" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 10l9 -6l9 6" />
-      <path d="M5 10v9h14v-9" />
-      <path d="M9 19v-5h6v5" />
-      <path d="M2 19h20" />
-    </svg>
-  ),
-  'training-grounds': (
-    <svg viewBox="0 0 24 24" className="dest-line-svg" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
-      <path d="M13 19l6 -6" />
-      <path d="M16 16l4 4" />
-      <path d="M9.5 17.5L21 6V3h-3L6.5 14.5" />
-      <path d="M11 19l-6 -6" />
-      <path d="M8 16l-4 4" />
-    </svg>
-  ),
-  'mission-board': (
-    <svg viewBox="0 0 24 24" className="dest-line-svg" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="4" width="14" height="16" rx="1.5" />
-      <path d="M9 4v-1.5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v1.5" />
-      <path d="M9 10h6" />
-      <path d="M9 14h6" />
-    </svg>
-  ),
-  'hokage-monument': (
-    <svg viewBox="0 0 24 24" className="dest-line-svg" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 20l5.5 -12l4 6l3.5 -8l5 14z" />
-      <path d="M2 20h20" />
-    </svg>
-  ),
-};
+import { LOCATION_SVGS } from './locationIcons';
 
 const TOP_NAV_ITEMS = [
   { number: '01', label: 'Intro', modalKey: 'intro', locId: 'main-street' },
@@ -425,32 +375,31 @@ const KonohaHUD = React.memo(function KonohaHUD({
             <span className="dest-trigger-count">{visitedIds.size}/6</span>
           </button>
 
-          <button
-            type="button"
-            className={`shinobi-menu-pill ${isMenuOpen ? 'is-open' : ''}`}
-            onClick={() => {
-              setIsMenuOpen((prev) => !prev);
-              setIsDestinationsOpen(false);
-            }}
-            aria-expanded={isMenuOpen}
-            title="Portfolio Menu & Settings"
-          >
-            <svg viewBox="0 0 24 24" className="menu-bars-svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              {isMenuOpen ? (
-                <>
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                  <line x1="6" y1="18" x2="18" y2="6" />
-                </>
-              ) : (
-                <>
-                  <line x1="4" y1="8" x2="20" y2="8" />
-                  <line x1="4" y1="12" x2="16" y2="12" />
-                  <line x1="4" y1="16" x2="20" y2="16" />
-                </>
-              )}
-            </svg>
-            <span>Menu</span>
-          </button>
+          {onSwitchTo2D && (
+            <button
+              type="button"
+              className="shinobi-menu-pill shinobi-2d-pill"
+              onClick={onSwitchTo2D}
+              title="Switch to 2D Classic Portfolio"
+              aria-label="Switch to 2D Classic Portfolio"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="menu-2d-svg"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+              </svg>
+              <span>2D Portfolio</span>
+            </button>
+          )}
         </div>
       </header>
 

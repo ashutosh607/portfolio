@@ -238,6 +238,7 @@ function AppContent() {
       {/* 3D Scene Canvas */}
       <Canvas
         frameloop={
+          activeModal === 'intro' ||
           activeModal === 'projects' ||
           activeModal === 'about' ||
           activeModal === 'achievements' ||

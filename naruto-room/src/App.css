@@ -389,10 +389,19 @@
   transform: translateY(-1px);
 }
 
-.menu-bars-svg {
+.menu-bars-svg,
+.menu-2d-svg {
   width: 15px;
   height: 15px;
   color: var(--charcoal);
+  flex-shrink: 0;
+}
+
+.shinobi-2d-pill:hover {
+  background: var(--white);
+  border-color: rgba(169, 47, 50, 0.4);
+  color: #120D10;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.28);
 }
 
 /* ==========================================================================
@@ -3124,6 +3133,11 @@
   }
   .shinobi-hint-pill {
     display: none;
+  }
+  .shinobi-2d-pill {
+    padding: 0 11px;
+    font-size: 13.5px;
+    height: 32px;
   }
   .shinobi-mobile-touchpad {
     display: flex;

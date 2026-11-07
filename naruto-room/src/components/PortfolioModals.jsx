@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import EntryGate from './EntryGate';
 import RamenBookModal from './RamenBookModal';
 import AboutModal from './AboutModal';
 import MissionScroll from './mission-scroll/MissionScroll';
@@ -35,6 +36,7 @@ const PortfolioModals = React.memo(function PortfolioModals({
       if (
         e.code === 'Escape' &&
         activeModal &&
+        activeModal !== 'intro' &&
         activeModal !== 'projects' &&
         activeModal !== 'about' &&
         activeModal !== 'contact' &&
@@ -65,6 +67,13 @@ const PortfolioModals = React.memo(function PortfolioModals({
       onClose();
     }
   };
+
+  if (activeModal === 'intro') {
+    return <EntryGate onClose={onClose} onOpenModal={onOpenModal} onTeleport={id => {
+      const location = KONOHA_LOCATIONS.find(item => item.id === id);
+      if (location) onFastTravel?.(location.position);
+    }}/>;
+  }
 
   // Custom Interactive Japanese Ramen Book for Ichiraku Projects Menu
   if (activeModal === 'projects') {
@@ -179,7 +188,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
         <div className="portfolio-modal-header">
           <div className="modal-title-group">
             <span className="modal-category-tag">
-              {activeModal === 'intro' && '🍃 LOCATION 01 • MAIN ENTRY GATE'}
               {activeModal === 'projects' && '🍜 LOCATION 02 • ICHIRAKU RAMEN MENU'}
               {activeModal === 'about' && "📜 LOCATION 03 • HOKAGE'S OFFICE ARCHIVE"}
               {activeModal === 'skills' && '⚔️ LOCATION 04 • TRAINING GROUNDS SCROLLS'}
@@ -187,7 +195,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
               {activeModal === 'resume' && '🎖️ SHINOBI CREDENTIALS & RESUME'}
             </span>
             <h2 className="modal-main-title">
-              {activeModal === 'intro' && "Hello, I'm Ashutosh."}
               {activeModal === 'projects' &&
                 (selectedProject
                   ? `${selectedProject.title} — Dish Details`
@@ -224,92 +231,6 @@ const PortfolioModals = React.memo(function PortfolioModals({
 
         {/* Modal Scroll Content Body */}
         <div className="portfolio-modal-body">
-          {/* ================= 01. INTRO / WELCOME MODAL (MAIN STREET) ================= */}
-          {activeModal === 'intro' && (
-            <div className="modal-section-content">
-              <div className="intro-hero-banner">
-                <div className="intro-badge-row">
-                  <span className="shinobi-role-pill">AI/ML Developer</span>
-                  <span className="shinobi-role-pill">Full-Stack Developer</span>
-                  <span className="shinobi-role-pill">Problem Solver</span>
-                </div>
-                <h3 className="intro-quote-headline">
-                  "A shinobi of code, building things worth discovering."
-                </h3>
-                <p className="intro-lead-text">
-                  Welcome to my interactive 3D Hidden Leaf Village portfolio. Walk down the streets
-                  of Konoha, talk to iconic shinobi, or travel directly to any of the{' '}
-                  <strong>6 village destinations</strong> below to explore my engineering work, AI/ML
-                  systems, skills, and mission history.
-                </p>
-
-                <div className="intro-cta-row">
-                  <button className="intro-primary-btn" onClick={onClose}>
-                    🍃 Explore My World
-                  </button>
-                  <button
-                    className="intro-secondary-btn"
-                    onClick={() => onOpenModal?.('projects')}
-                  >
-                    🍜 View My Projects
-                  </button>
-                  <button
-                    className="intro-tertiary-btn"
-                    onClick={() => onOpenModal?.('contact')}
-                  >
-                    ⛰️ Contact Me
-                  </button>
-                </div>
-              </div>
-
-              <h4 className="destinations-grid-heading">
-                🗺️ SIX VILLAGE DESTINATIONS — CLICK TO VISIT OR EXPLORE
-              </h4>
-              <div className="intro-destinations-grid">
-                {KONOHA_LOCATIONS.map((loc) => (
-                  <div key={loc.id} className="intro-dest-card">
-                    <div className="dest-card-top">
-                      <span className="dest-num-badge" style={{ backgroundColor: loc.color }}>
-                        {loc.number}
-                      </span>
-                      <span className="dest-icon">{loc.icon}</span>
-                      <div>
-                        <strong className="dest-title">{loc.name}</strong>
-                        <span className="dest-role">{loc.role}</span>
-                      </div>
-                    </div>
-                    <p className="dest-desc">{loc.description}</p>
-                    <div className="dest-card-actions">
-                      <button
-                        className="dest-action-open"
-                        onClick={() => {
-                          if (loc.id === 'main-street') {
-                            onClose();
-                          } else {
-                            onOpenModal?.(loc.modalKey);
-                          }
-                        }}
-                      >
-                        Open Section
-                      </button>
-                      {onFastTravel && (
-                        <button
-                          className="dest-action-travel"
-                          onClick={() => {
-                            onFastTravel(loc.position);
-                            onClose();
-                          }}
-                        >
-                          Teleport Here →
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* ================= 02. PROJECTS MODAL (ICHIRAKU RAMEN) ================= */}
           {activeModal === 'projects' && !selectedProject && (
             <div className="modal-section-content">

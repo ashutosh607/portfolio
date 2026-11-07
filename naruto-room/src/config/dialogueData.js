@@ -10,12 +10,12 @@ export const CHARACTERS_DATA = [
     locationLabel: 'Mission Gate — Konoha Plaza',
     modelPath: '/models/sasuke_uchiha.glb',
     // Standing on the LEFT of the Mission Gate at [-2.26, 0.56, -7.92], turned slightly towards center
-    position: [-3.66, 0.556, -7.85],
+    position: [-3.66, 0.68, -7.85],
     rotation: [0, 0.25, 0],
     scale: 0.96, // Calibrated height: ~1.75m
     modelRotation: [0, 0, 0],
     modelOffset: [0, 0, 0],
-    feetOffset: 0.01,
+    feetOffset: 0.12,
     interactionDistance: 3.5,
     themeColor: '#34495e',
     accentColor: '#9b59b6',

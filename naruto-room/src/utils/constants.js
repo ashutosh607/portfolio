@@ -1,6 +1,6 @@
 // Opening pose: Main Street, facing the visitor with the monument behind Naruto.
 export const INITIAL_SPAWN = {
-  position: [-23.22, -0.19, 10.39],
+  position: [-23.59, -0.17, 9.79],
   facing: 0,
   cameraYaw: 0,
   cameraPitch: -0.12,
