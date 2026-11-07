@@ -1,17 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { flushSync } from 'react-dom';
 import { PageTurnSurface } from './PageTurnSurface';
-import { getPortfolioProjects } from '../config/locations';
+import { loadProjectMenu } from '../data/projectMenu';
+import { PageNavigation, ProjectSpread } from './ProjectSpread';
+import { ADMIN_PROJECTS_STORAGE_KEY } from '../config/locations';
 import './RamenBookModal.css';
 
-// 4 Signature dishes as specified in the redesign requirements
-const SIGNATURE_PROJECT_IDS = [
-  'travelflow-ai',
-  'wastewise',
-  'callkavach',
-  'racket-sports-intelligence',
-];
+const PROJECTS_PER_SPREAD = 3;
 
 export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialProjectId = null }) {
   const [bookState, setBookState] = useState('closed');
@@ -20,11 +16,11 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   const [isMobileDetailView, setIsMobileDetailView] = useState(false);
   const [busy, setBusy] = useState(false);
   const [turnNotice, setTurnNotice] = useState('');
-  const [projectsVersion, setProjectsVersion] = useState(0);
+  const [projects, setProjects] = useState(loadProjectMenu);
   const bookContainerRef = useRef(null);
   const frontCoverRef = useRef(null);
   const interiorSpreadRef = useRef(null);
-  const rightPageContentRef = useRef(null);
+
   const turningLeafRef = useRef(null);
   const dialogRef = useRef(null);
   const timelineRef = useRef(null);
@@ -35,7 +31,9 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   const afterCloseRef = useRef(null);
 
   useEffect(() => {
-    const handleAdminProjectUpdate = () => setProjectsVersion(v => v + 1);
+    const handleAdminProjectUpdate = event => {
+      if (event.type !== 'storage' || !event.key || event.key === ADMIN_PROJECTS_STORAGE_KEY) setProjects(loadProjectMenu());
+    };
     window.addEventListener('storage', handleAdminProjectUpdate);
     window.addEventListener('shinobi-projects-updated', handleAdminProjectUpdate);
     return () => {
@@ -44,15 +42,9 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     };
   }, []);
 
-  const projects = useMemo(() => {
-    const allProjects = getPortfolioProjects();
-    return SIGNATURE_PROJECT_IDS
-      .map(id => allProjects.find(project => project.id === id))
-      .filter(Boolean)
-      .map((project, index) => ({ ...project, menuIndex: `0${index + 1}` }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectsVersion]);
-  const currentProject = projects[selectedProjectIndex] || projects[0];
+  const menuPages = Math.max(1, Math.ceil(projects.length / PROJECTS_PER_SPREAD));
+  const totalSpreads = menuPages + 1;
+  const currentProject = projects[selectedProjectIndex];
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const mobileView = () => window.matchMedia('(max-width: 860px)').matches;
   const lock = useCallback(() => {
@@ -84,18 +76,17 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     // Reset the external animation session when the modal is reopened.
     // eslint-disable-next-line react/set-state-in-effect
     setBookState('closed');
-    setCurrentSpread(1);
-    setSelectedProjectIndex(Math.max(0, projects.findIndex(project => project.id === initialProjectId)));
+    const initialIndex = Math.max(0, projects.findIndex(project => project.id === initialProjectId));
+    setCurrentSpread(1 + Math.floor(initialIndex / PROJECTS_PER_SPREAD));
+    setSelectedProjectIndex(initialIndex);
     setIsMobileDetailView(false);
     unlock();
 
     const container = bookContainerRef.current;
     const cover = frontCoverRef.current;
-    const isMob = mobileView();
-
     if (container && cover) {
       gsap.set(container, {
-        xPercent: isMob ? 0 : -25,
+        xPercent: 0,
         y: 0,
         '--open-progress': 0,
       });
@@ -110,7 +101,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       if (frontCoverRef.current && interiorSpreadRef.current) {
         prepareInnerCover(
           frontCoverRef.current,
-          interiorSpreadRef.current.querySelector('[data-spread="1"] .page-left')
+          interiorSpreadRef.current.querySelector('.is-current .page-left')
         );
       }
       dialogRef.current?.querySelector('.cover-open-trigger-btn')?.focus({ preventScroll: true });
@@ -131,7 +122,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     if (bookState !== 'closed' || !lock()) return;
     const container = bookContainerRef.current;
     const cover = frontCoverRef.current;
-    const leftPage = interiorSpreadRef.current?.querySelector('[data-spread="1"] .page-left');
+    const leftPage = interiorSpreadRef.current?.querySelector('.is-current .page-left');
 
     if (cover && leftPage && !cover.querySelector('.cover-inner-face .book-page')) {
       prepareInnerCover(cover, leftPage);
@@ -140,7 +131,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     setBookState('opening');
     const isMob = mobileView();
     const isReduced = reducedMotion();
-    const duration = isReduced ? 0.01 : isMob ? 0.72 : 0.96;
+    const duration = isReduced ? 0.01 : isMob ? 0.85 : 1.65;
 
     timelineRef.current?.kill();
     const tl = gsap.timeline({
@@ -149,7 +140,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         setBookState('open');
         unlock();
         requestAnimationFrame(() =>
-          interiorSpreadRef.current?.querySelector('.menu-dish-item')?.focus({ preventScroll: true })
+          interiorSpreadRef.current?.querySelector('.is-current .menu-dish-item')?.focus({ preventScroll: true })
         );
       },
     });
@@ -277,7 +268,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         .to(
           container,
           {
-            xPercent: -25,
+            xPercent: 0,
             '--open-progress': 0,
             duration,
             ease: 'power3.inOut',
@@ -299,24 +290,24 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   }, [bookState, currentSpread, onClose, lock, unlock]);
 
   const handleSelectProject = useCallback(index => {
-    if (bookState !== 'open' || currentSpread !== 1 || !lock()) return;
+    if (bookState !== 'open' || currentSpread > menuPages || !lock()) return;
     if (index === selectedProjectIndex) {
       setIsMobileDetailView(true);
-      requestAnimationFrame(() => { if (mobileView()) interiorSpreadRef.current?.querySelector('[data-spread="1"] .mobile-back-action-btn')?.focus({ preventScroll: true }); });
+      requestAnimationFrame(() => { if (mobileView()) interiorSpreadRef.current?.querySelector('.is-current .mobile-back-action-btn')?.focus({ preventScroll: true }); });
       unlock();
       return;
     }
-    const node = rightPageContentRef.current;
-    timelineRef.current = gsap.timeline({ onComplete: () => { unlock(); if (mobileView()) interiorSpreadRef.current.querySelector('[data-spread="1"] .mobile-back-action-btn')?.focus({ preventScroll: true }); } });
+    const node = interiorSpreadRef.current.querySelector('.is-current .project-detail');
+    timelineRef.current = gsap.timeline({ onComplete: () => { unlock(); if (mobileView()) interiorSpreadRef.current.querySelector('.is-current .mobile-back-action-btn')?.focus({ preventScroll: true }); } });
     timelineRef.current.to(node, { opacity: 0, filter: 'blur(4px)', y: -8, duration: reducedMotion() ? 0 : 0.17 })
-      .call(() => { flushSync(() => { setSelectedProjectIndex(index); setIsMobileDetailView(true); }); })
+      .call(() => { flushSync(() => { setSelectedProjectIndex(index); setIsMobileDetailView(true); }); node.scrollTop = 0; })
       .set(node, { y: 8 })
       .to(node, { opacity: 1, filter: 'blur(0px)', y: 0, duration: reducedMotion() ? 0.01 : 0.3, ease: 'power2.out' });
-  }, [bookState, currentSpread, selectedProjectIndex, lock, unlock]);
+  }, [bookState, currentSpread, menuPages, selectedProjectIndex, lock, unlock]);
 
-  const handleTurnSpread = useCallback(async direction => {
+  const handleTurnSpread = useCallback(direction => {
     const nextSpread = currentSpread + direction;
-    if (bookState !== 'open' || nextSpread < 1 || nextSpread > 2 || !lock()) return;
+    if (bookState !== 'open' || nextSpread < 1 || nextSpread > totalSpreads || !lock()) return;
     const generation = generationRef.current;
     const mobile = mobileView();
     const finish = () => {
@@ -324,10 +315,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       // Commit the resting spread before removing its animated surface.
       flushSync(() => {
         setCurrentSpread(nextSpread);
+        if (nextSpread <= menuPages) setSelectedProjectIndex((nextSpread - 1) * PROJECTS_PER_SPREAD);
         setIsMobileDetailView(false);
         setBookState('open');
       });
       turningLeafRef.current.style.visibility = 'hidden';
+      surfaceRef.current?.dispose();
       unlock();
       requestAnimationFrame(() => {
         const page = dialogRef.current?.querySelector(`[data-spread="${nextSpread}"] .page-left`);
@@ -341,7 +334,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       const from = root.querySelector(`[data-spread="${currentSpread}"] .${mobile ? (isMobileDetailView ? 'page-right' : 'page-left') : direction > 0 ? 'page-right' : 'page-left'}`);
       const to = root.querySelector(`[data-spread="${nextSpread}"] .${mobile || direction > 0 ? 'page-left' : 'page-right'}`);
       // Front is always the right-hand face; back UVs are reversed once, not text.
-      await surfaceRef.current.prepare(direction > 0 ? from : to, direction > 0 ? to : from, mobile, direction);
+      surfaceRef.current.prepare(direction > 0 ? from : to, direction > 0 ? to : from, mobile, direction);
       if (generation !== generationRef.current) return;
       flushSync(() => setBookState(direction > 0 ? 'turning-forward' : 'turning-backward'));
       turningLeafRef.current.style.visibility = 'visible';
@@ -352,14 +345,14 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       });
     } catch (error) {
       if (generation !== generationRef.current) return;
-      // WebGL loss / unavailable DOM capture: reading still works, with no fake flip.
+      // A view torn down during preparation can still settle on its destination.
       console.warn('Book page rendering unavailable:', error.message);
       setTurnNotice('Page animation is unavailable on this device. Reading controls remain available.');
       surfaceRef.current?.dispose();
       surfaceRef.current = null;
       finish();
     }
-  }, [bookState, currentSpread, isMobileDetailView, lock, unlock]);
+  }, [bookState, currentSpread, totalSpreads, menuPages, isMobileDetailView, lock, unlock]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -376,19 +369,22 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       if (event.key === 'Escape') {
         event.preventDefault();
         if (isTransitioningRef.current) return;
-        if (mobileView() && isMobileDetailView) setIsMobileDetailView(false);
-        else handleCloseBook();
+        handleCloseBook();
       } else if (bookState === 'open' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
         event.preventDefault();
-        if (event.key === 'ArrowUp') handleSelectProject((selectedProjectIndex + projects.length - 1) % projects.length);
-        if (event.key === 'ArrowDown') handleSelectProject((selectedProjectIndex + 1) % projects.length);
+        const first = (currentSpread - 1) * PROJECTS_PER_SPREAD;
+        const count = Math.min(PROJECTS_PER_SPREAD, projects.length - first);
+        if (count > 0 && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
+          const offset = event.key === 'ArrowUp' ? -1 : 1;
+          handleSelectProject(first + (selectedProjectIndex - first + count + offset) % count);
+        }
         if (event.key === 'ArrowRight') handleTurnSpread(1);
         if (event.key === 'ArrowLeft') handleTurnSpread(-1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, bookState, isMobileDetailView, selectedProjectIndex, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
+  }, [isOpen, bookState, currentSpread, isMobileDetailView, selectedProjectIndex, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
 
   const handleTouchEnd = event => {
     if (!touchRef.current || !mobileView() || busy) return;
@@ -398,6 +394,15 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     touchRef.current = null;
     if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.5) handleTurnSpread(dx < 0 ? 1 : -1);
   };
+
+  function spreadClass(number) {
+    const classes = ['book-spread'];
+    if (currentSpread === number) classes.push('is-current');
+    if ((bookState === 'turning-forward' && number === currentSpread + 1) ||
+        (bookState === 'turning-backward' && number === currentSpread - 1)) classes.push('is-target');
+    return classes.join(' ');
+  }
+  const navigation = number => <PageNavigation number={number} total={totalSpreads} onTurn={handleTurnSpread} busy={busy}/>;
 
   if (!isOpen) return null;
 
@@ -411,15 +416,9 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       aria-modal="true"
       aria-label="Ichiraku Ramen Projects Menu"
     >
-      {/* Ambient Cinema Lighting & Floating Sakura Petals */}
-      <div className="ramen-ambient-particles" aria-hidden="true">
-        <span className="ambient-bokeh b1" />
-        <span className="ambient-bokeh b2" />
-        <span className="floating-petal p1" />
-        <span className="floating-petal p2" />
-        <span className="floating-petal p3" />
-        <span className="floating-petal p4" />
-      </div>
+      <div className="ichiraku-scene" aria-hidden="true"><div className="ichiraku-atmosphere">
+        <i className="counter-steam"/><i className="counter-lantern"/><i className="counter-leaf"/>
+      </div></div>
 
       {/* Top Floating Minimalist Header (Matches Reference) */}
       <header className="ramen-top-header" onClick={(e) => e.stopPropagation()}>
@@ -479,14 +478,15 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           <div className="cover-inner-face" aria-hidden="true" inert />
           <div className="cover-leather-face">
             <div className="cover-gold-filigree-frame">
-              <div className="corner-accent top-left">✦</div>
-              <div className="corner-accent top-right">✦</div>
-              <div className="corner-accent bottom-left">✦</div>
-              <div className="corner-accent bottom-right">✦</div>
+              <div aria-hidden="true" className="cover-landscape"/>
+              <div className="corner-accent top-left"/>
+              <div className="corner-accent top-right"/>
+              <div className="corner-accent bottom-left"/>
+              <div className="corner-accent bottom-right"/>
 
               <div className="cover-badge-top">
                 <span className="badge-flourish">―</span>
-                <span>木ノ葉隠れの里 • 創業</span>
+                <span>木ノ葉隠れの里 · 創業</span>
                 <span className="badge-flourish">―</span>
               </div>
 
@@ -517,10 +517,8 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                     }}
                   >
                     <span>OPEN MENU</span>
-                    <span className="open-btn-kanji">開く</span>
                     <span className="open-arrow">→</span>
                   </button>
-                  <span className="cover-hint-text">Click anywhere to open book</span>
                 </div>
               )}
             </div>
@@ -534,299 +532,18 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
             ==================================================================== */}
         <div ref={interiorSpreadRef} className="book-interior-spread" inert={bookState !== 'open' || busy ? true : undefined}>
           {/* ================= SPREAD 1: SIGNATURE PROJECTS ================= */}
-          <div data-spread="1" className={`book-spread ${currentSpread === 1 ? 'is-current' : ''}`} inert={currentSpread !== 1 ? true : undefined} aria-hidden={currentSpread !== 1}>
-              {/* LEFT PAGE: PROJECT DISHES MENU */}
-              <section tabIndex={-1} className="book-page page-left" aria-label="Our Signature Projects">
-                {/* Decorative Sakura Branch Illustration (Top-Right) */}
-                <div className="page-decor-sakura-branch" aria-hidden="true">
-                  <svg viewBox="0 0 160 120" width="130" height="95" fill="none">
-                    <path
-                      d="M160 0 C 130 25, 95 35, 60 55 C 45 65, 30 75, 10 82"
-                      stroke="#8c6a58"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                      opacity="0.55"
-                    />
-                    <path
-                      d="M100 33 C 85 20, 70 12, 50 15"
-                      stroke="#8c6a58"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      opacity="0.45"
-                    />
-                    <path
-                      d="M65 52 C 55 45, 40 42, 28 48"
-                      stroke="#8c6a58"
-                      strokeWidth="1.2"
-                      strokeLinecap="round"
-                      opacity="0.4"
-                    />
-                    {/* Blossoms */}
-                    <circle cx="50" cy="15" r="7" fill="#fbcfe8" opacity="0.85" />
-                    <circle cx="50" cy="15" r="3" fill="#e11d48" opacity="0.6" />
-                    <circle cx="95" cy="30" r="8.5" fill="#fce7f3" opacity="0.9" />
-                    <circle cx="95" cy="30" r="3.5" fill="#e11d48" opacity="0.65" />
-                    <circle cx="68" cy="50" r="6" fill="#fbcfe8" opacity="0.85" />
-                    <circle cx="68" cy="50" r="2.5" fill="#be123c" opacity="0.6" />
-                    <circle cx="32" cy="46" r="7.5" fill="#fce7f3" opacity="0.88" />
-                    <circle cx="32" cy="46" r="3" fill="#e11d48" opacity="0.6" />
-                    <circle cx="12" cy="80" r="6.5" fill="#fbcfe8" opacity="0.8" />
-                    <circle cx="12" cy="80" r="2.5" fill="#be123c" opacity="0.5" />
-                  </svg>
-                </div>
-
-                {/* Left Page Top Header Badge */}
-                <div className="page-header-row center-header">
-                  <span className="section-rule" />
-                  <div className="ramen-badge-icon">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#a93226" strokeWidth="1.8">
-                      <path d="M4 11h16a1 1 0 0 1 1 1v.5a7.5 7.5 0 0 1 -15 0v-.5a1 1 0 0 1 1 -1z" fill="rgba(169, 50, 38, 0.15)" />
-                      <path d="M8 18h8" />
-                      <path d="M7 5l11 3" />
-                      <path d="M7 8l11 -2" />
-                    </svg>
-                  </div>
-                  <span className="section-badge-text">PROJECT MENU</span>
-                  <span className="section-rule" />
-                </div>
-
-                <div className="page-title-group">
-                  <h2 className="menu-heading-serif">Our Signature Projects</h2>
-                  <p className="menu-subhead-italic">A curated selection of my finest creations.</p>
-                </div>
-
-                {/* 4 Menu Dish Cards */}
-                <div className="menu-dishes-stack" role="group" aria-label="Select a project">
-                  {projects.map((proj, idx) => {
-                    const isSelected = idx === selectedProjectIndex;
-                    return (
-                      <button
-                        type="button"
-                        key={proj.id}
-                        className={`menu-dish-item ${isSelected ? 'is-active' : ''}`}
-                        onClick={() => handleSelectProject(idx)}
-                        disabled={busy}
-                        aria-pressed={isSelected}
-                      >
-                        {/* Front Page Project Photo Slot (Admin Panel / Config Ready) */}
-                        <div className="dish-thumbnail-box">
-                          <ProjectThumbnailVisual project={proj} />
-                          <span className="dish-index-pill">{proj.menuIndex}</span>
-                        </div>
-
-                        {/* Project Info */}
-                        <div className="dish-text-block">
-                          <h3 className="dish-name-heading">{proj.title}</h3>
-                          <p className="dish-flavor-subtitle">{proj.dishName}</p>
-                          <p className="dish-category">{proj.techStack.slice(0, 3).join(' · ')}</p>
-                        </div>
-
-                        {/* View Details Action Indicator */}
-                        <div className="dish-action-col">
-                          <span className="view-details-txt">View Details</span>
-                          <span className="view-arrow-badge" aria-hidden="true">→</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Bottom Left Corner Pagoda Illustration */}
-                <div className="page-decor-pagoda-wash" aria-hidden="true">
-                  <svg viewBox="0 0 180 90" width="150" height="75" fill="none">
-                    {/* Misty mountain hills */}
-                    <path
-                      d="M0 90 Q 40 45, 90 70 T 180 60 L 180 90 Z"
-                      fill="rgba(165, 145, 130, 0.22)"
-                    />
-                    <path
-                      d="M0 90 Q 60 60, 110 75 T 180 70 L 180 90 Z"
-                      fill="rgba(140, 120, 105, 0.28)"
-                    />
-                    {/* Pagoda Silhouette */}
-                    <rect x="25" y="38" width="16" height="26" fill="rgba(90, 75, 65, 0.5)" rx="1" />
-                    {/* Roof Tier 1 */}
-                    <path d="M17 40 L 49 40 L 44 34 L 22 34 Z" fill="rgba(80, 65, 55, 0.65)" />
-                    {/* Roof Tier 2 */}
-                    <path d="M20 34 L 46 34 L 42 27 L 24 27 Z" fill="rgba(80, 65, 55, 0.7)" />
-                    {/* Roof Tier 3 */}
-                    <path d="M23 27 L 43 27 L 39 20 L 27 20 Z" fill="rgba(80, 65, 55, 0.75)" />
-                    {/* Spire */}
-                    <line x1="33" y1="20" x2="33" y2="12" stroke="rgba(80, 65, 55, 0.8)" strokeWidth="1.5" />
-                  </svg>
-                </div>
-
-                {/* Bottom Spread Navigation & Pagination */}
-                <footer className="page-footer-nav">
-                  <div className="page-nav-controls">
-                    <span className="page-control-placeholder" />
-                    <span className="page-counter-badge">— 01 / 04 —</span>
-                    <button
-                      type="button"
-                      className="page-turn-btn next-btn"
-                      disabled={busy}
-                      onClick={() => handleTurnSpread(1)}
-                      title="Next Page: Architecture & Philosophy"
-                    >
-                      <span>Next</span>
-                      <span>→</span>
-                    </button>
-                  </div>
-                </footer>
-              </section>
-
-              {/* Center Valley Spine Fold Shadow */}
-              <div className="book-spine-crease" aria-hidden="true">
-                <div className="spine-deep-valley" />
-              </div>
-
-              {/* RIGHT PAGE: FEATURED PROJECT (Matches Reference Layout Exactly) */}
-              <section className="book-page page-right" aria-label="Selected Project Details">
-                {/* Mobile Back Button */}
-                <div className="mobile-back-row">
-                  <button
-                    type="button"
-                    className="mobile-back-action-btn"
-                    onClick={() => setIsMobileDetailView(false)}
-                  >
-                    ← Back to Dishes Menu
-                  </button>
-                </div>
-
-                {/* Right Page Top Header */}
-                <div className="page-header-row left-align-header">
-                  <div className="ramen-badge-icon">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#a93226" strokeWidth="1.8">
-                      <path d="M4 11h16a1 1 0 0 1 1 1v.5a7.5 7.5 0 0 1 -15 0v-.5a1 1 0 0 1 1 -1z" fill="rgba(169, 50, 38, 0.15)" />
-                      <path d="M8 18h8" />
-                      <path d="M7 5l11 3" />
-                      <path d="M7 8l11 -2" />
-                    </svg>
-                  </div>
-                  <span className="section-badge-text">FEATURED PROJECT</span>
-                </div>
-
-                {/* GSAP Blur-to-Clear Split Content Wrapper */}
-                <div ref={rightPageContentRef} className="featured-project-split-layout">
-                  {/* LEFT COLUMN: Editorial Details, Ingredients, & CTA */}
-                  <div className="featured-left-col">
-                    <div className="detail-header-block">
-                      <h2 className="detail-project-title-large">{currentProject.title}</h2>
-                      <p className="detail-dish-title-italic">{currentProject.dishName}</p>
-                    </div>
-
-                    <p className="detail-editorial-summary">{currentProject.shortDesc}</p>
-
-                    {/* Key Ingredients Section */}
-                    <div className="key-ingredients-group">
-                      <div className="ingredients-label-row">
-                        <svg viewBox="0 0 18 18" width="13" height="13" fill="none" stroke="#221811" strokeWidth="1.8">
-                          <path d="M2 5h14M2 9h14M2 13h14" strokeLinecap="round" />
-                        </svg>
-                        <h4 className="ingredients-heading">KEY INGREDIENTS</h4>
-                      </div>
-
-                      <div className="ingredients-badge-flex">
-                        {currentProject.techStack.map((tech) => (
-                          <span key={tech} className="ingredient-badge">
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Call-to-Action Explore Button */}
-                    <div className="detail-bottom-buttons-row">
-                      <a
-                        href={currentProject.liveUrl && currentProject.liveUrl !== '#projects' ? currentProject.liveUrl : currentProject.githubUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="explore-project-primary-btn"
-                      >
-                        <span className="btn-icon">↗</span>
-                        <span>Explore Project</span>
-                        <span className="btn-arrow">→</span>
-                      </a>
-
-                      {currentProject.githubUrl && (
-                        <a
-                          href={currentProject.githubUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="explore-github-secondary-btn"
-                          title="View GitHub Repository"
-                        >
-                          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-                          </svg>
-                          <span>GitHub</span>
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* RIGHT COLUMN: Realistic Device Mockup & Japanese Watercolor Scenery */}
-                  <div className="featured-right-col">
-                    {/* Watercolor Japanese Rising Sun & Pagoda Silhouette */}
-                    <div className="japanese-backdrop-scenery" aria-hidden="true">
-                      {/* Terracotta Watercolor Rising Sun */}
-                      <div className="watercolor-rising-sun" />
-
-                      {/* Pagoda Silhouette with Cherry Blossoms */}
-                      <div className="pagoda-silhouette-art">
-                        <svg viewBox="0 0 140 180" width="120" height="154" fill="none">
-                          {/* Cherry Blossom Branch */}
-                          <path
-                            d="M140 20 C 110 30, 85 45, 60 70"
-                            stroke="#8c6a58"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            opacity="0.6"
-                          />
-                          <circle cx="78" cy="48" r="6" fill="#fbcfe8" opacity="0.8" />
-                          <circle cx="78" cy="48" r="2.5" fill="#e11d48" opacity="0.6" />
-                          <circle cx="108" cy="32" r="7" fill="#fce7f3" opacity="0.85" />
-                          <circle cx="108" cy="32" r="3" fill="#be123c" opacity="0.6" />
-
-                          {/* Tower Spire */}
-                          <line x1="88" y1="50" x2="88" y2="70" stroke="#5d4c42" strokeWidth="2" />
-                          {/* Tower Tier 4 */}
-                          <path d="M74 74 L 102 74 L 97 68 L 79 68 Z" fill="#5d4c42" />
-                          <rect x="80" y="74" width="16" height="14" fill="#6d5a4f" />
-                          {/* Tower Tier 3 */}
-                          <path d="M68 90 L 108 90 L 103 84 L 73 84 Z" fill="#5d4c42" />
-                          <rect x="76" y="90" width="24" height="16" fill="#6d5a4f" />
-                          {/* Tower Tier 2 */}
-                          <path d="M62 108 L 114 108 L 108 102 L 68 102 Z" fill="#5d4c42" />
-                          <rect x="72" y="108" width="32" height="18" fill="#6d5a4f" />
-                          {/* Tower Tier 1 */}
-                          <path d="M55 128 L 121 128 L 114 122 L 62 122 Z" fill="#5d4c42" />
-                          <rect x="68" y="128" width="40" height="24" fill="#6d5a4f" />
-                        </svg>
-                      </div>
-
-                      {/* Sumi-e Landscape Base & Wash */}
-                      <div className="sumie-rock-base" />
-                    </div>
-
-                    {/* Project Photo Showcase Frame (Admin Panel / Config Ready) */}
-                    <div className="project-photo-showcase-wrapper">
-                      <ProjectPhotoShowcase project={currentProject} />
-                    </div>
-                  </div>
-                </div>
-
-                <footer className="page-footer-nav">
-                  <div className="page-nav-controls right-align">
-                    <span className="page-number-display">Page 02</span>
-                  </div>
-                </footer>
-              </section>
-          </div>
-
-          {/* ================= SPREAD 2: ARCHITECTURE & PHILOSOPHY ================= */}
-          <div data-spread="2" className={`book-spread ${currentSpread === 2 ? 'is-current' : ''}`} inert={currentSpread !== 2 ? true : undefined} aria-hidden={currentSpread !== 2}>
-              {/* LEFT PAGE: CHEF'S SPECIAL & 3D WORLD */}
+          {Array.from({ length: menuPages }, (_, index) => {
+            const number = index + 1;
+            const entries = projects.slice(index * PROJECTS_PER_SPREAD, number * PROJECTS_PER_SPREAD);
+            return <div key={number} data-spread={number} className={spreadClass(number)}
+              inert={currentSpread !== number} aria-hidden={currentSpread !== number}>
+              <ProjectSpread projects={entries} selected={currentSpread === number ? currentProject : entries[0]}
+                onSelect={project => handleSelectProject(projects.indexOf(project))}
+                onBack={() => setIsMobileDetailView(false)} onVillage={handleCloseBook} navigation={navigation(number)}/>
+            </div>;
+          })}
+          <div data-spread={totalSpreads} className={spreadClass(totalSpreads)} inert={currentSpread !== totalSpreads}
+            aria-hidden={currentSpread !== totalSpreads}>
               <section tabIndex={-1} className="book-page page-left" aria-label="Chef's Special & Architecture">
                 <div className="page-header-row center-header">
                   <span className="section-rule" />
@@ -871,21 +588,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   )}
                 </div>
 
-                <footer className="page-footer-nav">
-                  <div className="page-nav-controls">
-                    <button
-                      type="button"
-                      className="page-turn-btn prev-btn"
-                      disabled={busy}
-                      onClick={() => handleTurnSpread(-1)}
-                      title="Previous Page: Signature Projects"
-                    >
-                      <span>←</span>
-                      <span>Prev Page</span>
-                    </button>
-                    <span className="page-counter-badge">— 03 / 04 —</span>
-                  </div>
-                </footer>
+                {navigation(totalSpreads)}
               </section>
 
               {/* Center Valley Spine Fold Shadow */}
@@ -924,116 +627,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   </div>
                 </div>
 
-                <footer className="page-footer-nav">
-                  <div className="page-nav-controls right-align">
-                    <span className="page-number-display">Page 04</span>
-                  </div>
-                </footer>
               </section>
           </div>
         </div>
       </div>
-      <span className="book-status" role="status">{busy ? 'Book transition in progress' : bookState === 'closed' ? 'Book closed' : `Spread ${currentSpread} of 2. ${currentProject.title} selected.`}</span>
+      <span className="book-status" role="status">{busy ? 'Book transition in progress' : bookState === 'closed' ? 'Book closed' : `Spread ${currentSpread} of ${totalSpreads}. ${currentProject?.title || ''}`}</span>
       {turnNotice && <p className="book-notice" role="status">{turnNotice}</p>}
-    </div>
-  );
-}
-
-// ============================================================================
-// RIGHT PAGE: PROJECT PHOTO SHOWCASE SLOT (ADMIN PANEL & CONFIG READY)
-// ============================================================================
-function ProjectPhotoShowcase({ project }) {
-  const projectPhotoSrc =
-    project?.projectPhoto ||
-    project?.previewImage ||
-    project?.screenshot ||
-    project?.image ||
-    '';
-
-  if (projectPhotoSrc) {
-    return (
-      <div className="project-photo-frame has-attached-photo">
-        <img
-          src={projectPhotoSrc}
-          alt={`${project.title} project preview`}
-          className="project-attached-photo"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="project-photo-frame is-placeholder-slot">
-      {/* Top Photo Slot Frame Area */}
-      <div className="project-photo-dropzone-preview">
-        <div className="photo-slot-badge-pill">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <rect x="3" y="5" width="18" height="14" rx="2" />
-            <circle cx="8.5" cy="10.5" r="1.5" />
-            <path d="M21 15l-4.5-4.5L9 18" />
-          </svg>
-          <span>PROJECT PHOTO SLOT</span>
-        </div>
-        <p className="photo-slot-title">{project.title}</p>
-        <span className="photo-slot-hint">
-          Attach <code>projectPhoto</code> via Admin Panel or <code>locations.js</code>
-        </span>
-      </div>
-
-      {/* Concise Editorial Capabilities List inside the Frame */}
-      {Array.isArray(project?.features) && project.features.length > 0 && (
-        <div className="project-capabilities-digest">
-          <span className="capabilities-kicker">KEY HIGHLIGHTS</span>
-          <ul className="capabilities-compact-list">
-            {project.features.slice(0, 3).map((item, idx) => (
-              <li key={idx}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ============================================================================
-// LEFT PAGE: FRONT PAGE CARD PHOTO SLOT (ADMIN PANEL & CONFIG READY)
-// ============================================================================
-function ProjectThumbnailVisual({ project }) {
-  const frontPhotoSrc =
-    project?.frontPagePhoto ||
-    project?.thumbnailImage ||
-    project?.image ||
-    '';
-
-  if (frontPhotoSrc) {
-    return (
-      <div className="dish-photo-slot has-attached-photo">
-        <img
-          src={frontPhotoSrc}
-          alt={`${project.title} thumbnail`}
-          className="dish-attached-photo"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="dish-photo-slot is-placeholder-slot">
-      <svg
-        viewBox="0 0 24 24"
-        width="16"
-        height="16"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        className="dish-photo-slot-icon"
-        aria-hidden="true"
-      >
-        <rect x="3" y="5" width="18" height="14" rx="2" />
-        <circle cx="8.5" cy="10.5" r="1.5" />
-        <path d="M21 15l-4.5-4.5L9 18" />
-      </svg>
-      <span className="dish-photo-slot-label">Photo Slot</span>
     </div>
   );
 }

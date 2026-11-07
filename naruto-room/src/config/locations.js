@@ -257,19 +257,12 @@ export function getPortfolioProjects() {
     const raw = window.localStorage.getItem(ADMIN_PROJECTS_STORAGE_KEY);
     if (!raw) return PORTFOLIO_PROJECTS;
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      const overrideMap = new Map(parsed.filter(Boolean).map((item) => [item.id, item]));
-      return PORTFOLIO_PROJECTS.map((proj) => ({
-        ...proj,
-        ...(overrideMap.get(proj.id) || {}),
-      }));
+    const overrides = Array.isArray(parsed) ? parsed : Object.entries(parsed || {}).map(([id, item]) => ({ ...item, id }));
+    const entries = new Map(PORTFOLIO_PROJECTS.map(project => [project.id, project]));
+    for (const item of overrides) {
+      if (item?.id) entries.set(item.id, { ...entries.get(item.id), ...item });
     }
-    if (parsed && typeof parsed === 'object') {
-      return PORTFOLIO_PROJECTS.map((proj) => ({
-        ...proj,
-        ...(parsed[proj.id] || {}),
-      }));
-    }
+    return [...entries.values()];
   } catch {
     // Ignore storage parse errors and fall back to static config
   }

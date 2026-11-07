@@ -1,0 +1,14 @@
+{
+  "travelflow-ai": {
+    "thumbnail": "/ichiraku/projects/travelflow-ai.webp",
+    "screenshots": ["/ichiraku/projects/travelflow-ai.webp"],
+    "liveUrl": "https://travel-flow-1h4h.vercel.app/",
+    "githubUrl": "https://github.com/ashutosh607/TravelFlow"
+  },
+  "konoha-3d-portfolio": {
+    "thumbnail": "/ichiraku/projects/konoha-3d-portfolio.webp",
+    "screenshots": ["/ichiraku/projects/konoha-3d-portfolio.webp"],
+    "liveUrl": "https://portfolio-zeta-amber-3cr4nj8fai.vercel.app/",
+    "githubUrl": "https://github.com/ashutosh607/portfolio"
+  }
+}

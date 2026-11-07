@@ -25,7 +25,12 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError = null })
       {/* Top Sticky Navigation */}
       <header className="fallback-2d-header">
         <div className="fallback-brand">
-          <span className="fallback-crest">木ノ葉</span>
+          <img
+            src="/logo-mark-transparent.png"
+            alt="Ashutosh Shinobi Logo"
+            className="fallback-brand-logo-img"
+            draggable={false}
+          />
           <div>
             <h1>ASHUTOSH • KONOHA PORTFOLIO</h1>
             <p>AI/ML Developer | Full-Stack Developer | Problem Solver</p>

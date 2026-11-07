@@ -294,17 +294,14 @@ const KonohaHUD = React.memo(function KonohaHUD({
               onResetPosition?.();
               setShowWelcomeCard(true);
             }}
-            title="Return to Konoha Main Street"
+            title="Return to Konoha Main Street • Ashutosh Shinobi Portfolio"
           >
-            <svg viewBox="0 0 100 100" className="shinobi-crest-svg" aria-hidden="true">
-              <path
-                d="M 50 50 m 0 -5 a 5 5 0 1 1 -5 5 a 12 12 0 1 1 12 12 a 20 20 0 1 1 -20 -20 a 28 28 0 1 1 28 28 l 12 -5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="6.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <img
+              src="/logo-mark-transparent.png"
+              alt="Ashutosh Shinobi Logo"
+              className="shinobi-brand-logo-img"
+              draggable={false}
+            />
             <div className="shinobi-brand-text">
               <span className="brand-name">ASHUTOSH</span>
               <span className="brand-sub">SHINOBI PORTFOLIO</span>
