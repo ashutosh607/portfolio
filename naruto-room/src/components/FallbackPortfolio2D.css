@@ -1,11 +1,26 @@
+/* 2D Portfolio Wrapper for scrolling independence */
+.portfolio-2d-wrapper {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1000;
+  background-color: #0e0a0d;
+  -webkit-overflow-scrolling: touch;
+}
+
 .p2d-root {
   position: relative;
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
   background-color: #0e0a0d;
   color: #f4e8da;
   font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   overflow-x: hidden;
+  overflow-y: visible;
   selection-background-color: #a92f32;
 }
 

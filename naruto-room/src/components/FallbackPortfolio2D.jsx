@@ -136,8 +136,9 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
 
   // Scroll spy to highlight current section in the sticky navbar
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY + 180;
+    const handleScroll = (e) => {
+      const target = e?.target && e.target !== document ? e.target : window;
+      const scrollY = (target === window ? window.scrollY : target.scrollTop) + 180;
       for (let i = NAV_SECTIONS.length - 1; i >= 0; i--) {
         const sec = NAV_SECTIONS[i];
         const el = document.getElementById(`p2d-${sec.id}`);
@@ -147,8 +148,15 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
         }
       }
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const wrapper = document.querySelector('.portfolio-2d-wrapper');
+    wrapper?.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      wrapper?.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const scrollToSection = useCallback((sectionId) => {
@@ -661,8 +669,8 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
             <div className="p2d-skills-workbench">
               <SkillNavigation
                 categories={SKILL_CATEGORIES}
-                activeId={activeSkillCategory.id}
-                onSelect={setActiveSkillCategoryId}
+                activeCategoryId={activeSkillCategory.id}
+                onSelectCategory={setActiveSkillCategoryId}
               />
               <SkillDetails
                 category={activeSkillCategory}

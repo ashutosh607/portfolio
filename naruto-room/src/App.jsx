@@ -280,7 +280,11 @@ function AppContent() {
   }, []);
 
   if (is2DMode) {
-    return <FallbackPortfolio2D onSwitchTo3D={() => setIs2DMode(false)} />;
+    return (
+      <div className="portfolio-2d-wrapper">
+        <FallbackPortfolio2D onSwitchTo3D={() => setIs2DMode(false)} />
+      </div>
+    );
   }
 
   const isMovementPaused = Boolean(activeDialogueCharacter || activeModal);
