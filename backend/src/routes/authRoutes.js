@@ -18,7 +18,7 @@ const loginLimiter = rateLimit({
 });
 
 router.post('/login', loginLimiter, login);
-router.post('/logout', logout);
+router.post('/logout', protectAdmin, logout);
 router.get('/me', protectAdmin, getMe);
 router.put('/change-password', protectAdmin, changePassword);
 

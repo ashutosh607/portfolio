@@ -16,7 +16,7 @@ export const uploadImage = multer({
     if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid image type. Only JPG, PNG, WEBP, AVIF, and GIF are allowed.'));
+      cb(Object.assign(new Error('Invalid image type. Only JPG, PNG, WEBP, AVIF, and GIF are allowed.'), {status:415}));
     }
   },
 });
@@ -30,7 +30,7 @@ export const uploadDocument = multer({
     if (ALLOWED_DOCUMENT_TYPES.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid document type. Only PDF files are allowed.'));
+      cb(Object.assign(new Error('Invalid document type. Only PDF files are allowed.'), {status:415}));
     }
   },
 });

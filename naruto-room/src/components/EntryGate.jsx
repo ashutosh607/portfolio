@@ -1,3 +1,4 @@
+import { published } from '../data/published';
 import React, { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { entryDestinations } from '../data/entryDestinations';
@@ -33,6 +34,7 @@ function DestinationCard({ destination, onOpen, onTravel }) {
 }
 
 export default function EntryGate({ onClose, onOpenModal, onTeleport, embedded = false }) {
+  const hero = published?.profile?.hero;
   const dialog = useRef(null);
   const surface = useRef(null);
   const heading = useRef(null);
@@ -87,10 +89,10 @@ export default function EntryGate({ onClose, onOpenModal, onTeleport, embedded =
       <header className="gate-hero">
         <div className="gate-hero-art" aria-hidden="true"/>
         <div className="gate-titles"><p className="gate-label">{LOCATION_SVGS['main-street']} Location 01 · Main Entry Gate</p>
-          <h1 id="entry-heading" ref={heading} tabIndex={-1}>Hello, I’m <span>Ashutosh</span>.</h1></div>
-        <div className="gate-roles">{[['laptop','AI/ML Developer'],['layers','Full-Stack Developer'],['target','Problem Solver']].map(([icon,label]) => <span key={icon}><Icon name={icon}/>{label}</span>)}</div>
-        <div className="gate-copy"><blockquote>“A shinobi of code, building things worth discovering.”</blockquote>
-          <p>{embedded ? <>Scroll through the <strong>six village destinations</strong> to explore my projects, skills, and experience. Open the menu at Ichiraku Ramen or unroll a mission dossier along the way.</> : <>Welcome to my interactive 3D Hidden Leaf Village portfolio. Walk down the streets of Konoha, interact with familiar shinobi, or travel directly to one of the <strong>six village destinations</strong> to explore my projects, development skills, AI/ML work, and experience.</>}</p></div>
+          <h1 id="entry-heading" ref={heading} tabIndex={-1}>{hero?.greeting || <>Hello, I’m <span>Ashutosh</span>.</>}</h1></div>
+        <div className="gate-roles">{(hero?.roleBadges?.map((label,i)=>[['laptop','layers','target'][i%3],label]) ?? [['laptop','AI/ML Developer'],['layers','Full-Stack Developer'],['target','Problem Solver']]).map(([icon,label]) => <span key={icon}><Icon name={icon}/>{label}</span>)}</div>
+        <div className="gate-copy"><blockquote>“{hero?.quote || 'A shinobi of code, building things worth discovering.'}”</blockquote>
+          <p>{hero?.introBio || (embedded ? <>Scroll through the <strong>six village destinations</strong> to explore my projects, skills, and experience. Open the menu at Ichiraku Ramen or unroll a mission dossier along the way.</> : <>Welcome to my interactive 3D Hidden Leaf Village portfolio. Walk down the streets of Konoha, interact with familiar shinobi, or travel directly to one of the <strong>six village destinations</strong> to explore my projects, development skills, AI/ML work, and experience.</>)}</p></div>
         <div className="gate-actions gate-main-actions">
           {onClose && <button className="gate-red" onClick={embedded ? onClose : () => leave(onClose)}>{LOCATION_SVGS['main-street']} {embedded ? 'Enter 3D Village' : 'Explore My World'} <span aria-hidden="true">→</span></button>}
           <button onClick={() => open('projects')}><Icon name="layers"/> View My Projects</button>

@@ -1,4 +1,5 @@
-import Mission from '../models/Mission.js';
+import { reorder } from './reorder.js';
+import Mission, {publicMission} from '../models/Mission.js';
 
 export const getMissions = async (req, res, next) => {
   try {
@@ -9,7 +10,7 @@ export const getMissions = async (req, res, next) => {
     res.json({
       success: true,
       count: missions.length,
-      data: missions,
+      data: isPublic ? missions.map(publicMission) : missions,
     });
   } catch (error) {
     next(error);
@@ -18,11 +19,11 @@ export const getMissions = async (req, res, next) => {
 
 export const getMissionBySlug = async (req, res, next) => {
   try {
-    const mission = await Mission.findOne({ slug: req.params.slug });
+    const mission = await Mission.findOne({ slug: req.params.slug, visible: true });
     if (!mission) {
       return res.status(404).json({ success: false, message: 'Mission not found' });
     }
-    res.json({ success: true, data: mission });
+    res.json({ success: true, data: publicMission(mission) });
   } catch (error) {
     next(error);
   }
@@ -76,25 +77,4 @@ export const deleteMission = async (req, res, next) => {
   }
 };
 
-export const reorderMissions = async (req, res, next) => {
-  try {
-    const { items } = req.body;
-    if (!Array.isArray(items)) {
-      return res.status(400).json({ success: false, message: 'Array of items required' });
-    }
-
-    const updates = items.map((item) =>
-      Mission.updateOne({ slug: item.id || item.slug }, { $set: { order: item.order } })
-    );
-
-    await Promise.all(updates);
-
-    res.json({
-      success: true,
-      message: 'Mission order updated successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+export const reorderMissions = reorder(Mission);

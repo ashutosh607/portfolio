@@ -1,3 +1,7 @@
+import {resolveArtwork} from '../../data/projectMenu';
+import EditorDialog from '../EditorDialog';
+import AssetInput from '../AssetInput';
+import {useSearchParams} from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 import {
@@ -20,6 +24,11 @@ export default function ProjectsAdmin() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
+  const [params,setParams]=useSearchParams();
+  const [search,setSearch]=useState('');
+  const [category,setCategory]=useState('');
+  const [status,setStatus]=useState('');
+  const displayStatus=p=>p.visible?p.status:'hidden';
   // Form state
   const [formData, setFormData] = useState({
     title: '',
@@ -58,17 +67,18 @@ export default function ProjectsAdmin() {
   const openAddModal = () => {
     setEditingProject(null);
     setFormData({
+      status:'draft', screenshots:[],
       title: '',
       slug: '',
       dishName: '',
       category: 'Full-Stack',
-      projectPhoto: '/ramen-menu/travelflow-project.webp',
-      frontPagePhoto: '/ramen-menu/travelflow-menu.webp',
+      projectPhoto: '',
+      frontPagePhoto: '',
       shortDesc: '',
       problemSolved: '',
       featuresText: '',
-      techStackText: 'React, Node.js, Express, MongoDB',
-      githubUrl: 'https://github.com/ashutosh607',
+      techStackText: '',
+      githubUrl: '',
       liveUrl: '',
       accent: '#e68a2e',
       visible: true,
@@ -80,6 +90,7 @@ export default function ProjectsAdmin() {
   const openEditModal = (proj) => {
     setEditingProject(proj);
     setFormData({
+      status:proj.status, screenshots:proj.screenshots || [],
       title: proj.title || '',
       slug: proj.slug || '',
       dishName: proj.dishName || '',
@@ -99,6 +110,12 @@ export default function ProjectsAdmin() {
     setModalOpen(true);
   };
 
+  useEffect(()=>{
+    if(loading) return;
+    if(params.has('new')) {openAddModal();setParams({}, {replace:true});}
+    const project=projects.find(p=>p.slug===params.get('edit'));
+    if(project) {openEditModal(project);setParams({}, {replace:true});}
+  },[params,loading && projects.length===0]);
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -107,6 +124,7 @@ export default function ProjectsAdmin() {
     try {
       const payload = {
         ...formData,
+        screenshots:(formData.screenshots || []).map(url=>url.trim()).filter(Boolean),
         features: formData.featuresText
           .split('\n')
           .map((f) => f.trim())
@@ -189,6 +207,9 @@ export default function ProjectsAdmin() {
 
       {/* Projects Table */}
       <div className="admin-card">
+        <div className="cms-toolbar"><input aria-label="Search projects" placeholder="Search projects…" value={search} onChange={e=>setSearch(e.target.value)}/>
+        <select aria-label="Category" value={category} onChange={e=>setCategory(e.target.value)}><option value="">All categories</option>{[...new Set(projects.map(p=>p.category))].map(c=><option key={c}>{c}</option>)}</select>
+        <select aria-label="Status" value={status} onChange={e=>setStatus(e.target.value)}><option value="">All statuses</option>{['published','draft','archived','hidden'].map(v=><option key={v}>{v}</option>)}</select></div>
         {loading ? (
           <div className="admin-loading">Loading Ramen Book Projects...</div>
         ) : (
@@ -206,7 +227,7 @@ export default function ProjectsAdmin() {
                 </tr>
               </thead>
               <tbody>
-                {projects.map((proj) => (
+                {projects.filter(p=>p.title.toLowerCase().includes(search.toLowerCase()) && (!category || p.category===category) && (!status || displayStatus(p)===status)).map((proj) => (
                   <tr key={proj.slug || proj._id}>
                     <td>
                       <span className="order-badge">#{proj.order}</span>
@@ -218,8 +239,8 @@ export default function ProjectsAdmin() {
                           style={{ backgroundColor: proj.accent || '#e68a2e' }}
                         />
                         <div>
-                          <strong>{proj.title}</strong>
-                          <span className="table-subtext">{proj.slug}</span>
+                          {proj.frontPagePhoto && <img className="cms-thumb" src={resolveArtwork(proj.frontPagePhoto)} alt=""/>}<strong>{proj.title}</strong>
+                          <span className="table-subtext">{proj.updatedAt && new Date(proj.updatedAt).toLocaleDateString()}</span>
                         </div>
                       </div>
                     </td>
@@ -248,7 +269,7 @@ export default function ProjectsAdmin() {
                         title={proj.visible ? 'Visible on site' : 'Hidden from site'}
                       >
                         {proj.visible ? <Eye size={15} /> : <EyeOff size={15} />}
-                        <span>{proj.visible ? 'Published' : 'Hidden'}</span>
+                        <span>{displayStatus(proj)}</span>
                       </button>
                     </td>
                     <td style={{ textAlign: 'right' }}>
@@ -279,7 +300,7 @@ export default function ProjectsAdmin() {
 
       {/* Add / Edit Project Modal */}
       {modalOpen && (
-        <div className="admin-modal-backdrop">
+        <EditorDialog title="Project editor" onClose={()=>{if(!saving)setModalOpen(false)}}>
           <div className="admin-modal-dialog large">
             <div className="admin-modal-header">
               <h2>{editingProject ? `Edit: ${editingProject.title}` : 'Add New Ramen Project'}</h2>
@@ -289,10 +310,10 @@ export default function ProjectsAdmin() {
             </div>
 
             <form onSubmit={handleSave} className="admin-modal-body">
-              <div className="form-grid-2">
+              <h3>General</h3><div className="form-grid-2">
                 <div className="form-group">
-                  <label>Project Title *</label>
-                  <input
+                  <label htmlFor="projectsadmin-project-title">Project Title *</label>
+                  <input id="projectsadmin-project-title"
                     type="text"
                     required
                     value={formData.title}
@@ -302,8 +323,8 @@ export default function ProjectsAdmin() {
                 </div>
 
                 <div className="form-group">
-                  <label>Slug (URL identifier) *</label>
-                  <input
+                  <label htmlFor="projectsadmin-slug-url-identifier">Slug (URL identifier) *</label>
+                  <input id="projectsadmin-slug-url-identifier"
                     type="text"
                     required
                     disabled={!!editingProject}
@@ -316,8 +337,8 @@ export default function ProjectsAdmin() {
 
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label>Ramen Dish Name (Theme) *</label>
-                  <input
+                  <label htmlFor="projectsadmin-ramen-dish-name-theme">Ramen Dish Name (Theme) *</label>
+                  <input id="projectsadmin-ramen-dish-name-theme"
                     type="text"
                     required
                     value={formData.dishName}
@@ -327,8 +348,8 @@ export default function ProjectsAdmin() {
                 </div>
 
                 <div className="form-group">
-                  <label>Category *</label>
-                  <input
+                  <label htmlFor="projectsadmin-category">Category *</label>
+                  <input id="projectsadmin-category"
                     type="text"
                     required
                     value={formData.category}
@@ -340,8 +361,8 @@ export default function ProjectsAdmin() {
 
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label>Order in Menu (1, 2, 3...)</label>
-                  <input
+                  <label htmlFor="projectsadmin-order-in-menu-1-2-3">Order in Menu (1, 2, 3...)</label>
+                  <input id="projectsadmin-order-in-menu-1-2-3"
                     type="number"
                     value={formData.order}
                     onChange={(e) => setFormData({ ...formData, order: e.target.value })}
@@ -367,30 +388,30 @@ export default function ProjectsAdmin() {
 
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label>Front Page Photo (Left Menu Page)</label>
-                  <input
+                  <label htmlFor="projectsadmin-front-page-photo-left-menu-page">Front Page Photo (Left Menu Page)</label>
+                  <input id="projectsadmin-front-page-photo-left-menu-page"
                     type="text"
                     value={formData.frontPagePhoto}
                     onChange={(e) => setFormData({ ...formData, frontPagePhoto: e.target.value })}
-                    placeholder="/ramen-menu/your-menu.webp or Cloudinary URL"
+                    placeholder="/ichiraku/projects/image.webp or upload below"
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Project Photo (Right Detail Page) *</label>
-                  <input
+                  <label htmlFor="projectsadmin-project-photo-right-detail-page">Project Photo (Right Detail Page) *</label>
+                  <input id="projectsadmin-project-photo-right-detail-page"
                     type="text"
                     required
                     value={formData.projectPhoto}
                     onChange={(e) => setFormData({ ...formData, projectPhoto: e.target.value })}
-                    placeholder="/ramen-menu/your-project.webp or Cloudinary URL"
+                    placeholder="/ichiraku/projects/image.webp or upload below"
                   />
                 </div>
               </div>
 
               <div className="form-group">
-                <label>Short Description (Ramen Menu Summary) *</label>
-                <textarea
+                <h3>Content</h3><label htmlFor="projectsadmin-short-description-ramen-menu-summary">Short Description (Ramen Menu Summary) *</label>
+                <textarea id="projectsadmin-short-description-ramen-menu-summary"
                   rows={2}
                   required
                   value={formData.shortDesc}
@@ -400,8 +421,8 @@ export default function ProjectsAdmin() {
               </div>
 
               <div className="form-group">
-                <label>Problem Solved</label>
-                <textarea
+                <label htmlFor="projectsadmin-problem-solved">Problem Solved</label>
+                <textarea id="projectsadmin-problem-solved"
                   rows={2}
                   value={formData.problemSolved}
                   onChange={(e) => setFormData({ ...formData, problemSolved: e.target.value })}
@@ -410,8 +431,8 @@ export default function ProjectsAdmin() {
               </div>
 
               <div className="form-group">
-                <label>Key Features (One bullet per line)</label>
-                <textarea
+                <label htmlFor="projectsadmin-key-features-one-bullet-per-line">Key Features (One bullet per line)</label>
+                <textarea id="projectsadmin-key-features-one-bullet-per-line"
                   rows={3}
                   value={formData.featuresText}
                   onChange={(e) => setFormData({ ...formData, featuresText: e.target.value })}
@@ -420,8 +441,8 @@ export default function ProjectsAdmin() {
               </div>
 
               <div className="form-group">
-                <label>Tech Stack (Comma-separated)</label>
-                <input
+                <h3>Technologies</h3><label htmlFor="projectsadmin-tech-stack-comma-separated">Tech Stack (Comma-separated)</label>
+                <input id="projectsadmin-tech-stack-comma-separated"
                   type="text"
                   value={formData.techStackText}
                   onChange={(e) => setFormData({ ...formData, techStackText: e.target.value })}
@@ -431,8 +452,8 @@ export default function ProjectsAdmin() {
 
               <div className="form-grid-2">
                 <div className="form-group">
-                  <label>GitHub Repository URL</label>
-                  <input
+                  <h3>Links</h3><label htmlFor="projectsadmin-github-repository-url">GitHub Repository URL</label>
+                  <input id="projectsadmin-github-repository-url"
                     type="url"
                     value={formData.githubUrl}
                     onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
@@ -441,8 +462,8 @@ export default function ProjectsAdmin() {
                 </div>
 
                 <div className="form-group">
-                  <label>Live Website / Demo URL</label>
-                  <input
+                  <label htmlFor="projectsadmin-live-website-demo-url">Live Website / Demo URL</label>
+                  <input id="projectsadmin-live-website-demo-url"
                     type="url"
                     value={formData.liveUrl}
                     onChange={(e) => setFormData({ ...formData, liveUrl: e.target.value })}
@@ -451,6 +472,14 @@ export default function ProjectsAdmin() {
                 </div>
               </div>
 
+              <fieldset><legend>Media</legend>{[['projectPhoto','Main image'],['frontPagePhoto','Thumbnail'],['screenshots','Add screenshot']].map(([key,label])=><AssetInput key={key} label={label} onUpload={url=>setFormData(f=>({...f,[key]:key==='screenshots'?[...(f.screenshots || []),url]:url}))}/>)}
+              <label>Screenshot URLs, one per line<textarea value={(formData.screenshots || []).join('\n')} onChange={e=>setFormData({...formData,screenshots:e.target.value.split('\n')})}/></label></fieldset>
+              <label>Publishing status<select value={formData.status || 'draft'} onChange={e=>setFormData({...formData,status:e.target.value})}>{['draft','published','archived'].map(v=><option key={v}>{v}</option>)}</select></label>
+              {formData.liveUrl && formData.liveUrl===formData.githubUrl && <p className="field-hint">The live and repository URLs match. Enter the deployed website URL for this project.</p>}
+              <details className="cms-preview"><summary>Preview menu entry</summary>
+                <article>{formData.frontPagePhoto && <img className="cms-thumb" alt="" src={resolveArtwork(formData.frontPagePhoto)}/>}
+                <strong>{formData.title}</strong><em>{formData.dishName}</em><small>{formData.category}</small><p>{formData.shortDesc}</p></article></details>
+              {message.type==='error' && <p role="alert">{message.text}</p>}
               <div className="admin-modal-footer">
                 <button
                   type="button"
@@ -465,7 +494,7 @@ export default function ProjectsAdmin() {
               </div>
             </form>
           </div>
-        </div>
+        </EditorDialog>
       )}
     </div>
   );

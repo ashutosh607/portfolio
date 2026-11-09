@@ -1,11 +1,13 @@
+import { apiBase } from '../data/published';
+import { published } from '../data/published';
 import { sectionEntrance } from '../utils/sectionEntrance';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import './ContactModal.css';
 
-const CONTACT_EMAIL = 'ashutoshkadam607@gmail.com';
-const GITHUB_URL = 'https://github.com/ashutosh607';
-const LINKEDIN_URL = 'https://www.linkedin.com/in/Ashutosh-kadam';
+
+
+
 
 export default function ContactModal({
   isOpen,
@@ -14,6 +16,22 @@ export default function ContactModal({
   onOpenResume,
   onTeleportToMonument,
 }) {
+  const [delivery,setDelivery]=useState('');
+  const [sending,setSending]=useState(false);
+  async function sendMessage(event){
+    event.preventDefault();const form=event.currentTarget;
+    setSending(true);setDelivery('');
+    try{
+      const res=await fetch(apiBase+'/contact/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(form)))});
+      const body=await res.json();
+      if(!res.ok || !body.success)throw new Error(body.message || 'Message delivery failed.');
+      form.reset();setDelivery('Message delivered.');
+    }catch(err){setDelivery(err.message)}finally{setSending(false)}
+  }
+  const info = published?.contact;
+  const CONTACT_EMAIL = info?.email ?? 'ashutoshkadam607@gmail.com';
+  const GITHUB_URL = info?.githubUrl ?? 'https://github.com/ashutosh607';
+  const LINKEDIN_URL = info?.linkedinUrl ?? 'https://www.linkedin.com/in/Ashutosh-kadam';
   const overlayRef = useRef(null);
   const bgRef = useRef(null);
   const closeBtnRef = useRef(null);
@@ -33,8 +51,8 @@ export default function ContactModal({
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const handleCopyEmail = useCallback(() => {
-    navigator.clipboard?.writeText(CONTACT_EMAIL);
+  const handleCopyEmail = useCallback(async () => {
+    try { await navigator.clipboard.writeText(CONTACT_EMAIL); } catch { return; }
     setCopiedEmail(true);
     if (copyTimerRef.current) clearTimeout(copyTimerRef.current);
     copyTimerRef.current = setTimeout(() => {
@@ -315,13 +333,13 @@ export default function ContactModal({
             </h1>
 
             <p ref={subtitleRef} className="contact-hero-subtitle">
-              Every great mission starts with a conversation.
+              {info ? (info.isAvailable ? info.availabilityText : 'Currently unavailable') : 'Every great mission starts with a conversation.'}
             </p>
 
             <p ref={descRef} className="contact-hero-description">
-              I&rsquo;m always interested in meaningful opportunities, interesting projects, and new
+              {info?.description || <>I&rsquo;m always interested in meaningful opportunities, interesting projects, and new
               collaborations. Whether it&rsquo;s a software development role, an AI/ML project, or
-              simply discussing an idea, feel free to reach out.
+              simply discussing an idea, feel free to reach out.</>}
             </p>
           </header>
 
@@ -512,6 +530,10 @@ export default function ContactModal({
             </article>
           </main>
 
+          {info && <details className="contact-inquiry"><summary>Send a message</summary><form onSubmit={sendMessage}>
+            <label>Name<input name="name" required maxLength={100}/></label><label>Email<input type="email" name="email" required maxLength={200}/></label>
+            <label>Message<textarea required name="message" maxLength={5000}/></label><button className="contact-action-pill" disabled={sending}>{sending?'Sending…':'Send message'}</button><span role="status">{delivery}</span>
+          </form></details>}
           {/* ================= FOOTER BAR & VILLAGE ACTIONS ================= */}
           <footer ref={footerRef} className="contact-bottom-bar">
             <div className="contact-plaza-note">
@@ -529,7 +551,7 @@ export default function ContactModal({
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
               </svg>
-              <span>Stand before the Hokage Monument Plaza in Konoha.</span>
+              <span>{info?.location || 'Stand before the Hokage Monument Plaza in Konoha.'}</span>
             </div>
 
             <div className="contact-footer-actions">

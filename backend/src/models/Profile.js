@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const profileSchema = new mongoose.Schema(
   {
+    draft: { type: mongoose.Schema.Types.Mixed, select:false },
     hero: {
       welcomeSentences: {
         type: [String],

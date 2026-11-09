@@ -18,7 +18,7 @@ export const getDialogues = async (req, res, next) => {
 
 export const getDialogueByCharacter = async (req, res, next) => {
   try {
-    const dialogue = await Dialogue.findOne({ characterId: req.params.characterId });
+    const dialogue = await Dialogue.findOne({ characterId: req.params.characterId, visible: true });
     if (!dialogue) {
       return res.status(404).json({ success: false, message: 'Character dialogue not found' });
     }
@@ -30,6 +30,8 @@ export const getDialogueByCharacter = async (req, res, next) => {
 
 export const updateDialogue = async (req, res, next) => {
   try {
+    if (req.body.visible!==false && Array.isArray(req.body.dialogueSequence) && !req.body.dialogueSequence.length)
+      return res.status(400).json({message:'A published conversation requires a line.'});
     const dialogue = await Dialogue.findOneAndUpdate(
       { characterId: req.params.characterId },
       req.body,

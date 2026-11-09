@@ -35,9 +35,11 @@ export const protectAdmin = async (req, res, next) => {
       });
     }
 
+    if (user.sessionVersion !== decoded.version) return res.status(401).json({ message: 'Session has ended.' });
     req.user = user;
     next();
   } catch (error) {
+    if (!['JsonWebTokenError','TokenExpiredError','NotBeforeError','CastError'].includes(error.name)) return next(error);
     return res.status(401).json({
       success: false,
       message: 'Session expired or invalid signature. Please log in again.',

@@ -1,3 +1,4 @@
+import { reorder } from './reorder.js';
 import Project from '../models/Project.js';
 
 export const getProjects = async (req, res, next) => {
@@ -18,7 +19,7 @@ export const getProjects = async (req, res, next) => {
 
 export const getProjectBySlug = async (req, res, next) => {
   try {
-    const project = await Project.findOne({ slug: req.params.slug });
+    const project = await Project.findOne({ slug: req.params.slug, visible: true, status: 'published' });
     if (!project) {
       return res.status(404).json({ success: false, message: 'Project not found' });
     }
@@ -76,25 +77,4 @@ export const deleteProject = async (req, res, next) => {
   }
 };
 
-export const reorderProjects = async (req, res, next) => {
-  try {
-    const { items } = req.body; // Array of { id, order } or { slug, order }
-    if (!Array.isArray(items)) {
-      return res.status(400).json({ success: false, message: 'Invalid payload. Array required.' });
-    }
-
-    const updates = items.map((item) =>
-      Project.updateOne({ $or: [{ slug: item.id || item.slug }, { _id: item._id }] }, { $set: { order: item.order } })
-    );
-
-    await Promise.all(updates);
-
-    res.json({
-      success: true,
-      message: 'Project order updated successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+export const reorderProjects = reorder(Project);

@@ -195,17 +195,17 @@ export default function SkillsModal({
           <div ref={navRef}>
             <SkillNavigation
               categories={categories}
-              activeCategoryId={activeCategoryId}
+              activeCategoryId={activeCategory?.id}
               onSelectCategory={setActiveCategoryId}
             />
           </div>
 
           {/* Right Column: Skill Category Details */}
           <div ref={detailsRef}>
-            <SkillDetails
+            {activeCategory ? <SkillDetails
               category={activeCategory}
               onInspectProject={onInspectProject}
-            />
+            /> : <p>No published skill categories.</p>}
           </div>
         </main>
       </div>

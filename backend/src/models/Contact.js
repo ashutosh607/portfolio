@@ -31,6 +31,7 @@ const contactSchema = new mongoose.Schema(
       type: String,
       default: 'Mumbai, India',
     },
+    description: {type: String, default:''},
     availabilityText: {
       type: String,
       default: 'Available for Opportunities',
@@ -43,6 +44,7 @@ const contactSchema = new mongoose.Schema(
       activePdfUrl: {
         type: String,
         default: '/Ashutosh_Kadam_Resume.pdf',
+        validate: url=> /^(?:\/(?![\/\\])|https:\/\/)/i.test(url) && !/[\\\s]/.test(url),
       },
       fileName: {
         type: String,

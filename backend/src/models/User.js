@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'admin',
     },
+    sessionVersion: { type: Number, default: 0 },
     lastLogin: {
       type: Date,
       default: null,

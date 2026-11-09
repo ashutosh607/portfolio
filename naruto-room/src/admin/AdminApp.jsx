@@ -1,3 +1,5 @@
+import AccountAdmin from './pages/AccountAdmin';
+import DialoguesAdmin from './pages/DialoguesAdmin';
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AdminAuthProvider, useAdminAuth } from './AdminAuthContext';
@@ -5,6 +7,7 @@ import AdminLogin from './AdminLogin';
 import AdminLayout from './AdminLayout';
 import AdminDashboard from './AdminDashboard';
 import ProjectsAdmin from './pages/ProjectsAdmin';
+import MissionsAdmin from './pages/MissionsAdmin';
 import SkillsAdmin from './pages/SkillsAdmin';
 import ProfileAdmin from './pages/ProfileAdmin';
 import ContactAdmin from './pages/ContactAdmin';
@@ -47,6 +50,9 @@ export default function AdminApp() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="projects" element={<ProjectsAdmin />} />
+          <Route path="missions" element={<MissionsAdmin />} />
+          <Route path="settings" element={<AccountAdmin/>}/>
+          <Route path="dialogues" element={<DialoguesAdmin/>}/>
           <Route path="skills" element={<SkillsAdmin />} />
           <Route path="profile" element={<ProfileAdmin />} />
           <Route path="contact" element={<ContactAdmin />} />

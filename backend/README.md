@@ -88,7 +88,7 @@ The server will start with Nodemon on **`http://localhost:5000`**.
 | Category | Method | Endpoint | Access | Description |
 |---|---|---|---|---|
 | **Health** | `GET` | `/api/health` | Public | Server uptime and health check |
-| **Auth** | `POST` | `/api/auth/login` | Public (Rate-limited) | Admin login (Returns JWT & sets httpOnly cookie) |
+| **Auth** | `POST` | `/api/auth/login` | Public (Rate-limited) | Admin login (Sets an HTTP-only session cookie) |
 | | `GET` | `/api/auth/me` | Protected | Get current admin user info |
 | | `POST` | `/api/auth/logout` | Public | Clear auth cookie |
 | | `PUT` | `/api/auth/change-password` | Protected | Change admin password |

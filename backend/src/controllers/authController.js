@@ -5,8 +5,8 @@ import User from '../models/User.js';
 // Dummy hash used for constant-time comparison to prevent timing attacks
 const DUMMY_HASH = '$2a$12$e8ZbzK1jL/qF1pT.3j0z6eF0T4pA9F9pA9F9pA9F9pA9F9pA9F9pA';
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+const generateToken = (id, version) => {
+  return jwt.sign({ id, version }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
     algorithm: 'HS256',
   });
@@ -60,7 +60,7 @@ export const login = async (req, res, next) => {
     user.lastLogin = new Date();
     await user.save();
 
-    const token = generateToken(user._id);
+    const token = generateToken(user._id, user.sessionVersion);
 
     // 4. Secure HTTP-only Cookie flag configuration
     res.cookie('adminToken', token, {
@@ -73,7 +73,6 @@ export const login = async (req, res, next) => {
     res.json({
       success: true,
       message: 'Authentication verified.',
-      token,
       user: {
         id: user._id,
         email: user.email,
@@ -110,7 +109,8 @@ export const getMe = async (req, res) => {
  * @route POST /api/auth/logout
  * @access Public
  */
-export const logout = (req, res) => {
+export const logout = async (req, res) => {
+  await User.updateOne({ _id: req.user._id }, { $inc: { sessionVersion: 1 } });
   res.cookie('adminToken', '', {
     httpOnly: true,
     expires: new Date(0),
@@ -156,6 +156,7 @@ export const changePassword = async (req, res, next) => {
     }
 
     user.password = newPassword;
+    user.sessionVersion += 1;
     await user.save();
 
     res.json({

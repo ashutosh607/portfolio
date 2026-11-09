@@ -35,8 +35,8 @@ export default function AdminLogin() {
           <div className="admin-crest-badge">
             <span className="crest-kanji">忍</span>
           </div>
-          <h1>Shinobi Admin</h1>
-          <p>Hidden Leaf Portfolio Content Management System</p>
+          <h1>Shinobi CMS</h1>
+          <p>Sign in to your workspace.</p>
         </div>
 
         {errorMsg && (
@@ -63,7 +63,7 @@ export default function AdminLogin() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Secret Password</label>
+            <label htmlFor="password">Password</label>
             <div className="input-with-icon">
               <Lock className="input-icon" size={18} />
               <input
@@ -91,7 +91,7 @@ export default function AdminLogin() {
               <span>Authenticating...</span>
             ) : (
               <>
-                <span>Enter Hokage Command</span>
+                <span>Sign in</span>
                 <ArrowRight size={18} />
               </>
             )}

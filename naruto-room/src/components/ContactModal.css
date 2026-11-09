@@ -492,3 +492,5 @@
   }
 }
 
+
+.contact-inquiry{margin:16px 0;color:inherit}.contact-inquiry summary{cursor:pointer}.contact-inquiry form{display:grid;gap:12px;max-width:36rem;margin:12px 0}.contact-inquiry label{display:grid;gap:4px}.contact-inquiry input,.contact-inquiry textarea{padding:8px;background:#1d1719;color:#f3e9dc;border:1px solid #66514b;border-radius:6px}

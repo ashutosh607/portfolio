@@ -1,5 +1,13 @@
-import dotenv from 'dotenv';
-dotenv.config();
+import Project from './src/models/Project.js';
+import Skill from './src/models/Skill.js';
+import Mission, {publicMission} from './src/models/Mission.js';
+import Contact from './src/models/Contact.js';
+import Profile from './src/models/Profile.js';
+import Dialogue from './src/models/Dialogue.js';
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import cloudinary from './src/config/cloudinary.js';
+import { protectAdmin } from './src/middleware/auth.js';
 
 import express from 'express';
 import cors from 'cors';
@@ -22,6 +30,11 @@ import uploadRoutes from './src/routes/uploadRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+if (process.env.TRUST_PROXY_HOPS) {
+  const hops=Number(process.env.TRUST_PROXY_HOPS);
+  if (!Number.isInteger(hops) || hops<1) throw new Error('TRUST_PROXY_HOPS must be a positive integer.');
+  app.set('trust proxy',hops);
+}
 
 // Connect to MongoDB Atlas
 connectDB();
@@ -54,9 +67,7 @@ app.use('/api', globalLimiter);
 
 // 3. Strict CORS configuration
 const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
+  ...(process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5173','http://localhost:5174','http://localhost:3000']),
   ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim()) : []),
 ];
 
@@ -64,7 +75,7 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow server-to-server or trusted local origin
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Blocked by Shinobi CORS Policy'));
@@ -85,10 +96,55 @@ app.use(cookieParser());
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
     message: 'Hidden Leaf Village API is alive and kicking!',
     environment: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
   });
+});
+
+app.use('/api',(req,res,next)=>{
+  if (mongoose.connection.readyState!==1) return res.status(503).json({message:'Database unavailable. Please retry.'});
+  next();
+});
+app.get('/api/system', protectAdmin, async (req, res) => {
+  const [db, media] = await Promise.allSettled([
+    mongoose.connection.db.admin().ping(),
+    cloudinary.api.ping({timeout: 5000})
+  ]);
+  res.set('Cache-Control', 'no-store').json({data: {
+    api: 'Online', database: db.status === 'fulfilled' ? 'Online' : 'Unavailable',
+    media: media.status === 'fulfilled' ? 'Online' : 'Unavailable', verified: new Date()
+  }});
+});
+
+// Include private fields only after checking the caller's session.
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store');
+  if (req.query.all === 'true' || req.query.includeMessages === 'true') return protectAdmin(req, res, next);
+  next();
+});
+
+app.get('/api/overview', protectAdmin, async (req,res) => {
+  const types=[[Project,'Project','projects'],[Mission,'Mission','missions'],[Skill,'Skill','skills']];
+  const [projectCount,skillCount,missionCount,inbox,...groups]=await Promise.all([
+    Project.countDocuments({visible:true,status:'published'}),Skill.countDocuments(),Mission.countDocuments(),
+    Contact.aggregate([{$unwind:'$messages'},{$match:{'messages.read':{$ne:true}}},{$count:'unread'}]),
+    ...types.map(([model])=>model.find().select('slug title status visible updatedAt').sort({updatedAt:-1}).limit(8).lean())
+  ]);
+  const rows=groups.flatMap((group,i)=>group.map(row=>({...row,type:types[i][1],path:types[i][2]})))
+    .sort((a,b)=>b.updatedAt-a.updatedAt).slice(0,8);
+  res.json({data:{counts:[projectCount,skillCount,missionCount,inbox[0]?.unread || 0],rows}});
+});
+
+app.get('/api/portfolio', async (req,res) => {
+  const [projects,skills,missions,profile,contact,dialogues,hasDialogues] = await Promise.all([
+    Project.find({visible:true,status:'published'}).sort({order:1,slug:1}),
+    Skill.find({visible:true}).sort({order:1,slug:1}),
+    Mission.find({visible:true}).sort({order:1,slug:1}), Profile.findOne(),
+    Contact.findOne().select('-messages'), Dialogue.find({visible:true}), Dialogue.exists({})
+  ]);
+  res.json({data:{projects,skills,missions:missions.map(publicMission),profile,contact,dialogues,hasDialogues:!!hasDialogues}});
 });
 
 // 6. Mount Secure Routes

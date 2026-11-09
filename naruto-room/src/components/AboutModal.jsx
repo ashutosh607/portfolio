@@ -1,3 +1,4 @@
+import { published } from '../data/published';
 import { sectionEntrance } from '../utils/sectionEntrance';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
@@ -157,6 +158,7 @@ const DRIVE_VALUES = [
 ];
 
 export default function AboutModal({ embedded = false, isOpen, onClose, onOpenResume, onOpenContact }) {
+  const about = published?.profile?.about;
   const overlayRef = useRef(null);
   const bgRef = useRef(null);
   const closeBtnRef = useRef(null);
@@ -476,7 +478,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                 <div ref={photoFrameRef} className="about-photo-mask">
                   <img
                     ref={photoImgRef}
-                    src="/about/ashutosh-photo.jpg"
+                    src={about?.photoUrl || "/about/ashutosh-photo.jpg"}
                     alt="Ashutosh"
                     className="about-portrait-image"
                     draggable={false}
@@ -488,14 +490,14 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
             {/* ================= CENTER COLUMN: ABOUT ME & INTERESTS ================= */}
             <main className="about-col-center">
               <div ref={eyebrowRef} className="about-eyebrow-row">
-                <span className="about-eyebrow-text">ABOUT ME</span>
+                <span className="about-eyebrow-text">{about?.badge || "ABOUT ME"}</span>
                 <span className="about-eyebrow-line" aria-hidden="true" />
               </div>
 
               <h1 ref={headingRef} id="about-main-heading" className="about-hero-heading">
-                Hi, I&rsquo;m{' '}
+                {!about?.title && <>Hi, I&rsquo;m </>}
                 <span className="about-name-accent">
-                  Ashutosh.
+                  {about?.title || 'Ashutosh.'}
                   <svg
                     className="about-heading-brush"
                     viewBox="0 0 210 12"
@@ -514,12 +516,13 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
               </h1>
 
               <p ref={subtitleRef} className="about-hero-subtitle">
-                Developer <span className="about-dot">•</span> Creator{' '}
+                {about?.subtitle || <>Developer <span className="about-dot">•</span> Creator{' '}
                 <span className="about-dot">•</span> Anime Enthusiast{' '}
-                <span className="about-dot">•</span> Football Fan
+                <span className="about-dot">•</span> Football Fan</>}
               </p>
 
               <div ref={introRef} className="about-intro-prose">
+                {about?.bioParagraphs ? about.bioParagraphs.map((p,i)=><p key={i}>{p}</p>) : <>
                 <p>
                   I&rsquo;m Ashutosh, a developer who enjoys turning ideas into{' '}
                   <span className="prose-highlight">interactive, meaningful experiences</span>.
@@ -536,7 +539,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                   discovering somewhere new to eat. I enjoy staying busy, learning new things, and
                   making the most of whatever I&rsquo;m working on.
                 </p>
-              </div>
+              </>}</div>
 
               {/* MY INTERESTS — 5 COMPACT INTERACTIVE TILES */}
               <section
@@ -552,7 +555,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                 </div>
 
                 <div className="about-interests-row" role="list">
-                  {INTEREST_ITEMS.map((item) => {
+                  {(about?.interestItems?.map((x,i)=>({...x,id:x._id || i,detail:x.sub})) ?? INTEREST_ITEMS).map((item) => {
                     const isActive = activeInterestId === item.id;
                     return (
                       <button
@@ -576,7 +579,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
             {/* ================= RIGHT COLUMN: PROFESSIONAL SNAPSHOT & WHAT DRIVES ME ================= */}
             <aside className="about-col-right" aria-label="Professional Snapshot and Values">
               <div ref={snapshotRef} className="about-snapshot-list">
-                {SNAPSHOT_ITEMS.map((item) => (
+                {(about?.snapshotItems?.map((x,i)=>({...x,id:x._id || i,primary:x.title,secondary:x.desc,icon:SNAPSHOT_ITEMS[i]?.icon})) ?? SNAPSHOT_ITEMS).map((item) => (
                   <div key={item.id} className="about-snapshot-item">
                     <span className="snapshot-item-icon">{item.icon}</span>
                     <div className="snapshot-item-body">
@@ -604,7 +607,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                 </div>
 
                 <div className="about-drives-list">
-                  {DRIVE_VALUES.map((val) => (
+                  {(about?.driveValues?.map((x,i)=>({...x,id:x._id || i,description:x.desc,icon:x.num})) ?? DRIVE_VALUES).map((val) => (
                     <div key={val.id} className="about-drive-item">
                       <span className="drive-item-icon">{val.icon}</span>
                       <div className="drive-item-copy">

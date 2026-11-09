@@ -9,12 +9,9 @@ export function AdminAuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('shinobi_admin_token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
+    localStorage.removeItem('shinobi_admin_token');
+    const end = () => setAdmin(null);
+    window.addEventListener('cms-session-ended', end);
     apiRequest('/auth/me')
       .then((res) => {
         if (res.success && res.user) {
@@ -29,6 +26,7 @@ export function AdminAuthProvider({ children }) {
       .finally(() => {
         setLoading(false);
       });
+    return () => window.removeEventListener('cms-session-ended', end);
   }, []);
 
   const login = async (email, password) => {
@@ -39,8 +37,7 @@ export function AdminAuthProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
 
-      if (res.token) {
-        localStorage.setItem('shinobi_admin_token', res.token);
+      if (res.user) {
         setAdmin(res.user);
         return true;
       }
@@ -51,8 +48,8 @@ export function AdminAuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    apiRequest('/auth/logout', { method: 'POST' }).catch(() => {});
+  const logout = async () => {
+    await apiRequest('/auth/logout', { method: 'POST' });
     localStorage.removeItem('shinobi_admin_token');
     setAdmin(null);
   };

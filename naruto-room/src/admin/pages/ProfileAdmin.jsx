@@ -1,3 +1,4 @@
+import AssetInput from '../AssetInput';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 import { UserCheck, Sparkles, Check, AlertCircle, Save } from 'lucide-react';
@@ -30,8 +31,8 @@ export default function ProfileAdmin() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      const res = await apiRequest('/profile');
-      const data = res.data || {};
+      const res = await apiRequest('/profile?all=true');
+      const data = res.data?.draft || res.data || {};
       setProfile(data);
 
       const s = data.hero?.welcomeSentences || [];
@@ -71,6 +72,7 @@ export default function ProfileAdmin() {
 
     try {
       const payload = {
+        saveDraft:e.nativeEvent.submitter?.value==='draft',
         hero: {
           welcomeSentences: [
             heroForm.sentence1,
@@ -104,7 +106,7 @@ export default function ProfileAdmin() {
         body: JSON.stringify(payload),
       });
 
-      setMessage({ text: 'Profile & Hero settings saved successfully!', type: 'success' });
+      setMessage({ text: payload.saveDraft?'Draft saved.':'Profile published.', type: 'success' });
       loadProfile();
     } catch (err) {
       setMessage({ text: err.message, type: 'error' });
@@ -146,8 +148,8 @@ export default function ProfileAdmin() {
             </p>
 
             <div className="form-group">
-              <label>Sentence 1</label>
-              <input
+              <label htmlFor="profileadmin-sentence-1">Sentence 1</label>
+              <input id="profileadmin-sentence-1"
                 type="text"
                 value={heroForm.sentence1}
                 onChange={(e) => setHeroForm({ ...heroForm, sentence1: e.target.value })}
@@ -155,8 +157,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Sentence 2</label>
-              <input
+              <label htmlFor="profileadmin-sentence-2">Sentence 2</label>
+              <input id="profileadmin-sentence-2"
                 type="text"
                 value={heroForm.sentence2}
                 onChange={(e) => setHeroForm({ ...heroForm, sentence2: e.target.value })}
@@ -164,8 +166,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Sentence 3</label>
-              <input
+              <label htmlFor="profileadmin-sentence-3">Sentence 3</label>
+              <input id="profileadmin-sentence-3"
                 type="text"
                 value={heroForm.sentence3}
                 onChange={(e) => setHeroForm({ ...heroForm, sentence3: e.target.value })}
@@ -173,8 +175,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Sentence 4 (Final Direction to Gate)</label>
-              <input
+              <label htmlFor="profileadmin-sentence-4-final-direction-to-gate">Sentence 4 (Final Direction to Gate)</label>
+              <input id="profileadmin-sentence-4-final-direction-to-gate"
                 type="text"
                 value={heroForm.sentence4}
                 onChange={(e) => setHeroForm({ ...heroForm, sentence4: e.target.value })}
@@ -193,8 +195,8 @@ export default function ProfileAdmin() {
 
             <div className="form-grid-2">
               <div className="form-group">
-                <label>Greeting Title</label>
-                <input
+                <label htmlFor="profileadmin-greeting-title">Greeting Title</label>
+                <input id="profileadmin-greeting-title"
                   type="text"
                   value={heroForm.greeting}
                   onChange={(e) => setHeroForm({ ...heroForm, greeting: e.target.value })}
@@ -202,8 +204,8 @@ export default function ProfileAdmin() {
               </div>
 
               <div className="form-group">
-                <label>Role Badges (Comma-separated)</label>
-                <input
+                <label htmlFor="profileadmin-role-badges-comma-separated">Role Badges (Comma-separated)</label>
+                <input id="profileadmin-role-badges-comma-separated"
                   type="text"
                   value={heroForm.roleBadgesText}
                   onChange={(e) => setHeroForm({ ...heroForm, roleBadgesText: e.target.value })}
@@ -212,8 +214,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Shinobi Quote</label>
-              <input
+              <label htmlFor="profileadmin-shinobi-quote">Shinobi Quote</label>
+              <input id="profileadmin-shinobi-quote"
                 type="text"
                 value={heroForm.quote}
                 onChange={(e) => setHeroForm({ ...heroForm, quote: e.target.value })}
@@ -221,8 +223,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Hero Summary Bio</label>
-              <textarea
+              <label htmlFor="profileadmin-hero-summary-bio">Hero Summary Bio</label>
+              <textarea id="profileadmin-hero-summary-bio"
                 rows={2}
                 value={heroForm.introBio}
                 onChange={(e) => setHeroForm({ ...heroForm, introBio: e.target.value })}
@@ -238,8 +240,8 @@ export default function ProfileAdmin() {
 
             <div className="form-grid-2">
               <div className="form-group">
-                <label>Display Name</label>
-                <input
+                <label htmlFor="profileadmin-display-name">Display Name</label>
+                <input id="profileadmin-display-name"
                   type="text"
                   value={aboutForm.title}
                   onChange={(e) => setAboutForm({ ...aboutForm, title: e.target.value })}
@@ -247,8 +249,8 @@ export default function ProfileAdmin() {
               </div>
 
               <div className="form-group">
-                <label>Subtitle / Specialization</label>
-                <input
+                <label htmlFor="profileadmin-subtitle-specialization">Subtitle / Specialization</label>
+                <input id="profileadmin-subtitle-specialization"
                   type="text"
                   value={aboutForm.subtitle}
                   onChange={(e) => setAboutForm({ ...aboutForm, subtitle: e.target.value })}
@@ -257,8 +259,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Profile Photo URL</label>
-              <input
+              <label htmlFor="profileadmin-profile-photo-url">Profile Photo URL</label>
+              <input id="profileadmin-profile-photo-url"
                 type="text"
                 value={aboutForm.photoUrl}
                 onChange={(e) => setAboutForm({ ...aboutForm, photoUrl: e.target.value })}
@@ -266,8 +268,8 @@ export default function ProfileAdmin() {
             </div>
 
             <div className="form-group">
-              <label>About Bio Paragraphs (Separate each paragraph with an empty line)</label>
-              <textarea
+              <label htmlFor="profileadmin-about-bio-paragraphs-separate-each-paragraph-with-an-empty-line">About Bio Paragraphs (Separate each paragraph with an empty line)</label>
+              <textarea id="profileadmin-about-bio-paragraphs-separate-each-paragraph-with-an-empty-line"
                 rows={6}
                 value={aboutForm.bioText}
                 onChange={(e) => setAboutForm({ ...aboutForm, bioText: e.target.value })}
@@ -275,13 +277,18 @@ export default function ProfileAdmin() {
             </div>
           </div>
 
-          <div className="form-sticky-footer">
-            <button type="submit" disabled={saving} className="admin-primary-btn large">
-              <Save size={18} />
-              <span>{saving ? 'Saving Changes...' : 'Save All Profile Changes'}</span>
-            </button>
-          </div>
-        </form>
+        <AssetInput label="Upload portrait" onUpload={url=>setAboutForm(f=>({...f,photoUrl:url}))}/>
+          {aboutForm.photoUrl && <img className="cms-portrait" src={aboutForm.photoUrl} alt="Profile preview"/>}
+          {Object.entries({snapshotItems:['label','title','desc'],interestItems:['icon','label','sub'],driveValues:['num','title','desc']}).map(([field,keys])=>{
+            const rows=profile?.about?.[field] || [];
+            const setRows=next=>setProfile(p=>({...p,about:{...p.about,[field]:next}}));
+            return <fieldset key={field}><legend>{{snapshotItems:'Education & highlights',interestItems:'Interests',driveValues:'Career goals'}[field]}</legend>
+              {rows.map((row,i)=><div className="cms-row" key={i}>{keys.map(k=><label key={k}>{k}<input value={row[k] || ''} onChange={e=>setRows(rows.map((r,n)=>n===i?{...r,[k]:e.target.value}:r))}/></label>)}
+              <button type="button" onClick={()=>setRows(rows.filter((_,n)=>n!==i))}>Remove</button></div>)}
+              <button type="button" onClick={()=>setRows([...rows,{}])}>Add item</button></fieldset>;
+          })}
+          <div className="form-sticky-footer"><button type="submit" value="draft" disabled={saving} className="admin-secondary-btn">Save draft</button><button type="submit" disabled={saving} className="admin-primary-btn">Publish profile</button></div>
+          </form>
       )}
     </div>
   );

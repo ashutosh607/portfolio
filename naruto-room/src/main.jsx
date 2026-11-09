@@ -2,11 +2,16 @@ import { StrictMode, Suspense, lazy } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
-import App from './App.jsx';
+const App = lazy(() => import('./App.jsx'));
 
 // Lazy load the Admin Panel bundle so standard portfolio visitors never download admin code
 const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
 
+async function start() {
+if (!/^\/admin(?:\/|$)/.test(location.pathname)) {
+  const {loadPublished} = await import('./data/published');
+  await loadPublished();
+}
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
@@ -39,8 +44,11 @@ createRoot(document.getElementById('root')).render(
         />
 
         {/* Public Portfolio (3D Konoha Village & 2D Mode): Appears on all regular URLs */}
-        <Route path="/*" element={<App />} />
+        <Route path="/*" element={<Suspense fallback={null}><App /></Suspense>} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
 );
+
+}
+start();

@@ -16,8 +16,8 @@ const INITIAL_PROJECTS = [
     title: 'TravelFlow AI',
     dishName: 'Narutomaki AI Ramen',
     category: 'Full-Stack / AI Itinerary Planner',
-    frontPagePhoto: '/ramen-menu/travelflow-menu.webp',
-    projectPhoto: '/ramen-menu/travelflow-project.webp',
+    frontPagePhoto: '/ichiraku/projects/travelflow-ai.webp',
+    projectPhoto: '/ichiraku/projects/travelflow-ai.webp',
     screenshots: [],
     shortDesc: 'A production-grade travel platform with real-time routing, dynamic budget forecasting, and AI trip compilation.',
     problemSolved: 'Replaces scattered tabs, manual booking spreadsheets, and broken routes with an all-in-one AI travel workspace.',
@@ -39,8 +39,8 @@ const INITIAL_PROJECTS = [
     title: 'WasteWise',
     dishName: 'Tonkotsu Eco-Classifier',
     category: 'Computer Vision / Waste Segregation',
-    frontPagePhoto: '/ramen-menu/wastewise-menu.webp',
-    projectPhoto: '/ramen-menu/wastewise-project.webp',
+    frontPagePhoto: '/ichiraku/projects/wastewise.webp',
+    projectPhoto: '/ichiraku/projects/wastewise.webp',
     screenshots: [],
     shortDesc: 'Computer-vision-powered edge waste classification system that detects recyclables and sorts municipal refuse in real-time.',
     problemSolved: 'Solves municipal recycling contamination by classifying recyclable vs. organic refuse in under 60 milliseconds.',
@@ -62,8 +62,8 @@ const INITIAL_PROJECTS = [
     title: 'CallKavach',
     dishName: 'Shoyu Defense Broth',
     category: 'Voice Intelligence / Fraud Prevention',
-    frontPagePhoto: '/ramen-menu/callkavach-menu.webp',
-    projectPhoto: '/ramen-menu/callkavach-project.webp',
+    frontPagePhoto: '/ichiraku/projects/callkavach.webp',
+    projectPhoto: '/ichiraku/projects/callkavach.webp',
     screenshots: [],
     shortDesc: 'Streaming speech fraud detection that analyzes live phone call transcripts to block impersonation and credential theft.',
     problemSolved: 'Shields vulnerable users from bank impersonation and urgent financial scams before they transfer money.',
@@ -85,8 +85,8 @@ const INITIAL_PROJECTS = [
     title: 'Racket Sports Intelligence',
     dishName: 'Miso Vision Stir',
     category: 'Sports Analytics / Pose Estimation',
-    frontPagePhoto: '/ramen-menu/racket-menu.webp',
-    projectPhoto: '/ramen-menu/racket-project.webp',
+    frontPagePhoto: '/ichiraku/projects/racket-intel.webp',
+    projectPhoto: '/ichiraku/projects/racket-intel.webp',
     screenshots: [],
     shortDesc: 'Spatial tracking platform that analyzes match video footage, computes shuttlecock velocities, and maps court coverage.',
     problemSolved: 'Brings elite-level spatial stroke analytics to grassroots badminton players using standard smartphone cameras.',
@@ -108,8 +108,8 @@ const INITIAL_PROJECTS = [
     title: 'Hidden Leaf 3D Portfolio',
     dishName: 'Chidori Shio Ramen',
     category: 'Interactive 3D / WebGL Experience',
-    frontPagePhoto: '/ramen-menu/konoha-menu.webp',
-    projectPhoto: '/ramen-menu/konoha-project.webp',
+    frontPagePhoto: '/ichiraku/projects/konoha-3d-portfolio.webp',
+    projectPhoto: '/ichiraku/projects/konoha-3d-portfolio.webp',
     screenshots: [],
     shortDesc: 'A real-time 3D gamified developer portfolio featuring Konoha Village, third-person controls, character interactions, and dynamic HUD.',
     problemSolved: 'Transforms standard boring developer resumes into an unforgettable story-driven exploration experience.',
@@ -219,7 +219,7 @@ export const seedDatabase = async () => {
     if (!existingAdmin) {
       await User.create({
         email: adminEmail,
-        password: process.env.ADMIN_INITIAL_PASSWORD || 'ShinobiHokage2026!',
+        password: process.env.ADMIN_INITIAL_PASSWORD,
         name: 'Ashutosh Kadam',
         role: 'admin',
       });
@@ -228,13 +228,13 @@ export const seedDatabase = async () => {
 
     // 2. Seed Projects
     for (const proj of INITIAL_PROJECTS) {
-      await Project.findOneAndUpdate({ slug: proj.slug }, proj, { upsert: true, new: true });
+      await Project.findOneAndUpdate({ slug: proj.slug }, { $setOnInsert: proj }, { upsert: true, new: true });
     }
     console.log(`✅ [Seed] ${INITIAL_PROJECTS.length} Portfolio Projects seeded.`);
 
     // 3. Seed Skills
     for (const skill of INITIAL_SKILLS) {
-      await Skill.findOneAndUpdate({ slug: skill.slug }, skill, { upsert: true, new: true });
+      await Skill.findOneAndUpdate({ slug: skill.slug }, { $setOnInsert: skill }, { upsert: true, new: true });
     }
     console.log(`✅ [Seed] ${INITIAL_SKILLS.length} Skill Scrolls seeded.`);
 

@@ -1,3 +1,4 @@
+import { published } from '../data/published';
 import { CHARACTERS_DATA } from '../config/dialogueData';
 import { KONOHA_LOCATIONS } from '../config/locations';
 
@@ -24,7 +25,11 @@ const LOCATION_SHORT_NAMES = {
  * Preserves existing NPC positions, 3D models, and location modal keys.
  */
 export function buildInteractableRegistry() {
-  const npcs = CHARACTERS_DATA.map((char, idx) => {
+  const characters = published?.hasDialogues ? CHARACTERS_DATA.flatMap(character => {
+    const script = published.dialogues.find(d => d.characterId === character.id);
+    return script ? [{...character, name:script.name, dialogueSequence:script.dialogueSequence, choices:script.choices}] : [];
+  }) : CHARACTERS_DATA;
+  const npcs = characters.map((char, idx) => {
     const shortName = NPC_SHORT_NAMES[char.id] || char.name.split(' ')[0];
     return {
       uid: `npc:${char.id}`,

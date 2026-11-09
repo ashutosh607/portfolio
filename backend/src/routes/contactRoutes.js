@@ -1,3 +1,4 @@
+import Contact from '../models/Contact.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import {
@@ -24,6 +25,12 @@ router.route('/')
   .put(protectAdmin, updateContact);
 
 router.post('/messages', messageLimiter, submitVisitorMessage);
+router.patch('/messages/:messageId', protectAdmin, async (req,res) => {
+  if (typeof req.body.read !== 'boolean') return res.status(400).json({message:'Expected read status'});
+  const result = await Contact.updateOne({'messages._id':req.params.messageId}, {$set:{'messages.$.read':req.body.read}});
+  if (!result.matchedCount) return res.status(404).json({message:'Message not found'});
+  res.json({success:true});
+});
 router.delete('/messages/:messageId', protectAdmin, deleteVisitorMessage);
 
 export default router;

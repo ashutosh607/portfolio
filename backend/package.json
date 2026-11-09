@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "seed": "node src/data/seed.js"
+    "seed": "node src/data/seed.js",
+    "import:village": "node src/data/importVillage.js",
+    "test:audit": "node tests/audit.mjs"
   },
   "keywords": [
     "portfolio",

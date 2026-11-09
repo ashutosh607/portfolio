@@ -1,3 +1,4 @@
+import AssetInput from '../AssetInput';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 import { Mail, Globe, Link2, Trash2, Check, AlertCircle, Save, FileText } from 'lucide-react';
@@ -26,6 +27,7 @@ export default function ContactAdmin() {
       setContact(data);
 
       setForm({
+        description: data.description || '',
         email: data.email || '',
         githubUrl: data.githubUrl || '',
         linkedinUrl: data.linkedinUrl || '',
@@ -38,6 +40,7 @@ export default function ContactAdmin() {
       setMessage({ text: err.message, type: 'error' });
     } finally {
       setLoading(false);
+      if(location.hash==='#resume')requestAnimationFrame(()=>document.getElementById('resume')?.scrollIntoView());
     }
   };
 
@@ -52,6 +55,7 @@ export default function ContactAdmin() {
 
     try {
       const payload = {
+        description: form.description,
         email: form.email,
         githubUrl: form.githubUrl,
         linkedinUrl: form.linkedinUrl,
@@ -153,8 +157,8 @@ export default function ContactAdmin() {
             </div>
 
             <div className="form-group">
-              <label>Current Location</label>
-              <input
+              <label htmlFor="contactadmin-current-location">Current Location</label>
+              <input id="contactadmin-current-location"
                 type="text"
                 value={form.location}
                 onChange={(e) => setForm({ ...form, location: e.target.value })}
@@ -171,13 +175,13 @@ export default function ContactAdmin() {
                   onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })}
                 />
                 <label htmlFor="availToggle">
-                  Show green pulse: "{form.availabilityText}"
+                  Available for opportunities
                 </label>
               </div>
             </div>
 
             <div className="form-group">
-              <label>Active Resume PDF URL / Path</label>
+              <label id="resume">Active résumé PDF URL</label>
               <div className="input-with-icon">
                 <FileText className="input-icon" size={16} />
                 <input
@@ -192,6 +196,10 @@ export default function ContactAdmin() {
               </span>
             </div>
 
+            <label className="form-group">Availability label<input value={form.availabilityText} onChange={e=>setForm({...form,availabilityText:e.target.value})}/></label>
+            <label className="form-group">Contact description<textarea value={form.description || ''} onChange={e=>setForm({...form,description:e.target.value})}/></label>
+            <AssetInput label="Replace active résumé" document onUpload={url=>setForm(f=>({...f,resumePdfUrl:url}))}/>
+            {form.resumePdfUrl && <a href={form.resumePdfUrl} target="_blank" rel="noreferrer">Preview résumé ↗</a>}
             <button type="submit" disabled={saving} className="admin-primary-btn mt-4">
               <Save size={16} />
               <span>{saving ? 'Saving...' : 'Save Contact Settings'}</span>
@@ -237,7 +245,10 @@ export default function ContactAdmin() {
                     <div className="message-subject">
                       <strong>Subject:</strong> {msg.subject}
                     </div>
-                    <p className="message-body">{msg.message}</p>
+                    <p className="message-body">{msg.message}</p><button className="admin-secondary-btn" onClick={async()=>{
+                      try {await apiRequest('/contact/messages/'+msg._id,{method:'PATCH',body:JSON.stringify({read:!msg.read})});await loadContact()}
+                      catch(e){setMessage({type:'error',text:e.message})}
+                    }}>Mark {msg.read?'unread':'read'}</button>
                   </div>
                 ))}
               </div>

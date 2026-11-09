@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const hackathonEventSchema = new mongoose.Schema({
   id: { type: String, required: true },
-  title: { type: String, required: true },
+  title: { type: String, default: '' },
   organiser: { type: String, default: '' },
   date: { type: String, default: '' },
   duration: { type: String, default: '' },
@@ -60,8 +60,11 @@ const missionSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    startDate: String,
+    endDate: String,
     availableFrom: {
       type: String,
+      validate: value=>!value || Number.isFinite(Date.parse(value)),
       default: null,
     },
     thumbnail: {
@@ -82,7 +85,7 @@ const missionSchema = new mongoose.Schema(
     },
     caseStudy: {
       type: caseStudySchema,
-      default: () => ({}),
+      default: null,
     },
     events: {
       type: [hackathonEventSchema],
@@ -108,6 +111,12 @@ missionSchema.virtual('id').get(function () {
 
 missionSchema.set('toJSON', { virtuals: true });
 missionSchema.set('toObject', { virtuals: true });
+
+export function publicMission(document) {
+  const mission=document.toJSON();
+  mission.events=mission.events.filter(event=>event.visible!==false);
+  return mission;
+}
 
 const Mission = mongoose.model('Mission', missionSchema);
 export default Mission;

@@ -10,7 +10,7 @@ export const connectDB = async () => {
   }
 
   try {
-    const conn = await mongoose.connect(uri);
+    const conn = await mongoose.connect(uri, { serverSelectionTimeoutMS: 5000, bufferCommands: false });
     console.log(`🍃 [Database] MongoDB Atlas Connected: ${conn.connection.host}/${conn.connection.name}`);
     return true;
   } catch (error) {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { apiRequest } from '../api';
 import { UploadCloud, Check, Copy, AlertCircle, FileText, Image as ImageIcon } from 'lucide-react';
 
@@ -10,6 +10,9 @@ export default function MediaAdmin() {
   const [message, setMessage] = useState({ text: '', type: '' });
   const [copied, setCopied] = useState(false);
 
+  const [assets,setAssets]=useState([]),[search,setSearch]=useState('');
+  const refresh=()=>apiRequest('/upload').then(r=>setAssets(r.data)).catch(err=>setMessage({type:'error',text:err.message}));
+  useEffect(()=>{refresh()},[]);
   const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
@@ -33,6 +36,7 @@ export default function MediaAdmin() {
 
       if (res.success && res.data) {
         setUploadedAsset(res.data);
+        refresh();
         setMessage({ text: res.message || 'File uploaded to Cloudinary!', type: 'success' });
       }
     } catch (err) {
@@ -42,8 +46,8 @@ export default function MediaAdmin() {
     }
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text) => {
+    try {await navigator.clipboard.writeText(text)} catch {setMessage({type:'error',text:'Clipboard access failed.'});return}
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -101,7 +105,7 @@ export default function MediaAdmin() {
               </div>
             </div>
 
-            <div className="upload-dropzone">
+            <div className="upload-dropzone" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(!uploading)setSelectedFile(e.dataTransfer.files[0] || null)}}>
               <input
                 type="file"
                 id="fileUploadInput"
@@ -111,7 +115,7 @@ export default function MediaAdmin() {
               <label htmlFor="fileUploadInput" className="dropzone-label">
                 <UploadCloud size={36} className="upload-icon" />
                 <span>
-                  {selectedFile ? selectedFile.name : 'Click or drag file here to upload'}
+                  {selectedFile ? selectedFile.name : 'Choose a file or drop it here'}
                 </span>
                 <span className="dropzone-hint">
                   {uploadType === 'image'
@@ -191,6 +195,9 @@ export default function MediaAdmin() {
           )}
         </div>
       </div>
+      <section className="admin-card"><div className="cms-toolbar"><h2>Files</h2><input placeholder="Search filenames" aria-label="Search filenames" value={search} onChange={e=>setSearch(e.target.value)}/></div><div className="cms-files">{assets.filter(x=>x.name?.toLowerCase().includes(search.toLowerCase())).map(file=><article key={file._id}>
+      <a href={file.url} target="_blank" rel="noreferrer">{file.resourceType==='image' && <img className="cms-thumb" alt="" src={file.url}/>} {file.name}</a><small>{file.format} · {Math.ceil(file.bytes/1024)} KB · {new Date(file.createdAt).toLocaleDateString()}</small>
+      <button onClick={async()=>{if(!confirm('Delete this file from storage?'))return;try{await apiRequest('/upload/'+file._id,{method:'DELETE'});if(uploadedAsset?._id===file._id)setUploadedAsset(null);await refresh()}catch(e){setMessage({type:'error',text:e.message})}}}>Delete</button></article>)}</div></section>
     </div>
   );
 }

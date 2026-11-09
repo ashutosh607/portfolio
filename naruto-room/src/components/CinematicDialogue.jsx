@@ -21,6 +21,7 @@ export default function CinematicDialogue({
   const [isShowingReply, setIsShowingReply] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
+  const replyAction=useRef(null);
   const rootRef = useRef(null);
   const gradientRef = useRef(null);
   const portraitRef = useRef(null);
@@ -35,6 +36,7 @@ export default function CinematicDialogue({
   useEffect(() => {
     if (character) {
       mountTimestampRef.current = performance.now();
+      replyAction.current=null;
       setActiveDialogueList(character.dialogueSequence || []);
       setCurrentLineIndex(0);
       setIsTyping(true);
@@ -172,10 +174,10 @@ export default function CinematicDialogue({
       setCurrentLineIndex((prev) => prev + 1);
       setIsTyping(true);
     } else {
-      // Final press: Cleanly close dialogue
-      performAnimatedClose();
+      const choice=replyAction.current;
+      performAnimatedClose(choice?.action && choice.action!=='close' ? ()=>onTriggerAction?.(choice.action,choice) : undefined);
     }
-  }, [isClosing, currentLine, isTyping, isFinalLine, performAnimatedClose]);
+  }, [isClosing, currentLine, isTyping, isFinalLine, performAnimatedClose, onTriggerAction]);
 
   // Fast Forward Button: Jump straight to final line & reveal choices
   const handleFastForward = useCallback(() => {
@@ -190,6 +192,7 @@ export default function CinematicDialogue({
       if (isClosing) return;
 
       if (choice.replyDialogue && choice.replyDialogue.length > 0) {
+        replyAction.current=choice;
         setIsShowingReply(true);
         setActiveDialogueList(choice.replyDialogue);
         setCurrentLineIndex(0);
@@ -229,11 +232,7 @@ export default function CinematicDialogue({
         // Ignore held key auto-repeat so holding Space/E never skips multiple lines
         if (e.repeat) return;
 
-        if (!isFinalLine || isTyping) {
-          handleAdvance();
-        } else {
-          performAnimatedClose();
-        }
+        handleAdvance();
       }
     };
 

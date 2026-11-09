@@ -1,3 +1,4 @@
+import { published } from '../data/published';
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import './ResumeViewerModal.css';
@@ -9,7 +10,7 @@ export default function ResumeViewerModal({ isOpen, onClose, onBack, originName 
   const timelineRef = useRef(null);
   const isClosingRef = useRef(false);
 
-  const pdfUrl = '/Ashutosh_Kadam_Resume.pdf';
+  const pdfUrl = published?.contact?.resume?.activePdfUrl || '/Ashutosh_Kadam_Resume.pdf';
 
   const prefersReducedMotion = () =>
     typeof window !== 'undefined' &&

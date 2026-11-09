@@ -1,40 +1,16 @@
 import Profile from '../models/Profile.js';
 
-export const getProfile = async (req, res, next) => {
-  try {
-    let profile = await Profile.findOne();
-    if (!profile) {
-      // Create initial profile if none exists
-      profile = await Profile.create({});
-    }
-    res.json({
-      success: true,
-      data: profile,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+export async function getProfile(req,res) {
+  const profile=await Profile.findOne().select(req.user?'+draft':'-draft');
+  res.json({data:profile || new Profile()});
+}
 
-export const updateProfile = async (req, res, next) => {
-  try {
-    let profile = await Profile.findOne();
-    if (!profile) {
-      profile = await Profile.create(req.body);
-    } else {
-      profile = await Profile.findByIdAndUpdate(profile._id, req.body, {
-        new: true,
-        runValidators: true,
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Profile dossier updated successfully',
-      data: profile,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+export async function updateProfile(req,res) {
+  const {hero,about}=req.body;
+  if(!hero && !about)return res.status(400).json({message:'Provide profile content.'});
+  const fields={...(hero && {hero}),...(about && {about})};
+  const update=req.body.saveDraft ? {$set:{draft:fields}} : {$set:fields,$unset:{draft:1}};
+  update.$setOnInsert={_id:'000000000000000000000002'};
+  const profile=await Profile.findOneAndUpdate({},update,{upsert:true,new:true,runValidators:true}).select('+draft');
+  res.json({success:true,data:profile});
+}

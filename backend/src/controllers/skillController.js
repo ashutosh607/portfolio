@@ -1,3 +1,4 @@
+import { reorder } from './reorder.js';
 import Skill from '../models/Skill.js';
 
 export const getSkills = async (req, res, next) => {
@@ -64,25 +65,4 @@ export const deleteSkill = async (req, res, next) => {
   }
 };
 
-export const reorderSkills = async (req, res, next) => {
-  try {
-    const { items } = req.body;
-    if (!Array.isArray(items)) {
-      return res.status(400).json({ success: false, message: 'Array required' });
-    }
-
-    const updates = items.map((item) =>
-      Skill.updateOne({ slug: item.id || item.slug }, { $set: { order: item.order } })
-    );
-
-    await Promise.all(updates);
-
-    res.json({
-      success: true,
-      message: 'Skill order updated successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
+export const reorderSkills = reorder(Skill);
