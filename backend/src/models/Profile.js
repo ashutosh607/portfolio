@@ -76,6 +76,54 @@ const profileSchema = new mongoose.Schema(
           desc: { type: String, default: '' },
         },
       ],
+      headline: {
+        type: String,
+        default: 'The shinobi behind the code.',
+      },
+      animeList: [
+        {
+          title: { type: String, default: '', maxlength: 80 },
+          tags: { type: String, default: '', maxlength: 160 },
+          imageUrl: { type: String, default: '', maxlength: 600 },
+        },
+      ],
+      football: {
+        title: { type: String, default: 'Football', maxlength: 80 },
+        description: {
+          type: String,
+          default: 'More than a sport — it’s where I learn discipline, teamwork, and quick decision-making.',
+          maxlength: 400,
+        },
+        position: { type: String, default: 'Centre Midfielder', maxlength: 80 },
+        imageUrl: { type: String, default: '/about/football.jpg', maxlength: 600 },
+      },
+    },
+    githubCalendar: {
+      username: {
+        type: String,
+        default: 'ashutosh607',
+        trim: true,
+      },
+      title: {
+        type: String,
+        default: 'My Coding Journey',
+      },
+      subtitle: {
+        type: String,
+        default: 'DEVELOPER ACTIVITY',
+      },
+      description: {
+        type: String,
+        default: 'A year of building, learning and shipping code.',
+      },
+      profileUrl: {
+        type: String,
+        default: 'https://github.com/ashutosh607',
+      },
+      enabled: {
+        type: Boolean,
+        default: true,
+      },
     },
   },
   {

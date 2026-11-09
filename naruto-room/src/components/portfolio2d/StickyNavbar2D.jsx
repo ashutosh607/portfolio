@@ -17,6 +17,25 @@ export default function StickyNavbar2D({
   const activeIndicatorRef = useRef(null);
   const navItemRefs = useRef({});
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const button=navbarRef.current.querySelector('.p2d-mobile-menu-btn');
+    const controls=navbarRef.current.querySelectorAll('.p2d-mobile-drawer button');
+    controls[0]?.focus({preventScroll:true});
+    const keydown=e=>{
+      if(e.key==='Escape') setMobileMenuOpen(false);
+      if(e.key==='Tab' && e.shiftKey && document.activeElement===controls[0]){
+        e.preventDefault();controls[controls.length-1]?.focus();
+      } else if(e.key==='Tab' && !e.shiftKey && document.activeElement===controls[controls.length-1]){
+        e.preventDefault();controls[0]?.focus();
+      }
+    };
+    const media=matchMedia('(min-width: 901px)');
+    const resize=()=>{if(media.matches)setMobileMenuOpen(false)};
+    window.addEventListener('keydown',keydown);media.addEventListener('change',resize);
+    return ()=>{window.removeEventListener('keydown',keydown);media.removeEventListener('change',resize);button?.focus({preventScroll:true})};
+  },[mobileMenuOpen]);
+
   // 1. Initial Entrance Animations on mount
   useEffect(() => {
     const prefersReducedMotion =
@@ -83,26 +102,44 @@ export default function StickyNavbar2D({
   }, []);
 
   // 3. Sliding active navigation indicator
+  const updateIndicator = useCallback(
+    (instant = false) => {
+      const activeEl = navItemRefs.current[activeSection];
+      const indicator = activeIndicatorRef.current;
+      if (!activeEl || !indicator || !linksContainerRef.current) return;
+
+      const containerRect = linksContainerRef.current.getBoundingClientRect();
+      const itemRect = activeEl.getBoundingClientRect();
+      if (!itemRect.width) return;
+
+      const targetX = itemRect.left - containerRect.left;
+      const targetWidth = itemRect.width;
+
+      if (instant) {
+        gsap.set(indicator, { x: targetX, width: targetWidth, opacity: 1 });
+      } else {
+        gsap.to(indicator, {
+          x: targetX,
+          width: targetWidth,
+          opacity: 1,
+          duration: 0.35,
+          ease: 'power2.out',
+          overwrite: 'auto',
+        });
+      }
+    },
+    [activeSection]
+  );
+
   useEffect(() => {
-    const activeEl = navItemRefs.current[activeSection];
-    const indicator = activeIndicatorRef.current;
-    if (!activeEl || !indicator || !linksContainerRef.current) return;
+    updateIndicator();
+  }, [updateIndicator, isScrolled]);
 
-    const containerRect = linksContainerRef.current.getBoundingClientRect();
-    const itemRect = activeEl.getBoundingClientRect();
-
-    const targetX = itemRect.left - containerRect.left;
-    const targetWidth = itemRect.width;
-
-    gsap.to(indicator, {
-      x: targetX,
-      width: targetWidth,
-      opacity: 1,
-      duration: 0.35,
-      ease: 'power2.out',
-      overwrite: 'auto',
-    });
-  }, [activeSection]);
+  useEffect(() => {
+    const handleResize = () => updateIndicator(true);
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, [updateIndicator]);
 
   const handleNavClick = useCallback(
     (id) => {
@@ -194,6 +231,7 @@ export default function StickyNavbar2D({
           className={`p2d-mobile-menu-btn ${mobileMenuOpen ? 'is-open' : ''}`}
           onClick={() => setMobileMenuOpen((v) => !v)}
           aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
+          aria-controls={mobileMenuOpen ? "portfolio-mobile-drawer" : undefined}
           aria-expanded={mobileMenuOpen}
         >
           <span className="p2d-hamburger-bar" />
@@ -210,12 +248,13 @@ export default function StickyNavbar2D({
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
-          <div className="p2d-mobile-drawer" role="dialog" aria-modal="true">
+          <div className="p2d-mobile-drawer" role="dialog" aria-modal="true" aria-label="Portfolio navigation" id="portfolio-mobile-drawer">
             <div className="p2d-mobile-drawer-inner">
               {navSections.map((item) => (
                 <button
                   key={item.id}
                   type="button"
+                  aria-current={activeSection===item.id ? "location" : undefined}
                   className={`p2d-mobile-nav-item ${activeSection === item.id ? 'is-active' : ''}`}
                   onClick={() => handleNavClick(item.id)}
                 >

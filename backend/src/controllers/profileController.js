@@ -6,9 +6,9 @@ export async function getProfile(req,res) {
 }
 
 export async function updateProfile(req,res) {
-  const {hero,about}=req.body;
-  if(!hero && !about)return res.status(400).json({message:'Provide profile content.'});
-  const fields={...(hero && {hero}),...(about && {about})};
+  const {hero,about,githubCalendar}=req.body;
+  if(!hero && !about && !githubCalendar)return res.status(400).json({message:'Provide profile content.'});
+  const fields={...(hero && {hero}),...(about && {about}),...(githubCalendar && {githubCalendar})};
   const update=req.body.saveDraft ? {$set:{draft:fields}} : {$set:fields,$unset:{draft:1}};
   update.$setOnInsert={_id:'000000000000000000000002'};
   const profile=await Profile.findOneAndUpdate({},update,{upsert:true,new:true,runValidators:true}).select('+draft');

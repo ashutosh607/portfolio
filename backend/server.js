@@ -27,6 +27,7 @@ import profileRoutes from './src/routes/profileRoutes.js';
 import contactRoutes from './src/routes/contactRoutes.js';
 import dialogueRoutes from './src/routes/dialogueRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
+import githubRoutes from './src/routes/githubRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -205,6 +206,7 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/dialogues', dialogueRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/github', githubRoutes);
 
 // 7. Error Handlers
 app.use(notFound);

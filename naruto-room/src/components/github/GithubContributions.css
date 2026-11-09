@@ -1,0 +1,546 @@
+/* ==============================================================================
+   GITHUB CONTRIBUTION CALENDAR — MINIMAL WARM CHARCOAL PALETTE
+   Palette:
+     Background:  #141110
+     Headings:    #F3E6D3
+     Body/Meta:   #B9ADA5
+     Surface:     #1D1917
+     Border:      #39312D
+     Accent:      #FF5A1F
+   ============================================================================== */
+
+.gh-section-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 1240px;
+  margin: 72px auto 24px;
+  box-sizing: border-box;
+}
+
+.gh-section-wrapper.is-embedded {
+  margin-top: 56px;
+  margin-bottom: 32px;
+}
+
+/* --------------------------------------------------------------------------
+   1. SECTION HEADER
+   -------------------------------------------------------------------------- */
+.gh-header {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.gh-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.gh-icon-mark {
+  color: #FF5A1F;
+  flex-shrink: 0;
+}
+
+.gh-eyebrow-text {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #B9ADA5;
+}
+
+.gh-eyebrow-rule {
+  width: 36px;
+  height: 1px;
+  background-color: #FF5A1F;
+}
+
+.gh-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.gh-main-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(28px, 3.2vw, 42px);
+  color: #F3E6D3;
+  line-height: 1.1;
+  margin: 0;
+  letter-spacing: -0.015em;
+}
+
+.gh-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #141110;
+  border: 1px solid #39312D;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: #B9ADA5;
+}
+
+.gh-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #39d353;
+  box-shadow: 0 0 8px rgba(57, 211, 83, 0.6);
+}
+
+.gh-badge-total {
+  font-weight: 700;
+  color: #F3E6D3;
+  font-family: 'Cinzel', Georgia, serif;
+}
+
+.gh-badge-label {
+  color: #B9ADA5;
+  font-size: 11.5px;
+}
+
+.gh-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #B9ADA5;
+  margin: 0;
+  max-width: 58ch;
+}
+
+/* --------------------------------------------------------------------------
+   2. MAIN SURFACE CARD
+   -------------------------------------------------------------------------- */
+.gh-card {
+  position: relative;
+  background-color: #1D1917;
+  border: 1px solid #39312D;
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  overflow: hidden;
+  transition: border-color 0.3s ease;
+}
+
+.gh-card:hover {
+  border-color: rgba(255, 90, 31, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   3. HORIZONTALLY SCROLLABLE CALENDAR CANVAS
+   -------------------------------------------------------------------------- */
+.gh-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #39312D transparent;
+  -webkit-overflow-scrolling: touch;
+  outline: none;
+}
+
+.gh-scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.gh-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gh-scroll-container::-webkit-scrollbar-thumb {
+  background: #39312D;
+  border-radius: 999px;
+}
+
+.gh-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #FF5A1F;
+}
+
+.gh-calendar-canvas {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 820px;
+  user-select: none;
+}
+
+/* --- Months row --- */
+.gh-months-row {
+  display: flex;
+  height: 20px;
+  margin-bottom: 6px;
+}
+
+.gh-month-spacer {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+.gh-months-track {
+  position: relative;
+  flex: 1;
+}
+
+.gh-month-label {
+  position: absolute;
+  top: 0;
+  font-size: 11px;
+  color: #B9ADA5;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* --- Grid Body --- */
+.gh-grid-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gh-weekdays-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.gh-weekday-label {
+  height: 12px;
+  font-size: 9.5px;
+  line-height: 12px;
+  color: #7d726b;
+  font-weight: 500;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.gh-matrix {
+  display: flex;
+  gap: 3px;
+}
+
+.gh-week-col {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+/* --- Single Day Cell --- */
+.gh-day-cell {
+  width: 12px;
+  height: 12px;
+  border-radius: 2.5px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  background-color: #242825;
+  transition: transform 0.15s ease, outline 0.15s ease, filter 0.15s ease;
+  position: relative;
+}
+
+.gh-day-cell.is-empty {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gh-day-cell:hover,
+.gh-day-cell:focus-visible,
+.gh-day-cell.is-active {
+  transform: scale(1.3);
+  z-index: 5;
+  outline: 1.5px solid #FF5A1F;
+  outline-offset: 1px;
+  filter: brightness(1.2);
+}
+
+/* --------------------------------------------------------------------------
+   4. CARD FOOTER: PROFILE LINK & LEGEND
+   -------------------------------------------------------------------------- */
+.gh-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #39312D;
+}
+
+.gh-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #F3E6D3;
+  text-decoration: none;
+  padding: 6px 14px;
+  background: #141110;
+  border: 1px solid #39312D;
+  border-radius: 999px;
+  transition: all 0.22s ease;
+}
+
+.gh-profile-btn:hover {
+  border-color: #FF5A1F;
+  color: #FF5A1F;
+  transform: translateY(-1px);
+}
+
+.gh-arrow {
+  font-size: 14px;
+  transition: transform 0.2s ease;
+}
+
+.gh-profile-btn:hover .gh-arrow {
+  transform: translate(2px, -2px);
+}
+
+/* --- Legend --- */
+.gh-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: #B9ADA5;
+}
+
+.gh-legend-cells {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.gh-legend-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   5. ACCESSIBLE TOOLTIP
+   -------------------------------------------------------------------------- */
+.gh-tooltip {
+  position: absolute;
+  z-index: 100;
+  transform: translate(-50%, -100%);
+  background-color: #141110;
+  border: 1px solid #39312D;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.7);
+  animation: gh-tooltip-pop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes gh-tooltip-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -92%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%) scale(1);
+  }
+}
+
+.gh-tooltip-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: #F3E6D3;
+}
+
+.gh-tooltip-date {
+  font-size: 10.5px;
+  color: #B9ADA5;
+}
+
+.gh-tooltip-arrow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background-color: #141110;
+  border-right: 1px solid #39312D;
+  border-bottom: 1px solid #39312D;
+}
+
+/* --------------------------------------------------------------------------
+   6. LOADING SKELETON & ERROR STATES
+   -------------------------------------------------------------------------- */
+.gh-skeleton-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: gh-pulse 1.8s infinite ease-in-out;
+}
+
+@keyframes gh-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
+.gh-skeleton-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.gh-skeleton-bar {
+  background-color: #242825;
+  border-radius: 4px;
+}
+
+.gh-skeleton-title {
+  width: 140px;
+  height: 16px;
+}
+
+.gh-skeleton-stat {
+  width: 180px;
+  height: 24px;
+  border-radius: 999px;
+}
+
+.gh-skeleton-grid {
+  width: 100%;
+  height: 110px;
+  background: repeating-linear-gradient(
+    90deg,
+    #242825 0px,
+    #242825 12px,
+    transparent 12px,
+    transparent 15px
+  );
+  border-radius: 6px;
+}
+
+.gh-skeleton-footer {
+  display: flex;
+  justify-content: space-between;
+}
+
+.gh-skeleton-link {
+  width: 130px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.gh-skeleton-legend {
+  width: 120px;
+  height: 16px;
+}
+
+/* --- Error State --- */
+.gh-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 16px;
+  text-align: center;
+  gap: 12px;
+}
+
+.gh-error-icon {
+  color: #FF5A1F;
+}
+
+.gh-error-message {
+  font-size: 13.5px;
+  color: #B9ADA5;
+  margin: 0;
+  max-width: 44ch;
+}
+
+.gh-retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background-color: #141110;
+  border: 1px solid #FF5A1F;
+  border-radius: 999px;
+  color: #F3E6D3;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gh-retry-btn:hover {
+  background-color: #FF5A1F;
+  color: #141110;
+}
+
+/* --------------------------------------------------------------------------
+   7. RESPONSIVE BREAKPOINTS (Tablet & Mobile)
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .gh-section-wrapper {
+    margin-top: 48px;
+  }
+
+  .gh-card {
+    padding: 20px 16px;
+  }
+
+  .gh-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .gh-badge-pill {
+    padding: 4px 10px;
+    font-size: 11.5px;
+  }
+
+  .gh-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .gh-legend {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 440px) {
+  .gh-main-title {
+    font-size: 26px;
+  }
+
+  .gh-description {
+    font-size: 13px;
+  }
+
+  .gh-profile-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .gh-legend {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+

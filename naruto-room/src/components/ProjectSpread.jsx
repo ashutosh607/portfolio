@@ -8,9 +8,9 @@ function Media({ source, title }) {
 
 export function PageNavigation({ number, total, onTurn, busy }) {
   return <footer className="page-footer-nav">
-    <button disabled={busy || number === 1} onClick={() => onTurn(-1)}>← Previous Page</button>
+    <button disabled={busy || number === 1} onClick={() => onTurn(-1)}>← Previous<span className="desktop-nav-label"> Page</span></button>
     <span>{number} / {total}</span>
-    <button disabled={busy || number === total} onClick={() => onTurn(1)}>Next Page →</button>
+    <button disabled={busy || number === total} onClick={() => onTurn(1)}>Next<span className="desktop-nav-label"> Page</span> →</button>
   </footer>;
 }
 
@@ -24,7 +24,8 @@ export function ProjectSpread({ projects, selected, onSelect, onBack, onVillage,
           onClick={() => onSelect(project)}>
           <span className="dish-thumbnail-box"><Media source={project.thumbnail} title={project.title}/></span>
           <span className="dish-copy"><strong>{project.title}</strong><em>{project.dishName}</em>
-            <span>{project.category?.split('•')[0].trim()}</span><b>View Details →</b></span>
+            <span className="mobile-dish-summary">{project.description}</span><span className="mobile-dish-stack">{project.technologies.slice(0,3).join(' · ')}</span>
+            <span className="dish-category">{project.category?.split('•')[0].trim()}</span><b>View Details →</b></span>
         </button>)}
         {!projects.length && <p>No projects are currently listed.</p>}
       </div>
@@ -46,6 +47,7 @@ export function ProjectSpread({ projects, selected, onSelect, onBack, onVillage,
           {selected.githubUrl && <a href={selected.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
         </div>
       </div>}
+      <div className="mobile-reading-nav">{navigation}</div>
     </section>
   </>;
 }

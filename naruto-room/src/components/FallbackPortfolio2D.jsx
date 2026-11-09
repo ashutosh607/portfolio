@@ -22,11 +22,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 
 const NAV_SECTIONS = [
-  { id: 'intro', num: '01', label: 'Intro' },
-  { id: 'projects', num: '02', label: 'Projects' },
-  { id: 'about', num: '03', label: 'About' },
-  { id: 'skills', num: '04', label: 'Skills' },
-  { id: 'missions', num: '05', label: 'Missions' },
+  { id: 'intro', num: '01', label: 'Home' },
+  { id: 'about', num: '02', label: 'About' },
+  { id: 'projects', num: '03', label: 'Projects' },
+  { id: 'missions', num: '04', label: 'Experience' },
+  { id: 'skills', num: '05', label: 'Skills' },
   { id: 'contact', num: '06', label: 'Contact' },
 ];
 
@@ -36,6 +36,8 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
   // Interactive Full-Screen Modal Overlays accessible inside 2D Mode
   const [openOverlay, setOpenOverlay] = useState(null);
   const [bookRequest, setBookRequest] = useState({ id: null, revision: 0 });
+  const isNavigatingRef = useRef(false);
+  const scrollTimeoutRef = useRef(null);
 
   useVillagePageMotion(rootRef);
 
@@ -43,26 +45,95 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
   useEffect(() => {
     const wrapper = rootRef.current.closest('.portfolio-2d-wrapper');
     const sections = Array.from(rootRef.current.querySelectorAll('.p2d-section[id]'));
-    const handleScroll = () => {
+
+    const updateReadingProgress = () => {
       const range = wrapper.scrollHeight - wrapper.clientHeight;
       rootRef.current.style.setProperty('--reading-progress', range > 0 ? wrapper.scrollTop / range : 0);
-      const marker = wrapper.getBoundingClientRect().top + Math.min(wrapper.clientHeight * .34, 220);
-      const visible = sections.filter(section => section.getBoundingClientRect().top <= marker).at(-1);
-      if (visible) setActiveSection(visible.id.slice(4));
     };
-    const observer = new ResizeObserver(() => { ScrollTrigger.refresh(); handleScroll(); });
+
+    const handleScroll = () => {
+      updateReadingProgress();
+
+      // When smooth-scrolling via navbar click, suppress scroll-spy overriding
+      if (isNavigatingRef.current) return;
+
+      const marker = wrapper.getBoundingClientRect().top + Math.min(wrapper.clientHeight * 0.34, 220);
+      const visible = sections.filter((section) => section.getBoundingClientRect().top <= marker).at(-1);
+      if (visible) {
+        const id = visible.id.slice(4);
+        setActiveSection((prev) => (prev !== id ? id : prev));
+      }
+    };
+
+    let resizeTimer;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        ScrollTrigger.refresh();
+        handleScroll();
+      }, 120);
+    });
+
     observer.observe(rootRef.current);
     wrapper.addEventListener('scroll', handleScroll, { passive: true });
+
+    // Unlock programmatic navigation on user touch/wheel or when scroll stops
+    const unlockNav = () => {
+      clearTimeout(scrollTimeoutRef.current);
+      isNavigatingRef.current = false;
+    };
+
+    wrapper.addEventListener('scrollend', unlockNav, { passive: true });
+    wrapper.addEventListener('wheel', unlockNav, { passive: true });
+    wrapper.addEventListener('touchstart', unlockNav, { passive: true });
+
     handleScroll();
-    return () => { observer.disconnect(); wrapper.removeEventListener('scroll', handleScroll); };
+
+    return () => {
+      clearTimeout(resizeTimer);
+      clearTimeout(scrollTimeoutRef.current);
+      observer.disconnect();
+      wrapper.removeEventListener('scroll', handleScroll);
+      wrapper.removeEventListener('scrollend', unlockNav);
+      wrapper.removeEventListener('wheel', unlockNav);
+      wrapper.removeEventListener('touchstart', unlockNav);
+    };
   }, []);
 
   const scrollToSection = useCallback((sectionId) => {
     const normalized = sectionId === 'achievements' ? 'missions' : sectionId;
     setActiveSection(normalized);
+    isNavigatingRef.current = true;
+    clearTimeout(scrollTimeoutRef.current);
+
+    // Release programmatic navigation lock once smooth scrolling completes
+    scrollTimeoutRef.current = setTimeout(() => {
+      isNavigatingRef.current = false;
+    }, 750);
+
     const el = document.getElementById(`p2d-${normalized}`);
     if (el) {
-      el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+      const wrapper = rootRef.current.closest('.portfolio-2d-wrapper');
+      const header = rootRef.current.querySelector('.p2d-navbar');
+      const headerOffset = header ? header.offsetHeight : 54;
+
+      const targetTop =
+        normalized === 'intro'
+          ? 0
+          : Math.max(
+              0,
+              wrapper.scrollTop +
+                el.getBoundingClientRect().top -
+                wrapper.getBoundingClientRect().top -
+                headerOffset
+            );
+
+      requestAnimationFrame(() => {
+        wrapper.scrollTo({
+          top: targetTop,
+          behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+        });
+      });
     }
   }, []);
 
@@ -74,7 +145,7 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
 
   return (
     <div ref={rootRef} className="p2d-root">
-      <div className="p2d-ambient-bg" aria-hidden="true"><div className="p2d-village-landscape"/></div>
+      <div className="p2d-ambient-bg" aria-hidden="true" />
 
       {/* Premium Sticky Navigation Bar with Sliding Active Indicator */}
       <StickyNavbar2D
@@ -105,18 +176,18 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
         <section id="p2d-intro" className="p2d-section">
           <EntryGate embedded onClose={onSwitchTo3D} onOpenModal={scrollToSection}/>
         </section>
+        <section id="p2d-about" className="p2d-section p2d-village-scene">
+          <AboutModal embedded isOpen onOpenResume={() => setOpenOverlay('resume')} onOpenContact={() => scrollToSection('contact')}/>
+        </section>
         <section id="p2d-projects" className="p2d-section p2d-book-section" aria-label="Location 02 · Ichiraku Ramen">
           <RamenBookModal key={bookRequest.revision} isOpen embedded
             initialProjectId={bookRequest.id} onVillage={onSwitchTo3D}/>
         </section>
-        <section id="p2d-about" className="p2d-section p2d-village-scene">
-          <AboutModal embedded isOpen onOpenResume={() => setOpenOverlay('resume')} onOpenContact={() => scrollToSection('contact')}/>
+        <section id="p2d-missions" className="p2d-section" aria-label="Location 05 · Mission Board">
+          <MissionScroll embedded onContact={() => scrollToSection('contact')}/>
         </section>
         <section id="p2d-skills" className="p2d-section p2d-village-scene">
           <SkillsModal embedded isOpen onInspectProject={handleInspectProjectFromSkills}/>
-        </section>
-        <section id="p2d-missions" className="p2d-section" aria-label="Location 05 · Mission Board">
-          <MissionScroll embedded onContact={() => scrollToSection('contact')}/>
         </section>
         <section id="p2d-contact" className="p2d-section p2d-village-scene">
           <ContactModal embedded isOpen onOpenResume={() => setOpenOverlay('resume')}/>

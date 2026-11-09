@@ -38,7 +38,7 @@ router.delete('/:id', protectAdmin, async (req, res) => {
   if (!asset) return res.status(404).json({ message: 'File not found' });
   const refs = [
     [Project, ['frontPagePhoto', 'projectPhoto', 'screenshots', 'demoVideoUrl']],
-    [Profile, ['about.photoUrl', 'draft.about.photoUrl']],
+    [Profile, ['about.photoUrl', 'draft.about.photoUrl', 'about.animeList.imageUrl', 'draft.about.animeList.imageUrl', 'about.football.imageUrl', 'draft.about.football.imageUrl']],
     [Contact, ['resume.activePdfUrl']],
     [Mission, ['thumbnail', 'certificates', 'caseStudy.screenshots', 'events.certificates']],
     [Dialogue, ['portrait']],

@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { getSkillCategories } from '../../data/skillsData';
 import SkillNavigation from './SkillNavigation';
 import SkillDetails from './SkillDetails';
+import GithubContributions from '../github/GithubContributions';
 import './SkillsModal.css';
 
 /**
@@ -91,8 +92,8 @@ export default function SkillsModal({
         )
         .fromTo(
           detailsRef.current,
-          { opacity: 0, y: 16, scale: 0.99 },
-          { opacity: 1, y: 0, scale: 1, duration: 0.5 },
+          { opacity: 0, x: 0, y: 16, scale: 0.99 },
+          { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.5, clearProps: 'transform' },
           '-=0.35'
         );
     }, overlayRef);
@@ -208,6 +209,9 @@ export default function SkillsModal({
             /> : <p>No published skill categories.</p>}
           </div>
         </main>
+
+        {/* Real Live GitHub Contribution Calendar Activity */}
+        <GithubContributions embedded={embedded} />
       </div>
     </div>
   );

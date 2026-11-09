@@ -28,6 +28,17 @@ export default function ProfileAdmin() {
     bioText: '',
   });
 
+  const [githubForm, setGithubForm] = useState({
+    username: 'ashutosh607',
+    title: 'My Coding Journey',
+    subtitle: 'DEVELOPER ACTIVITY',
+    description: 'A year of building, learning and shipping code.',
+    profileUrl: 'https://github.com/ashutosh607',
+    enabled: true,
+  });
+  const [refreshingGithub, setRefreshingGithub] = useState(false);
+  const [githubRefreshMsg, setGithubRefreshMsg] = useState('');
+
   const loadProfile = async () => {
     try {
       setLoading(true);
@@ -53,6 +64,16 @@ export default function ProfileAdmin() {
         subtitle: data.about?.subtitle || 'AI & ML Engineering Student • Full-Stack & 3D Web Developer',
         photoUrl: data.about?.photoUrl || '/about/ashutosh-photo.jpg',
         bioText: (data.about?.bioParagraphs || []).join('\n\n'),
+      });
+
+      const gh = data.githubCalendar || {};
+      setGithubForm({
+        username: gh.username || 'ashutosh607',
+        title: gh.title || 'My Coding Journey',
+        subtitle: gh.subtitle || 'DEVELOPER ACTIVITY',
+        description: gh.description || 'A year of building, learning and shipping code.',
+        profileUrl: gh.profileUrl || 'https://github.com/ashutosh607',
+        enabled: gh.enabled !== false,
       });
     } catch (err) {
       setMessage({ text: err.message, type: 'error' });
@@ -99,6 +120,9 @@ export default function ProfileAdmin() {
             .map((p) => p.trim())
             .filter(Boolean),
         },
+        githubCalendar: {
+          ...githubForm,
+        },
       };
 
       await apiRequest('/profile', {
@@ -112,6 +136,22 @@ export default function ProfileAdmin() {
       setMessage({ text: err.message, type: 'error' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRefreshGithubCache = async () => {
+    try {
+      setRefreshingGithub(true);
+      setGithubRefreshMsg('');
+      const res = await apiRequest('/github/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ username: githubForm.username }),
+      });
+      setGithubRefreshMsg(`✓ Cache refreshed! ${res.total || 0} real contributions loaded for @${githubForm.username}`);
+    } catch (err) {
+      setGithubRefreshMsg(`Error refreshing: ${err.message}`);
+    } finally {
+      setRefreshingGithub(false);
     }
   };
 
@@ -279,14 +319,119 @@ export default function ProfileAdmin() {
 
         <AssetInput label="Upload portrait" onUpload={url=>setAboutForm(f=>({...f,photoUrl:url}))}/>
           {aboutForm.photoUrl && <img className="cms-portrait" src={aboutForm.photoUrl} alt="Profile preview"/>}
-          {Object.entries({snapshotItems:['label','title','desc'],interestItems:['icon','label','sub'],driveValues:['num','title','desc']}).map(([field,keys])=>{
+          {Object.entries({snapshotItems:['label','title','desc'],interestItems:['icon','label','sub'],driveValues:['num','title','desc'],animeList:['title','tags','imageUrl']}).map(([field,keys])=>{
             const rows=profile?.about?.[field] || [];
             const setRows=next=>setProfile(p=>({...p,about:{...p.about,[field]:next}}));
-            return <fieldset key={field}><legend>{{snapshotItems:'Education & highlights',interestItems:'Interests',driveValues:'Career goals'}[field]}</legend>
+            return <fieldset key={field}><legend>{{snapshotItems:'Education & highlights',interestItems:'Interests',driveValues:'Career goals',animeList:'Top anime posters (shown in About → My Top 3 Anime)'}[field]}</legend>
               {rows.map((row,i)=><div className="cms-row" key={i}>{keys.map(k=><label key={k}>{k}<input value={row[k] || ''} onChange={e=>setRows(rows.map((r,n)=>n===i?{...r,[k]:e.target.value}:r))}/></label>)}
+              {keys.includes('imageUrl') && <AssetInput label="Upload poster" onUpload={url=>setRows(rows.map((r,n)=>n===i?{...r,imageUrl:url}:r))}/>}
               <button type="button" onClick={()=>setRows(rows.filter((_,n)=>n!==i))}>Remove</button></div>)}
               <button type="button" onClick={()=>setRows([...rows,{}])}>Add item</button></fieldset>;
           })}
+          <fieldset><legend>About headline</legend>
+            <label>headline<input value={profile?.about?.headline || ''} placeholder="The shinobi behind the code." onChange={e=>setProfile(p=>({...p,about:{...p.about,headline:e.target.value}}))}/></label>
+          </fieldset>
+          <fieldset><legend>Football (About section)</legend>
+            {['title','position','description','imageUrl'].map(k=><label key={k}>{k}<input value={profile?.about?.football?.[k] || ''} onChange={e=>setProfile(p=>({...p,about:{...p.about,football:{...p.about?.football,[k]:e.target.value}}}))}/></label>)}
+            <AssetInput label="Upload football image" onUpload={url=>setProfile(p=>({...p,about:{...p.about,football:{...p.about?.football,imageUrl:url}}}))}/>
+          </fieldset>
+
+          {/* GitHub Live Contribution Calendar Configuration */}
+          <fieldset style={{ borderColor: 'rgba(255, 90, 31, 0.4)' }}>
+            <legend style={{ color: '#FF5A1F', fontWeight: 600 }}>GitHub Activity Calendar (Live 12-Month Grid)</legend>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={githubForm.enabled}
+                  onChange={(e) => setGithubForm({ ...githubForm, enabled: e.target.checked })}
+                  style={{ width: '18px', height: '18px', accentColor: '#FF5A1F' }}
+                />
+                <span style={{ fontWeight: 600, color: '#F3E6D3' }}>Show GitHub Contribution Calendar on Portfolio</span>
+              </label>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                <label>
+                  GitHub Username
+                  <input
+                    type="text"
+                    required
+                    value={githubForm.username}
+                    placeholder="e.g. ashutosh607"
+                    onChange={(e) => setGithubForm({ ...githubForm, username: e.target.value })}
+                  />
+                  <small style={{ color: '#888', display: 'block', marginTop: '4px' }}>
+                    Real contributions are pulled from this account and cached for 4 hours.
+                  </small>
+                </label>
+
+                <label>
+                  Section Title
+                  <input
+                    type="text"
+                    value={githubForm.title}
+                    placeholder="My Coding Journey"
+                    onChange={(e) => setGithubForm({ ...githubForm, title: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  Eyebrow Label
+                  <input
+                    type="text"
+                    value={githubForm.subtitle}
+                    placeholder="DEVELOPER ACTIVITY"
+                    onChange={(e) => setGithubForm({ ...githubForm, subtitle: e.target.value })}
+                  />
+                </label>
+
+                <label>
+                  Profile Link
+                  <input
+                    type="url"
+                    value={githubForm.profileUrl}
+                    placeholder="https://github.com/ashutosh607"
+                    onChange={(e) => setGithubForm({ ...githubForm, profileUrl: e.target.value })}
+                  />
+                </label>
+              </div>
+
+              <label>
+                Description
+                <textarea
+                  rows={2}
+                  value={githubForm.description}
+                  placeholder="A year of building, learning and shipping code."
+                  onChange={(e) => setGithubForm({ ...githubForm, description: e.target.value })}
+                />
+              </label>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px' }}>
+                <button
+                  type="button"
+                  disabled={refreshingGithub}
+                  onClick={handleRefreshGithubCache}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    background: '#1D1917',
+                    border: '1px solid #FF5A1F',
+                    color: '#F3E6D3',
+                    cursor: refreshingGithub ? 'not-allowed' : 'pointer',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                  }}
+                >
+                  {refreshingGithub ? 'Refreshing from GitHub...' : '↻ Refresh GitHub Cache Now'}
+                </button>
+                {githubRefreshMsg && (
+                  <span style={{ fontSize: '13px', color: githubRefreshMsg.startsWith('✓') ? '#39d353' : '#fca5a5' }}>
+                    {githubRefreshMsg}
+                  </span>
+                )}
+              </div>
+            </div>
+          </fieldset>
           <div className="form-sticky-footer"><button type="submit" value="draft" disabled={saving} className="admin-secondary-btn">Save draft</button><button type="submit" disabled={saving} className="admin-primary-btn">Publish profile</button></div>
           </form>
       )}

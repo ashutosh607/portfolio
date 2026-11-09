@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { flushSync } from 'react-dom';
 import { PageTurnSurface } from './PageTurnSurface';
@@ -7,9 +7,11 @@ import { PageNavigation, ProjectSpread } from './ProjectSpread';
 import { ADMIN_PROJECTS_STORAGE_KEY } from '../config/locations';
 import './RamenBookModal.css';
 
-const PROJECTS_PER_SPREAD = 3;
+const phoneLayout = () => matchMedia('(max-width: 860px)').matches;
+const pageCapacity = () => phoneLayout() ? 2 : 3;
 
 export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialProjectId = null, embedded = false, onVillage }) {
+  const [perPage,setPerPage] = useState(pageCapacity);
   const [bookState, setBookState] = useState('closed');
   const [currentSpread, setCurrentSpread] = useState(1);
   const [selectedProjectIndex, setSelectedProjectIndex] = useState(0);
@@ -42,11 +44,46 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     };
   }, []);
 
-  const menuPages = Math.max(1, Math.ceil(projects.length / PROJECTS_PER_SPREAD));
+  const readingPosition = useRef(null);
+  useLayoutEffect(() => {
+    readingPosition.current = { currentSpread, selectedProjectIndex, perPage, count: projects.length };
+  }, [currentSpread, selectedProjectIndex, perPage, projects.length]);
+
+  useEffect(() => {
+    const media = matchMedia('(max-width:860px)');
+    const resize = () => {
+      // Finish a moving leaf before mapping its settled project to the new spread.
+      if (isTransitioningRef.current) timelineRef.current?.progress(1);
+      const position = readingPosition.current;
+      const capacity = pageCapacity();
+      const special = position.currentSpread > Math.max(1, Math.ceil(position.count / position.perPage));
+      setCurrentSpread(special ? Math.max(1, Math.ceil(position.count / capacity)) + 1 :
+        Math.floor(position.selectedProjectIndex / capacity) + 1);
+      setPerPage(capacity);
+    };
+    media.addEventListener('change', resize);
+    return () => media.removeEventListener('change', resize);
+  }, []);
+  useEffect(() => {
+    const book = bookContainerRef.current;
+    if (!book || !isOpen) return;
+    let width = book.clientWidth;
+    let height = book.clientHeight;
+    const observer = new ResizeObserver(() => {
+      if ((width !== book.clientWidth || height !== book.clientHeight) && surfaceRef.current?.panels.length) {
+        timelineRef.current?.progress(1);
+      }
+      width = book.clientWidth;
+      height = book.clientHeight;
+    });
+    observer.observe(book);
+    return () => observer.disconnect();
+  }, [isOpen]);
+  const menuPages = Math.max(1, Math.ceil(projects.length / perPage));
   const totalSpreads = menuPages + 1;
   const currentProject = projects[selectedProjectIndex];
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const mobileView = () => window.matchMedia('(max-width: 860px)').matches;
+  const mobileView = phoneLayout;
   const lock = useCallback(() => {
     if (isTransitioningRef.current) return false;
     isTransitioningRef.current = true;
@@ -77,7 +114,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     // eslint-disable-next-line react/set-state-in-effect
     setBookState('closed');
     const initialIndex = Math.max(0, projects.findIndex(project => project.id === initialProjectId));
-    setCurrentSpread(1 + Math.floor(initialIndex / PROJECTS_PER_SPREAD));
+    setCurrentSpread(1 + Math.floor(initialIndex / pageCapacity()));
     setSelectedProjectIndex(initialIndex);
     setIsMobileDetailView(false);
     unlock();
@@ -141,9 +178,10 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       onComplete: () => {
         setBookState('open');
         unlock();
-        if (!embedded) requestAnimationFrame(() =>
-          interiorSpreadRef.current?.querySelector('.is-current .menu-dish-item')?.focus({ preventScroll: true })
-        );
+        if (!embedded || phoneLayout()) requestAnimationFrame(() => {
+          const page = interiorSpreadRef.current?.querySelector('.is-current .page-left');
+          (page?.querySelector('.menu-dish-item') || page)?.focus({preventScroll:true});
+        });
       },
     });
     timelineRef.current = tl;
@@ -205,16 +243,16 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
 
   const autoOpened = useRef(false);
   useEffect(() => {
-    if (!embedded || autoOpened.current || !isOpen) return;
+    if (!embedded || autoOpened.current || !isOpen || (phoneLayout() && !initialProjectId)) return;
     const observer = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting || autoOpened.current) return;
       autoOpened.current = true;
       observer.disconnect();
-      handleOpenBook();
+      if (!phoneLayout() || initialProjectId) handleOpenBook();
     }, { threshold: 0.35 });
     observer.observe(dialogRef.current);
     return () => observer.disconnect();
-  }, [embedded, isOpen, handleOpenBook]);
+  }, [embedded, isOpen, handleOpenBook, initialProjectId]);
 
   const handleCloseBook = useCallback(() => {
     if (isTransitioningRef.current) return;
@@ -245,6 +283,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         const action = afterCloseRef.current;
         afterCloseRef.current = null;
         if (!embedded) onClose();
+        else requestAnimationFrame(()=>cover.querySelector('.cover-open-trigger-btn')?.focus({preventScroll:true}));
         action?.();
       },
     });
@@ -304,7 +343,42 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     }
   }, [bookState, currentSpread, onClose, lock, unlock, embedded]);
 
+  // The resting DOM stays mounted. Only the moving sheet is copied into the mesh.
+  const turnMobile = useCallback((direction, page, detail, index) => {
+    if (bookState !== 'open' || !lock()) return;
+    const root = interiorSpreadRef.current;
+    const face = (number, right) => root.querySelector(`[data-spread="${number}"] .page-${right ? 'right' : 'left'}`);
+    const departing = face(currentSpread, isMobileDetailView);
+    const target = face(page, detail);
+    const commit = () => {
+      setCurrentSpread(page);
+      setSelectedProjectIndex(index);
+      setIsMobileDetailView(detail);
+    };
+    const finish = () => {
+      flushSync(() => { commit(); setBookState('open'); unlock(); });
+      surfaceRef.current?.dispose();
+      turningLeafRef.current.style.visibility = 'hidden';
+      const control = detail ? target.querySelector('.mobile-back-action-btn') : target;
+      control?.focus({preventScroll:true});
+    };
+    if (reducedMotion()) { finish(); return; }
+    try {
+      const surface = surfaceRef.current ??= new PageTurnSurface(turningLeafRef.current);
+      // A forward leaf leaves the new page underneath. The inverse lays the new leaf over the old page.
+      surface.prepare(direction > 0 ? departing : target, null, true, direction);
+      flushSync(() => { if (direction > 0) commit(); setBookState('turning-mobile'); });
+      turningLeafRef.current.style.visibility = 'visible';
+      const motion = {progress: direction > 0 ? 0 : 1};
+      timelineRef.current = gsap.to(motion, {progress:direction > 0 ? 1 : 0, duration:.72, ease:'sine.inOut',
+        onUpdate:()=>surface.render(motion.progress), onComplete:finish});
+    } catch {
+      finish();
+    }
+  }, [bookState, currentSpread, isMobileDetailView, lock, unlock]);
+
   const handleSelectProject = useCallback(index => {
+    if (phoneLayout()) { turnMobile(1,currentSpread,true,index); return; }
     if (bookState !== 'open' || currentSpread > menuPages || !lock()) return;
     if (index === selectedProjectIndex) {
       setIsMobileDetailView(true);
@@ -318,11 +392,13 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       .call(() => { flushSync(() => { setSelectedProjectIndex(index); setIsMobileDetailView(true); }); node.scrollTop = 0; })
       .set(node, { y: 8 })
       .to(node, { opacity: 1, filter: 'blur(0px)', y: 0, duration: reducedMotion() ? 0.01 : 0.3, ease: 'power2.out' });
-  }, [bookState, currentSpread, menuPages, selectedProjectIndex, lock, unlock]);
+  }, [bookState, currentSpread, menuPages, selectedProjectIndex, isMobileDetailView, turnMobile, lock, unlock]);
 
   const handleTurnSpread = useCallback(direction => {
     const nextSpread = currentSpread + direction;
-    if (bookState !== 'open' || nextSpread < 1 || nextSpread > totalSpreads || !lock()) return;
+    if (nextSpread < 1 || nextSpread > totalSpreads) return;
+    if (phoneLayout()) { turnMobile(direction,nextSpread,false,Math.max(0, Math.min(projects.length-1,(nextSpread-1)*perPage))); return; }
+    if (bookState !== 'open' || !lock()) return;
     const generation = generationRef.current;
     const mobile = mobileView();
     const finish = () => {
@@ -330,7 +406,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       // Commit the resting spread before removing its animated surface.
       flushSync(() => {
         setCurrentSpread(nextSpread);
-        if (nextSpread <= menuPages) setSelectedProjectIndex((nextSpread - 1) * PROJECTS_PER_SPREAD);
+        if (nextSpread <= menuPages) setSelectedProjectIndex((nextSpread - 1) * perPage);
         setIsMobileDetailView(false);
         setBookState('open');
       });
@@ -367,7 +443,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       surfaceRef.current = null;
       finish();
     }
-  }, [bookState, currentSpread, totalSpreads, menuPages, isMobileDetailView, lock, unlock]);
+  }, [bookState, currentSpread, totalSpreads, menuPages, isMobileDetailView, perPage, projects.length, turnMobile, lock, unlock]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -388,8 +464,8 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         handleCloseBook();
       } else if (bookState === 'open' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
         event.preventDefault();
-        const first = (currentSpread - 1) * PROJECTS_PER_SPREAD;
-        const count = Math.min(PROJECTS_PER_SPREAD, projects.length - first);
+        const first = (currentSpread - 1) * perPage;
+        const count = Math.min(perPage, projects.length - first);
         if (count > 0 && (event.key === 'ArrowUp' || event.key === 'ArrowDown')) {
           const offset = event.key === 'ArrowUp' ? -1 : 1;
           handleSelectProject(first + (selectedProjectIndex - first + count + offset) % count);
@@ -466,6 +542,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         className={`ramen-book-container state-${bookState} ${isMobileDetailView ? 'mobile-detail-active' : ''}`}
         onClick={(e) => e.stopPropagation()}
         onTouchStart={event => { touchRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }}
+        onTouchCancel={() => {touchRef.current=null}}
         onTouchEnd={handleTouchEnd}
       >
         {/* Leather Binding Hardcover Trim & Stacked Paper Layers */}
@@ -551,12 +628,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           {/* ================= SPREAD 1: SIGNATURE PROJECTS ================= */}
           {Array.from({ length: menuPages }, (_, index) => {
             const number = index + 1;
-            const entries = projects.slice(index * PROJECTS_PER_SPREAD, number * PROJECTS_PER_SPREAD);
+            const entries = projects.slice(index * perPage, number * perPage);
             return <div key={number} data-spread={number} className={spreadClass(number)}
               inert={currentSpread !== number} aria-hidden={currentSpread !== number}>
               <ProjectSpread projects={entries} selected={currentSpread === number ? currentProject : entries[0]}
                 onSelect={project => handleSelectProject(projects.indexOf(project))}
-                onBack={() => setIsMobileDetailView(false)} onVillage={embedded ? onVillage : handleCloseBook} navigation={navigation(number)}/>
+                onBack={() => turnMobile(-1,currentSpread,false,selectedProjectIndex)} onVillage={embedded ? onVillage : handleCloseBook} navigation={navigation(number)}/>
             </div>;
           })}
           <div data-spread={totalSpreads} className={spreadClass(totalSpreads)} inert={currentSpread !== totalSpreads}
@@ -573,7 +650,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   <p className="menu-subhead-italic">Hokage Grand Bowl • Spatial Engine</p>
                 </div>
 
-                <div className="mobile-back-row"><button type="button" className="mobile-back-action-btn" onClick={() => setIsMobileDetailView(!isMobileDetailView)}>{isMobileDetailView ? '← Architecture' : 'Read the philosophy →'}</button></div>
+                <div className="mobile-back-row"><button type="button" className="mobile-back-action-btn" onClick={() => turnMobile(isMobileDetailView ? -1 : 1,currentSpread,!isMobileDetailView,selectedProjectIndex)}>{isMobileDetailView ? '← Architecture' : 'Read the philosophy →'}</button></div>
                 <div className="spread2-content-body">
                   <p className="spread2-lead">
                     This interactive 3D portfolio is engineered from the ground up to push the boundaries
@@ -626,7 +703,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   <p className="menu-subhead-italic">Principles Behind Every Project</p>
                 </div>
 
-                <div className="mobile-back-row"><button type="button" className="mobile-back-action-btn" onClick={() => setIsMobileDetailView(!isMobileDetailView)}>{isMobileDetailView ? '← Architecture' : 'Read the philosophy →'}</button></div>
+                <div className="mobile-back-row"><button type="button" className="mobile-back-action-btn" onClick={() => turnMobile(isMobileDetailView ? -1 : 1,currentSpread,!isMobileDetailView,selectedProjectIndex)}>{isMobileDetailView ? '← Architecture' : 'Read the philosophy →'}</button></div>
                 <div className="spread2-content-body">
                   <div className="philosophy-pillar">
                     <h4>01 • Relentless Problem Solving</h4>
@@ -644,11 +721,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
                   </div>
                 </div>
 
+                <div className="mobile-reading-nav">{navigation(totalSpreads)}</div>
               </section>
           </div>
         </div>
       </div>
-      <span className="book-status" role="status">{busy ? 'Book transition in progress' : bookState === 'closed' ? 'Book closed' : `Spread ${currentSpread} of ${totalSpreads}. ${currentProject?.title || ''}`}</span>
+      <span className="book-status"  role="status">{busy ? 'Book transition in progress' : bookState === 'closed' ? 'Book closed' : `Spread ${currentSpread} of ${totalSpreads}. ${currentProject?.title || ''}`}</span>
       {turnNotice && <p className="book-notice" role="status">{turnNotice}</p>}
     </div>
   );

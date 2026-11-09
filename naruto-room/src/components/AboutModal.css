@@ -1,22 +1,20 @@
 /* ==========================================================================
-   SHINOBI PORTFOLIO — PREMIUM DARK EDITORIAL ABOUT ME OVERLAY
+   SHINOBI PORTFOLIO — MINIMAL PREMIUM ABOUT SECTION (Warm Charcoal)
    Palette:
-   Main background:      #100D0F
-   Secondary background: #1B1417
-   Primary text:         #F5F0E9
-   Secondary text:       #B8AAA6
-   Muted red:            #A63C38
-   Soft red highlight:   #C75A50
-   Warm border:          #49332F
-   Warm ivory accent:    #E8D1B8
+   Main background:    #141110 (Solid Warm Charcoal)
+   Primary headings:   #F3E6D3 (Warm Cream)
+   Body text:          #B9ADA5 (Muted Neutral)
+   Accent orange:      #FF5A1F (Ember Orange)
+   Secondary surfaces: #1D1917 (Deep Warm Charcoal)
+   Subtle borders:     #39312D (Subtle Warm Border)
    ========================================================================== */
 
 .about-editorial-overlay {
   position: fixed;
   inset: 0;
   z-index: 1200;
-  background-color: #100D0F;
-  color: #F5F0E9;
+  background-color: #141110;
+  color: #B9ADA5;
   font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   display: flex;
   flex-direction: column;
@@ -26,83 +24,41 @@
 }
 
 /* --------------------------------------------------------------------------
-   1. BACKGROUND LAYER (Provided Dark Japanese Landscape)
+   1. SOLID BACKGROUND (No background images, no large radial gradients)
    -------------------------------------------------------------------------- */
-.about-background {
-  position: absolute;
-  inset: 0;
-  background-image: url('/about/about-japanese-bg.jpg');
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  pointer-events: none;
-  z-index: 0;
-  will-change: transform, opacity;
-}
-
+.about-background,
 .about-background-scrim {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-  background:
-    linear-gradient(
-      90deg,
-      rgba(16, 13, 15, 0.36) 0%,
-      rgba(16, 13, 15, 0.72) 38%,
-      rgba(16, 13, 15, 0.84) 100%
-    ),
-    radial-gradient(
-      ellipse at 14% 22%,
-      rgba(166, 60, 56, 0.08) 0%,
-      transparent 48%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(16, 13, 15, 0.32) 0%,
-      transparent 24%,
-      transparent 78%,
-      rgba(16, 13, 15, 0.78) 100%
-    );
+  display: none !important;
 }
 
 /* --------------------------------------------------------------------------
-   2. MINIMAL TOP-RIGHT CLOSE BUTTON (No Header Navigation)
+   2. MINIMAL CLOSE BUTTON (3D Village mode only)
    -------------------------------------------------------------------------- */
 .about-minimal-close-btn {
   position: fixed;
   top: 26px;
   right: 32px;
-  z-index: 20;
-  width: 42px;
-  height: 42px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: rgba(27, 20, 23, 0.74);
-  border: 1px solid #49332F;
-  color: #F5F0E9;
+  background: #1D1917;
+  border: 1px solid #39312D;
+  color: #F3E6D3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+  transition: border-color 0.25s ease, transform 0.25s ease;
 }
 
 .about-minimal-close-btn:hover {
-  background: rgba(166, 60, 56, 0.22);
-  border-color: #C75A50;
-  color: #F5F0E9;
-  transform: translateY(-1px);
-}
-
-.about-minimal-close-btn:focus-visible {
-  outline: 2px solid #C75A50;
-  outline-offset: 3px;
+  border-color: #FF5A1F;
+  transform: translateY(-2px);
 }
 
 /* --------------------------------------------------------------------------
-   3. MAIN SCROLLABLE SHELL & EDITORIAL GRID
+   3. SCROLL CONTAINER & EDITORIAL SHELL
    -------------------------------------------------------------------------- */
 .about-editorial-scroll-container {
   position: relative;
@@ -111,447 +67,565 @@
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 48px 34px;
+  padding: 56px 44px 72px;
   box-sizing: border-box;
+  background-color: #141110;
 }
 
 .about-editorial-shell {
   width: 100%;
-  max-width: 1320px;
-  margin: auto;
+  max-width: 1240px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 26px;
-}
-
-.about-editorial-grid {
-  display: grid;
-  grid-template-columns: minmax(250px, 310px) minmax(360px, 1.35fr) minmax(260px, 0.92fr);
-  gap: 44px;
-  align-items: start;
+  gap: 72px;
 }
 
 /* --------------------------------------------------------------------------
-   4. LEFT COLUMN — ACTUAL PERSONAL PHOTOGRAPH
+   4. PRIMARY HERO SECTION — SAGE EAST EDITORIAL OVERLAP
    -------------------------------------------------------------------------- */
-.about-col-photo {
-  display: flex;
-  justify-content: center;
-  padding-top: 8px;
-}
-
-.about-photo-stage {
+.ab-hero {
   position: relative;
   width: 100%;
-  max-width: 296px;
-  aspect-ratio: 3 / 4;
+  padding-top: 12px;
 }
 
-/* Thin muted red offset border */
-.about-photo-offset-frame {
-  position: absolute;
-  inset: -10px -10px 10px 10px;
-  border: 1px solid #A63C38;
-  border-radius: 4px;
-  opacity: 0.72;
+.ab-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 310px 1.05fr;
+  grid-template-areas:
+    "head   photo facts"
+    "copy   photo facts";
+  column-gap: 36px;
+  row-gap: 20px;
+  align-items: start;
+  min-height: 520px;
+}
+
+/* --- Left Column: Headline & Bio --- */
+.ab-head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 5;
+}
+
+.ab-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #B9ADA5;
+}
+
+.ab-eyebrow-rule {
+  width: 38px;
+  height: 1px;
+  background-color: #FF5A1F;
+}
+
+.ab-headline {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(38px, 3.6vw, 56px);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.06;
+  letter-spacing: -0.015em;
+  color: #F3E6D3;
+  margin: 0 0 10px 0;
+  max-width: 16ch;
+}
+
+.ab-headline-brush {
+  width: 140px;
+  height: 9px;
+  margin-top: -2px;
+  display: block;
+}
+
+.ab-copy {
+  grid-area: copy;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 44ch;
+  position: relative;
+  z-index: 5;
+  margin-top: 6px;
+}
+
+.ab-copy p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.68;
+  color: #B9ADA5;
+  font-weight: 400;
+}
+
+/* --- Center Column: Portrait overlapping Giant ABOUT --- */
+.ab-photo-col {
+  grid-area: photo;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 10; /* Stays strictly above the giant ABOUT typography */
   pointer-events: none;
-  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.38s ease;
 }
 
-.about-photo-stage:hover .about-photo-offset-frame {
+.ab-portrait-stage {
+  position: relative;
+  width: 100%;
+  max-width: 275px;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.ab-portrait-frame {
+  position: absolute;
+  inset: -8px -8px 8px 8px;
+  border: 1px solid #39312D;
+  border-radius: 4px;
+  opacity: 0.85;
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.4s ease;
+}
+
+.ab-portrait-stage:hover .ab-portrait-frame {
   transform: translate(3px, -3px);
-  border-color: #C75A50;
+  border-color: #FF5A1F;
 }
 
-/* Subtle vertical Katakana plate on left edge */
-.about-photo-katakana-tag {
+.ab-katakana {
   position: absolute;
   left: -20px;
-  top: 22%;
-  z-index: 4;
-  background: #1B1417;
-  border: 1px solid #49332F;
+  top: 18%;
+  z-index: 12;
+  background: #1D1917;
+  border: 1px solid #39312D;
   padding: 10px 6px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.15;
-  color: #E8D1B8;
-  letter-spacing: 0.04em;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  color: #F3E6D3;
+  letter-spacing: 0.05em;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
 }
 
-.about-photo-mask {
+.ab-portrait {
   position: relative;
-  z-index: 2;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 3 / 4.15;
   overflow: hidden;
   border-radius: 4px;
-  border: 1px solid #49332F;
-  background: #1B1417;
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.58);
-  will-change: clip-path;
+  border: 1px solid #39312D;
+  background: #1D1917;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
 }
 
-.about-portrait-image {
+.ab-portrait img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 14%;
+  object-position: center 15%;
   display: block;
-  transform-origin: center center;
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
 }
 
-.about-photo-stage:hover .about-portrait-image {
-  transform: scale(1.022);
+/* --- Right Column: Personal Highlights / Facts --- */
+.ab-facts {
+  grid-area: facts;
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  z-index: 5;
+}
+
+.ab-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.ab-fact-icon {
+  flex-shrink: 0;
+  color: #FF5A1F;
+  margin-top: 3px;
+  display: inline-flex;
+}
+
+.ab-fact-label {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #FF5A1F;
+  margin-bottom: 2px;
+}
+
+.ab-fact-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #F3E6D3;
+  line-height: 1.4;
+}
+
+.ab-fact-desc {
+  margin: 3px 0 0;
+  font-size: 12px;
+  color: #B9ADA5;
+  line-height: 1.35;
+}
+
+/* --- Giant ABOUT Background Typography & Clean Brushstroke --- */
+.ab-word-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  z-index: 2; /* Sits behind the portrait, but in front of background */
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.ab-word-mask {
+  overflow: hidden;
+  display: block;
+  line-height: 0.84;
+  padding: 0 20px;
+}
+
+.ab-word {
+  display: block;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(96px, 17vw, 224px);
+  letter-spacing: -0.04em;
+  line-height: 0.84;
+  color: #F3E6D3;
+  text-align: center;
+  white-space: nowrap;
+  transform-origin: center bottom;
+}
+
+.ab-brush {
+  width: clamp(260px, 34vw, 440px);
+  height: 26px;
+  margin-top: -10px;
+  transform: rotate(-1.5deg);
+  display: block;
+}
+
+/* --- Konoha Leaf Seal Divider --- */
+.ab-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 48px;
+  width: 100%;
+}
+
+.ab-divider-line {
+  flex: 1;
+  height: 1px;
+  background: #39312D;
+  transform-origin: left center;
+}
+
+.ab-divider-line.is-right {
+  transform-origin: right center;
+}
+
+.ab-divider-mark {
+  width: 24px;
+  height: 24px;
+  color: #FF5A1F;
+  opacity: 0.9;
+  flex-shrink: 0;
 }
 
 /* --------------------------------------------------------------------------
-   5. CENTER COLUMN — ABOUT ME INTRODUCTION & MY INTERESTS
+   5. MY TOP 3 ANIME SECTION
    -------------------------------------------------------------------------- */
-.about-col-center {
+.ab-anime {
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  gap: 26px;
 }
 
-.about-eyebrow-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
-}
-
-.about-eyebrow-text {
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: #E8D1B8;
-}
-
-.about-eyebrow-line {
-  width: 34px;
-  height: 1px;
-  background-color: #A63C38;
-}
-
-.about-hero-heading {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(38px, 3.8vw, 56px);
-  font-weight: 600;
-  line-height: 1.06;
-  letter-spacing: -0.01em;
-  color: #F5F0E9;
-  margin: 0 0 10px;
-}
-
-.about-name-accent {
-  position: relative;
-  display: inline-block;
-}
-
-.about-heading-brush {
-  position: absolute;
-  left: 0;
-  bottom: -5px;
-  width: 100%;
-  height: 10px;
-  pointer-events: none;
-}
-
-.about-hero-subtitle {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-style: italic;
-  font-size: clamp(16px, 1.35vw, 19px);
-  color: #E8D1B8;
-  margin: 4px 0 18px;
-  letter-spacing: 0.01em;
-}
-
-.about-dot {
-  color: #A63C38;
-  margin: 0 4px;
-  font-style: normal;
-}
-
-.about-intro-prose {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  margin-bottom: 24px;
-  max-width: 610px;
-}
-
-.about-intro-prose p {
-  margin: 0;
-  font-size: 14.5px;
-  line-height: 1.62;
-  color: #B8AAA6;
-  font-weight: 400;
-}
-
-.prose-highlight {
-  color: #F5F0E9;
-  border-bottom: 1px solid rgba(199, 90, 80, 0.45);
-  padding-bottom: 1px;
-}
-
-/* Sub-section Header (My Interests / What Drives Me) */
-.about-sub-header {
+.ab-section-head {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 14px;
 }
 
-.about-sub-title {
+.ab-shuriken {
+  width: 18px;
+  height: 18px;
+  color: #FF5A1F;
+  flex-shrink: 0;
+}
+
+.ab-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.ab-anime-title {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-style: italic;
-  font-size: 22px;
   font-weight: 600;
-  color: #F5F0E9;
+  font-size: clamp(22px, 2.2vw, 30px);
+  color: #F3E6D3;
   margin: 0;
+  line-height: 1.1;
   white-space: nowrap;
 }
 
-.about-sub-rule {
+.ab-anime-rule {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, #49332F 0%, rgba(73, 51, 47, 0.12) 100%);
+  background: #39312D;
+  transform-origin: left center;
 }
 
-/* 5 Compact Interactive Interest Tiles */
-.about-interests-row {
+.ab-anime-kicker {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #B9ADA5;
+  white-space: nowrap;
+}
+
+.ab-anime-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
 }
 
-.about-interest-tile {
+.ab-anime-card {
   position: relative;
-  background: rgba(27, 20, 23, 0.72);
-  border: 1px solid #49332F;
-  border-radius: 14px;
-  padding: 14px 10px 12px;
-  min-height: 98px;
+  background: #1D1917;
+  border: 1px solid #39312D;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.ab-anime-card:hover {
+  border-color: #FF5A1F;
+  transform: translateY(-4px);
+}
+
+.ab-anime-media {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9.5;
+  overflow: hidden;
+  background: #141110;
+}
+
+.ab-anime-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ab-anime-card:hover .ab-anime-media img {
+  transform: scale(1.04);
+}
+
+.ab-anime-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 34px 18px 14px;
+  background: linear-gradient(180deg, transparent 0%, rgba(20, 17, 16, 0.85) 45%, #141110 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  text-align: center;
-  cursor: pointer;
-  color: #F5F0E9;
-  font-family: inherit;
-  transition:
-    transform 0.24s cubic-bezier(0.22, 1, 0.36, 1),
-    border-color 0.24s ease,
-    background-color 0.24s ease,
-    box-shadow 0.24s ease;
+  gap: 3px;
 }
 
-.about-interest-tile:hover,
-.about-interest-tile:focus-visible,
-.about-interest-tile.is-active {
-  transform: translateY(-4px);
-  border-color: #C75A50;
-  background: rgba(34, 23, 26, 0.9);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.42);
-  outline: none;
+.ab-anime-caption h3 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 21px;
+  color: #F3E6D3;
+  margin: 0;
+  line-height: 1.15;
 }
 
-.interest-tile-icon {
-  color: #E8D1B8;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.22s ease, transform 0.22s ease;
-}
-
-.about-interest-tile:hover .interest-tile-icon,
-.about-interest-tile:focus-visible .interest-tile-icon,
-.about-interest-tile.is-active .interest-tile-icon {
-  color: #C75A50;
-  transform: scale(1.06);
-}
-
-.interest-tile-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: #F5F0E9;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
-}
-
-/* Hover / Tap Personal Detail Popover inside/above Tile */
-.interest-tile-detail {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  transform: translate(-50%, 6px);
-  width: 176px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #1B1417;
-  border: 1px solid #A63C38;
-  color: #F5F0E9;
-  font-size: 11.5px;
-  line-height: 1.38;
-  font-weight: 400;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.65);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: 15;
-  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
-}
-
-.about-interest-tile:hover .interest-tile-detail,
-.about-interest-tile:focus-visible .interest-tile-detail,
-.about-interest-tile.is-active .interest-tile-detail {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(-50%, 0);
+.ab-anime-caption p {
+  font-size: 11px;
+  color: #B9ADA5;
+  margin: 0;
+  letter-spacing: 0.02em;
 }
 
 /* --------------------------------------------------------------------------
-   6. RIGHT COLUMN — PROFESSIONAL SNAPSHOT & WHAT DRIVES ME
+   6. FOOTBALL SECTION
    -------------------------------------------------------------------------- */
-.about-col-right {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  border-left: 1px solid rgba(73, 51, 47, 0.65);
-  padding-left: 28px;
+.ab-football {
+  position: relative;
+  border: 1px solid #39312D;
+  border-radius: 14px;
+  background: #1D1917;
+  overflow: hidden;
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: 140px 1fr auto;
+  align-items: center;
+  gap: 28px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
 
-.about-snapshot-list {
-  display: flex;
-  flex-direction: column;
+.ab-fb-media {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #39312D;
+  position: relative;
+  z-index: 2;
 }
 
-.about-snapshot-item {
+.ab-fb-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ab-fb-pitch {
+  position: absolute;
+  right: 180px;
+  top: 0;
+  bottom: 0;
+  width: 380px;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.12;
+  z-index: 1;
+}
+
+.pitch-line {
+  stroke: #B9ADA5;
+  stroke-width: 1.5;
+  fill: none;
+  stroke-dasharray: 1;
+}
+
+.ab-fb-body {
+  position: relative;
+  z-index: 2;
   display: flex;
   align-items: flex-start;
-  gap: 13px;
-  padding: 11px 0;
-  border-bottom: 1px solid rgba(73, 51, 47, 0.45);
+  gap: 16px;
 }
 
-.about-snapshot-item:first-child {
-  padding-top: 2px;
-}
-
-.about-snapshot-item:last-child {
-  border-bottom: none;
-  padding-bottom: 2px;
-}
-
-.snapshot-item-icon {
-  color: #E8D1B8;
+.ab-fb-icon {
+  width: 26px;
+  height: 26px;
+  color: #FF5A1F;
   flex-shrink: 0;
-  margin-top: 2px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  margin-top: 4px;
 }
 
-.snapshot-item-body {
+.ab-fb-copy {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  min-width: 0;
+  gap: 6px;
 }
 
-.snapshot-item-kicker {
+.ab-fb-title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: 28px;
+  color: #F3E6D3;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.ab-fb-text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #B9ADA5;
+  max-width: 52ch;
+}
+
+.ab-fb-role-wrap {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.ab-fb-role-kicker {
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: #C75A50;
+  color: #B9ADA5;
 }
 
-.snapshot-item-primary {
+.ab-fb-role {
   margin: 0;
-  font-size: 13.5px;
-  font-weight: 500;
-  color: #F5F0E9;
-  line-height: 1.38;
-}
-
-.snapshot-item-secondary {
-  margin: 0;
-  font-size: 12px;
-  color: #B8AAA6;
-  line-height: 1.38;
-}
-
-/* What Drives Me — 3 Compact Values */
-.about-drives-list {
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-}
-
-.about-drive-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.drive-item-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(166, 60, 56, 0.14);
-  border: 1px solid rgba(166, 60, 56, 0.36);
-  color: #E8D1B8;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.drive-item-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.drive-item-title {
-  margin: 0;
-  font-size: 13.5px;
+  gap: 10px;
+  padding: 10px 20px;
+  background: rgba(255, 90, 31, 0.1);
+  border: 1px solid #FF5A1F;
+  border-radius: 999px;
+  color: #F3E6D3;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 16.5px;
   font-weight: 600;
-  color: #F5F0E9;
-  line-height: 1.25;
-}
-
-.drive-item-desc {
-  margin: 0;
-  font-size: 12.5px;
-  color: #B8AAA6;
-  line-height: 1.38;
+  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
-   7. BOTTOM BAR — EDITORIAL PULL QUOTE & TWO ACTIONS
+   7. BOTTOM BAR / ACTIONS
    -------------------------------------------------------------------------- */
 .about-bottom-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 28px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(73, 51, 47, 0.5);
+  padding-top: 18px;
+  border-top: 1px solid #39312D;
 }
 
 .about-pull-quote {
@@ -559,15 +633,14 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  max-width: 620px;
-  padding-left: 4px;
+  max-width: 600px;
 }
 
 .quote-mark {
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 44px;
   line-height: 0.75;
-  color: #A63C38;
+  color: #FF5A1F;
   flex-shrink: 0;
   margin-top: 6px;
 }
@@ -576,186 +649,225 @@
   margin: 0;
   font-size: 13px;
   font-style: italic;
-  line-height: 1.5;
-  color: #B8AAA6;
-  border-left: 1px solid #49332F;
+  line-height: 1.55;
+  color: #B9ADA5;
+  border-left: 1px solid #39312D;
   padding-left: 12px;
 }
 
 .about-bottom-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-shrink: 0;
 }
 
-.about-btn-resume {
-  background: rgba(27, 20, 23, 0.65);
-  border: 1px solid #E8D1B8;
-  color: #F5F0E9;
+.about-btn-resume,
+.about-btn-contact,
+.about-btn-return {
   border-radius: 999px;
-  padding: 11px 22px;
+  padding: 10px 22px;
   font-family: inherit;
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   cursor: pointer;
-  transition: background-color 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  transition: all 0.24s ease;
+}
+
+.about-btn-resume {
+  background: #1D1917;
+  border: 1px solid #39312D;
+  color: #F3E6D3;
 }
 
 .about-btn-resume:hover {
-  background: rgba(232, 209, 184, 0.12);
-  border-color: #F5F0E9;
+  border-color: #FF5A1F;
   transform: translateY(-2px);
 }
 
 .about-btn-contact {
-  background: #A63C38;
-  border: 1px solid #A63C38;
-  color: #F5F0E9;
-  border-radius: 999px;
-  padding: 11px 24px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  cursor: pointer;
-  transition: background-color 0.22s ease, border-color 0.22s ease, transform 0.22s ease;
+  background: #FF5A1F;
+  border: 1px solid #FF5A1F;
+  color: #141110;
+  font-weight: 600;
 }
 
 .about-btn-contact:hover {
-  background: #C75A50;
-  border-color: #C75A50;
+  background: #e04e1a;
   transform: translateY(-2px);
 }
 
 .about-btn-return {
-  background: rgba(27, 20, 23, 0.45);
-  border: 1px solid #49332F;
-  color: #B8AAA6;
-  border-radius: 999px;
-  padding: 11px 22px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  cursor: pointer;
-  transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease, transform 0.22s ease;
+  background: #1D1917;
+  border: 1px solid #39312D;
+  color: #B9ADA5;
 }
 
 .about-btn-return:hover {
-  background: rgba(73, 51, 47, 0.4);
-  border-color: #E8D1B8;
-  color: #F5F0E9;
+  color: #F3E6D3;
+  border-color: #FF5A1F;
   transform: translateY(-2px);
 }
 
-.about-btn-resume:focus-visible,
-.about-btn-contact:focus-visible,
-.about-btn-return:focus-visible {
-  outline: 2px solid #E8D1B8;
-  outline-offset: 3px;
-}
-
 /* --------------------------------------------------------------------------
-   8. RESPONSIVE DESIGN (TABLET & MOBILE)
+   8. RESPONSIVE DESIGN (TABLET & MOBILE BREAKPOINTS)
    -------------------------------------------------------------------------- */
-@media (max-width: 1140px) {
+@media (max-width: 1024px) {
   .about-editorial-scroll-container {
-    align-items: flex-start;
-    padding: 48px 32px 36px;
+    padding: 44px 28px 60px;
   }
 
-  .about-editorial-grid {
-    grid-template-columns: 260px 1fr;
-    gap: 32px;
+  .ab-hero-grid {
+    grid-template-columns: 1fr 260px;
+    grid-template-areas:
+      "head  photo"
+      "copy  photo"
+      "facts facts";
+    column-gap: 24px;
+    row-gap: 24px;
   }
 
-  .about-col-right {
-    grid-column: 1 / -1;
-    border-left: none;
-    border-top: 1px solid rgba(73, 51, 47, 0.6);
+  .ab-facts {
     padding-left: 0;
-    padding-top: 24px;
     display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    border-top: 1px solid #39312D;
+    padding-top: 20px;
+  }
+
+  .ab-football {
+    grid-template-columns: 100px 1fr;
+    gap: 20px;
+  }
+
+  .ab-fb-role-wrap {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+  }
+
+  .ab-fb-pitch {
+    display: none;
   }
 }
 
-@media (max-width: 768px) {
-  .about-minimal-close-btn {
-    top: 16px;
-    right: 16px;
-    width: 40px;
-    height: 40px;
-  }
-
+@media (max-width: 760px) {
   .about-editorial-scroll-container {
-    padding: 56px 20px 32px;
+    padding: 36px 18px 48px;
   }
 
-  .about-editorial-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
+  .about-editorial-shell {
+    gap: 48px;
   }
 
-  .about-col-photo {
-    padding-top: 0;
-  }
-
-  .about-photo-stage {
-    max-width: 240px;
-  }
-
-  .about-interests-row {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .about-interest-tile {
-    align-items: flex-start;
-    text-align: left;
-    padding: 12px 14px;
+  .ab-hero-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 22px;
     min-height: auto;
   }
 
-  .interest-tile-detail {
-    position: static;
-    transform: none;
-    width: 100%;
-    padding: 6px 0 0;
-    border: none;
-    background: transparent;
-    box-shadow: none;
-    color: #B8AAA6;
-    opacity: 1;
-    visibility: visible;
-    font-size: 11.5px;
+  .ab-head {
+    align-items: center;
   }
 
-  .about-col-right {
+  .ab-eyebrow {
+    justify-content: center;
+  }
+
+  .ab-headline {
+    max-width: none;
+    font-size: clamp(32px, 8.2vw, 44px);
+  }
+
+  .ab-copy {
+    max-width: none;
+    text-align: left;
+    order: 4; /* Below ABOUT composition on mobile */
+  }
+
+  .ab-photo-col {
+    order: 2;
+    margin: 12px 0;
+  }
+
+  .ab-portrait-stage {
+    max-width: 210px;
+  }
+
+  .ab-katakana {
+    left: -16px;
+    top: 14%;
+    font-size: 9.5px;
+    padding: 8px 4px;
+  }
+
+  .ab-word-layer {
+    position: relative;
+    order: 3;
+    bottom: auto;
+    margin-top: -38px;
+    z-index: 1;
+  }
+
+  .ab-word {
+    font-size: clamp(74px, 21vw, 110px);
+  }
+
+  .ab-brush {
+    width: 220px;
+    height: 18px;
+    margin-top: -6px;
+  }
+
+  .ab-facts {
+    order: 5;
+    width: 100%;
     grid-template-columns: 1fr;
-    gap: 24px;
+    text-align: left;
+    gap: 14px;
+  }
+
+  .ab-anime-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .ab-football {
+    grid-template-columns: 1fr;
+    text-align: left;
+    padding: 20px;
+    gap: 18px;
+  }
+
+  .ab-fb-media {
+    width: 84px;
+  }
+
+  .ab-fb-body {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .ab-fb-role-wrap {
+    align-items: flex-start;
   }
 
   .about-bottom-bar {
     flex-direction: column;
     align-items: stretch;
-    gap: 18px;
+    gap: 20px;
   }
 
   .about-bottom-actions {
-    width: 100%;
     flex-direction: column;
+    width: 100%;
   }
 
   .about-btn-resume,
@@ -765,4 +877,3 @@
     justify-content: center;
   }
 }
-

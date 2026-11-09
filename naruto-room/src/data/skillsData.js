@@ -1,3 +1,4 @@
+import { resolveArtwork } from './projectMenu';
 import { published } from './published';
 /**
  * Shinobi Portfolio — Technical Skills & Jutsu Scrolls Data
@@ -203,7 +204,7 @@ export const SKILL_CATEGORIES = [
 export function getSkillCategories() {
   if (published) return published.skills.map(skill => ({
     id:skill.slug,title:skill.title,japaneseLabel:skill.japaneseTitle,description:skill.summary,
-    iconKey:skill.icon,relatedProjectIds:skill.relatedProjects,
+    iconKey:({frontend:'code',backend:'layers',ml:'brain',databases:'database',apis:'link'})[skill.icon] || skill.icon,relatedProjectIds:skill.relatedProjects,
     technologies:skill.technologies.map(name=>({id:name,name,iconKey:name.toLowerCase()}))
   }));
   return SKILL_CATEGORIES.filter((c) => c.visible).sort((a, b) => a.order - b.order);
@@ -212,7 +213,7 @@ export function getSkillCategories() {
 export function getProjectById(projectId) {
   if (published) {
     const project = published.projects.find(p=>p.slug===projectId);
-    return project && {...project,id:project.slug,thumbnail:project.frontPagePhoto || project.projectPhoto};
+    return project && {...project,id:project.slug,thumbnail:resolveArtwork(project.frontPagePhoto || project.projectPhoto)};
   }
   return PROJECTS_METADATA[projectId] || null;
 }

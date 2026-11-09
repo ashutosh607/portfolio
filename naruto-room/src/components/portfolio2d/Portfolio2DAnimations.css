@@ -4,7 +4,7 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. STICKY NAVBAR & SLIDING ACTIVE INDICATOR
+   1. STICKY NAVBAR & SLIDING ACTIVE INDICATOR (Minimal Warm Charcoal)
    -------------------------------------------------------------------------- */
 .p2d-navbar {
   position: sticky;
@@ -15,25 +15,22 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 2rem;
-  background: rgba(16, 11, 14, 0.78);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(213, 173, 131, 0.16);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  background: rgba(20, 17, 16, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #39312D;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
   transition:
     padding 0.3s cubic-bezier(0.16, 1, 0.3, 1),
     background 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .p2d-navbar.is-scrolled {
   padding: 0.52rem 2rem;
-  background: rgba(13, 9, 12, 0.94);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(213, 173, 131, 0.24);
-  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.58);
+  background: rgba(20, 17, 16, 0.98);
+  border-bottom: 1px solid #39312D;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 .p2d-nav-links {
@@ -43,8 +40,8 @@
   gap: 0.35rem;
   padding: 0.22rem;
   border-radius: 999px;
-  background: rgba(24, 16, 20, 0.5);
-  border: 1px solid rgba(213, 173, 131, 0.12);
+  background: #1D1917;
+  border: 1px solid #39312D;
 }
 
 /* Sliding Active Pill Indicator */
@@ -55,9 +52,9 @@
   left: 0;
   width: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(169, 47, 50, 0.32) 0%, rgba(125, 36, 40, 0.42) 100%);
-  border: 1px solid rgba(184, 58, 53, 0.55);
-  box-shadow: 0 0 14px rgba(169, 47, 50, 0.32);
+  background: rgba(255, 90, 31, 0.16);
+  border: 1px solid #FF5A1F;
+  box-shadow: 0 0 10px rgba(255, 90, 31, 0.2);
   pointer-events: none;
   opacity: 0;
   z-index: 0;
@@ -74,7 +71,7 @@
   background: transparent;
   border: none;
   border-radius: 999px;
-  color: #c8b6a9;
+  color: #B9ADA5;
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
@@ -82,19 +79,19 @@
 }
 
 .p2d-nav-item:hover {
-  color: #f5efe7;
+  color: #F3E6D3;
 }
 
 .p2d-nav-item.is-active {
-  color: #f5efe7;
+  color: #F3E6D3;
   font-weight: 600;
 }
 
 .p2d-nav-item-num {
   font-family: 'Cinzel', Georgia, serif;
   font-size: 0.72rem;
-  color: #d5ad83;
-  opacity: 0.85;
+  color: #FF5A1F;
+  opacity: 0.9;
 }
 
 /* 3D World button pulse animation */
@@ -178,10 +175,8 @@
   z-index: 999;
   max-height: calc(100dvh - 60px);
   overflow-y: auto;
-  background: rgba(14, 10, 13, 0.98);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(213, 173, 131, 0.25);
+  background: #141110;
+  border-bottom: 1px solid #39312D;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   padding: 1.1rem 1.25rem 1.5rem;
   animation: p2d-drawer-down 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -210,10 +205,10 @@
   justify-content: space-between;
   width: 100%;
   padding: 0.75rem 1rem;
-  background: rgba(28, 18, 22, 0.6);
-  border: 1px solid rgba(213, 173, 131, 0.12);
+  background: #1D1917;
+  border: 1px solid #39312D;
   border-radius: 10px;
-  color: #f4e8da;
+  color: #B9ADA5;
   font-size: 0.94rem;
   font-weight: 500;
   cursor: pointer;
@@ -221,8 +216,13 @@
 }
 
 .p2d-mobile-nav-item.is-active {
-  background: rgba(169, 47, 50, 0.25);
-  border-color: rgba(184, 58, 53, 0.45);
+  background: rgba(255, 90, 31, 0.12);
+  border-color: #FF5A1F;
+  color: #F3E6D3;
+}
+
+.p2d-mobile-nav-item .p2d-nav-item-num {
+  color: #FF5A1F;
 }
 
 .p2d-mobile-drawer-actions {

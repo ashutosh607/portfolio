@@ -11,7 +11,13 @@ export default function SkillNavigation({
 }) {
   return (
     <nav className="skills-nav-container" aria-label="Skill Categories">
-      <div className="skills-nav-list" role="tablist">
+      <label className="skills-category-picker">
+        <span>Skill category</span>
+        <select value={activeCategoryId || ''} onChange={event => onSelectCategory(event.target.value)}>
+          {categories.map(category => <option key={category.id} value={category.id}>{category.title}</option>)}
+        </select>
+      </label>
+      <div className="skills-nav-list"  role="tablist">
         {categories.map((cat) => {
           const isActive = cat.id === activeCategoryId;
           return (

@@ -1,397 +1,313 @@
 import { published } from '../data/published';
-import { sectionEntrance } from '../utils/sectionEntrance';
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 import './AboutModal.css';
 
-const INTEREST_ITEMS = [
-  {
-    id: 'football',
-    label: 'Football',
-    detail: 'Always up for a good match.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="9" />
-        <polygon points="12 7.5 15.2 9.8 14 13.6 10 13.6 8.8 9.8" />
-        <line x1="12" y1="3" x2="12" y2="7.5" />
-        <line x1="15.2" y1="9.8" x2="20.4" y2="8.8" />
-        <line x1="14" y1="13.6" x2="17.5" y2="18.8" />
-        <line x1="10" y1="13.6" x2="6.5" y2="18.8" />
-        <line x1="8.8" y1="9.8" x2="3.6" y2="8.8" />
-      </svg>
-    ),
-  },
-  {
-    id: 'anime',
-    label: 'Anime',
-    detail: 'Naruto will always be a favorite.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <rect x="3" y="5" width="18" height="14" rx="3" />
-        <polygon points="10 9.5 15.5 12 10 14.5" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
-  {
-    id: 'foodie',
-    label: 'Foodie',
-    detail: 'Trying new food spots. KFC is a favorite.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M15.5 5.5a4.5 4.5 0 0 1 3 7.8c-1.2 1.1-2.7 1.4-4 2.7l-3.2 3.2a1.8 1.8 0 0 1-2.5-2.5l3.2-3.2c1.3-1.3 1.6-2.8 2.7-4a4.5 4.5 0 0 1 .8-4z" />
-        <circle cx="6.2" cy="17.8" r="1.4" />
-        <circle cx="4.8" cy="15.2" r="1.4" />
-      </svg>
-    ),
-  },
-  {
-    id: 'coding',
-    label: 'Coding',
-    detail: 'Turning random ideas into working projects.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polyline points="8 8 4 12 8 16" />
-        <polyline points="16 8 20 12 16 16" />
-        <line x1="13.5" y1="6" x2="10.5" y2="18" />
-      </svg>
-    ),
-  },
-  {
-    id: 'creating',
-    label: 'Always Creating',
-    detail: 'I enjoy staying productive and working on new ideas.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polygon points="13 3 5 14 12 14 11 21 19 10 12 10 13 3" />
-      </svg>
-    ),
-  },
+gsap.registerPlugin(ScrollTrigger, SplitText);
+
+/* ----------------------------------------------------------------------------
+   Fallback content (used only when the CMS has not published a value)
+   ---------------------------------------------------------------------------- */
+const FACT_ICONS = [
+  <svg key="edu" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 10L12 5 2 10l10 5 10-5z" />
+    <path d="M6 12.5v4.5c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" />
+  </svg>,
+  <svg key="code" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <polyline points="8 8 4 12 8 16" />
+    <polyline points="16 8 20 12 16 16" />
+    <line x1="13.5" y1="6" x2="10.5" y2="18" />
+  </svg>,
+  <svg key="pin" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z" />
+    <circle cx="12" cy="10" r="2.4" />
+  </svg>,
+  <svg key="goal" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="4.5" />
+    <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+  </svg>,
 ];
 
-const SNAPSHOT_ITEMS = [
-  {
-    id: 'education',
-    label: 'Education',
-    primary: 'B.Tech in Artificial Intelligence & Machine Learning',
-    secondary: 'Dwarkadas J. Sanghvi College of Engineering (DJSCE)',
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M22 10L12 5 2 10l10 5 10-5z" />
-        <path d="M6 12.5v4.5c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5" />
-      </svg>
-    ),
-  },
-  {
-    id: 'development',
-    label: 'Development',
-    primary: 'Full-Stack Web Development',
-    secondary: 'React.js, Node.js, Express.js, MongoDB',
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polyline points="8 8 4 12 8 16" />
-        <polyline points="16 8 20 12 16 16" />
-        <line x1="13.5" y1="6" x2="10.5" y2="18" />
-      </svg>
-    ),
-  },
-  {
-    id: 'exploration',
-    label: 'Exploration',
-    primary: 'Artificial Intelligence & Machine Learning',
-    secondary: null,
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polygon points="12 3 2 8 12 13 22 8 12 3" />
-        <polyline points="2 12.5 12 17.5 22 12.5" />
-        <polyline points="2 17 12 22 22 17" />
-      </svg>
-    ),
-  },
-  {
-    id: 'goal',
-    label: 'Goal',
-    primary: 'Build useful, creative digital products while continuously improving my skills.',
-    secondary: null,
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="8.5" />
-        <circle cx="12" cy="12" r="4.5" />
-        <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-      </svg>
-    ),
-  },
+const FALLBACK_FACTS = [
+  { label: 'Education', title: 'B.Tech (AIML), DJSCE, Mumbai', desc: 'Sep 2025 – May 2029  |  CGPA: 9.57' },
+  { label: 'Focus', title: 'Full-Stack Development, Web, AI/ML, 3D Web', desc: '' },
+  { label: 'Based in', title: 'Mumbai, India', desc: '' },
+  { label: 'Current goal', title: 'Build impactful products and gain industry experience.', desc: '' },
 ];
 
-const DRIVE_VALUES = [
-  {
-    id: 'build',
-    title: 'Build',
-    description: 'Turn ideas into useful products.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polygon points="13 3 5 14 12 14 11 21 19 10 12 10 13 3" />
-      </svg>
-    ),
-  },
-  {
-    id: 'learn',
-    title: 'Learn',
-    description: 'Explore, experiment, and keep improving.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <path d="M2 5.5A2.5 2.5 0 0 1 4.5 3H11v16H4.5A2.5 2.5 0 0 0 2 21.5v-16z" />
-        <path d="M22 5.5A2.5 2.5 0 0 0 19.5 3H13v16h6.5a2.5 2.5 0 0 1 2.5 2.5v-16z" />
-      </svg>
-    ),
-  },
-  {
-    id: 'grow',
-    title: 'Grow',
-    description: 'Become a better developer, creator, and person.',
-    icon: (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-        <polyline points="16 7 22 7 22 13" />
-      </svg>
-    ),
-  },
+const FALLBACK_BIO = [
+  'I’m Ashutosh Kadam, a B.Tech (AIML) student at DJSCE, Mumbai, who builds full-stack applications and interactive digital experiences.',
+  'I love turning ideas into working products — blending clean engineering, modern web technologies, and a curiosity for AI/ML and 3D on the web.',
 ];
+
+const FALLBACK_ANIME = [
+  { title: 'Naruto', tags: 'Perseverance • Growth • Never Give Up', imageUrl: '/about/anime-naruto.jpg' },
+  { title: 'One Piece', tags: 'Freedom • Friendship • Big Dreams', imageUrl: '/about/anime-onepiece.jpg' },
+  { title: 'Attack on Titan', tags: 'Sacrifice • Perspective • Humanity', imageUrl: '/about/anime-aot.jpg' },
+];
+
+const FALLBACK_FOOTBALL = {
+  title: 'Football',
+  description: 'More than a sport — it’s where I learn discipline, teamwork, and quick decision-making.',
+  position: 'Centre Midfielder',
+  imageUrl: '/about/football.jpg',
+};
+
+function LeafMark({ className }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 17c3.5-1 6-3.5 7-7 1 2 1 4.5-.5 6.5C9 18.5 6 18.5 4 17z" />
+      <path d="M12.5 9.5c1.6-1.4 4.2-1.8 6.5-.8-1 2.6-3.4 4.1-6 4" />
+      <circle cx="13.6" cy="13.6" r="2.2" />
+      <path d="M13.6 11.4c1.6 0 2.9 1.2 2.9 2.7" />
+    </svg>
+  );
+}
 
 export default function AboutModal({ embedded = false, isOpen, onClose, onOpenResume, onOpenContact }) {
   const about = published?.profile?.about;
   const overlayRef = useRef(null);
-  const bgRef = useRef(null);
   const closeBtnRef = useRef(null);
-  const photoFrameRef = useRef(null);
-  const photoImgRef = useRef(null);
-  const eyebrowRef = useRef(null);
-  const headingRef = useRef(null);
-  const subtitleRef = useRef(null);
-  const introRef = useRef(null);
-  const snapshotRef = useRef(null);
-  const interestsRef = useRef(null);
-  const drivesRef = useRef(null);
-  const footerRef = useRef(null);
-  const timelineRef = useRef(null);
   const isClosingRef = useRef(false);
 
-  const [activeInterestId, setActiveInterestId] = useState(null);
+  const facts = about?.snapshotItems?.length ? about.snapshotItems : FALLBACK_FACTS;
+  const bio = about?.bioParagraphs?.length ? about.bioParagraphs : FALLBACK_BIO;
+  const anime = (about?.animeList?.filter((a) => a?.title)?.length ? about.animeList.filter((a) => a?.title) : FALLBACK_ANIME).slice(0, 3);
+  const football = { ...FALLBACK_FOOTBALL, ...Object.fromEntries(Object.entries(about?.football || {}).filter(([, v]) => v)) };
+  const headline = about?.headline || 'The shinobi behind the code.';
+  const badge = about?.badge ? `02 — ${about.badge.split('•').pop().trim()}` : '02 — Personal Dossier';
 
   const prefersReducedMotion = () =>
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const triggerClose = useCallback(
     (afterCloseCallback) => {
       if (isClosingRef.current) return;
       isClosingRef.current = true;
-
-      if (prefersReducedMotion() || !overlayRef.current) {
+      const finish = () => {
         isClosingRef.current = false;
         if (afterCloseCallback) afterCloseCallback();
         else onClose?.();
-        return;
-      }
-
-      timelineRef.current?.kill();
-      const tl = gsap.timeline({
-        onComplete: () => {
-          isClosingRef.current = false;
-          if (afterCloseCallback) afterCloseCallback();
-          else onClose?.();
-        },
-      });
-      timelineRef.current = tl;
-
-      tl.to(
-        [
-          photoFrameRef.current,
-          eyebrowRef.current,
-          headingRef.current,
-          subtitleRef.current,
-          introRef.current,
-          snapshotRef.current,
-          interestsRef.current,
-          drivesRef.current,
-          footerRef.current,
-        ].filter(Boolean),
-        {
-          opacity: 0,
-          y: 10,
-          duration: 0.24,
-          ease: 'power2.in',
-          overwrite: 'auto',
-        },
-        0
-      ).to(
-        overlayRef.current,
-        {
-          opacity: 0,
-          duration: 0.3,
-          ease: 'power2.inOut',
-        },
-        0.06
-      );
+      };
+      if (prefersReducedMotion() || !overlayRef.current) return finish();
+      gsap.to(overlayRef.current, { opacity: 0, duration: 0.32, ease: 'power2.inOut', onComplete: finish });
     },
     [onClose]
   );
 
-  // Coordinated GSAP opening timeline
+  /* --------------------------------------------------------------------------
+     Modal behaviour (3D village only): body scroll lock + focus restore
+     -------------------------------------------------------------------------- */
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || embedded) return undefined;
     isClosingRef.current = false;
     const previousFocus = document.activeElement;
     const previousOverflow = document.body.style.overflow;
-    if (!embedded) document.body.style.overflow = 'hidden';
-
-    const reduced = prefersReducedMotion();
-    const ctx = gsap.context(() => {
-      if (reduced) {
-        gsap.set(overlayRef.current, { opacity: 1 });
-        gsap.set(photoFrameRef.current, { clipPath: 'inset(0% 0% 0% 0%)', opacity: 1 });
-        gsap.set(photoImgRef.current, { scale: 1 });
-        return;
-      }
-
-      const snapshotItems = snapshotRef.current
-        ? snapshotRef.current.querySelectorAll('.about-snapshot-item')
-        : [];
-      const interestTiles = interestsRef.current
-        ? interestsRef.current.querySelectorAll('.about-interest-tile')
-        : [];
-      const driveItems = drivesRef.current
-        ? drivesRef.current.querySelectorAll('.about-drive-item')
-        : [];
-      const introParagraphs = introRef.current
-        ? introRef.current.querySelectorAll('p')
-        : [];
-
-      gsap.set(overlayRef.current, { opacity: 0 });
-      gsap.set(bgRef.current, { opacity: 0, scale: 1.03 });
-      gsap.set(photoFrameRef.current, {
-        clipPath: 'inset(100% 0% 0% 0%)',
-        opacity: 1,
-      });
-      gsap.set(photoImgRef.current, { scale: 1.04 });
-      gsap.set([eyebrowRef.current, headingRef.current, subtitleRef.current], {
-        opacity: 0,
-        y: 18,
-      });
-      gsap.set(introParagraphs, { opacity: 0, y: 14 });
-      gsap.set(snapshotItems, { opacity: 0, x: 14 });
-      gsap.set(interestTiles, { opacity: 0, y: 14 });
-      gsap.set(driveItems, { opacity: 0, y: 12 });
-      gsap.set(footerRef.current, { opacity: 0, y: 12 });
-
-      const tl = sectionEntrance(overlayRef.current, embedded);
-      timelineRef.current = tl;
-
-      // 1. Background fades in smoothly
-      tl.to(overlayRef.current, { opacity: 1, duration: 0.35, ease: 'power2.out' }, 0)
-        .to(bgRef.current, { opacity: 1, scale: 1, duration: 0.9, ease: 'power2.out' }, 0.05)
-        // 2. Photo reveals from bottom to top using vertical clip-path mask (~800ms)
-        .to(
-          photoFrameRef.current,
-          {
-            clipPath: 'inset(0% 0% 0% 0%)',
-            duration: 0.82,
-            ease: 'power3.inOut',
-          },
-          0.12
-        )
-        .to(
-          photoImgRef.current,
-          {
-            scale: 1,
-            duration: 0.85,
-            ease: 'power2.out',
-          },
-          0.12
-        )
-        // 3. Heading & subtitle reveal with subtle staggered typography
-        .to(
-          [eyebrowRef.current, headingRef.current, subtitleRef.current],
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.52,
-            stagger: 0.08,
-          },
-          0.26
-        )
-        // 4. Introduction fades upward
-        .to(
-          introParagraphs,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.48,
-            stagger: 0.07,
-          },
-          0.42
-        )
-        // 5. Professional highlights appear sequentially
-        .to(
-          snapshotItems,
-          {
-            opacity: 1,
-            x: 0,
-            duration: 0.44,
-            stagger: 0.06,
-          },
-          0.48
-        )
-        // 6. Interest tiles & What Drives Me stagger into position
-        .to(
-          interestTiles,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.42,
-            stagger: 0.05,
-          },
-          0.62
-        )
-        .to(
-          driveItems,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.4,
-            stagger: 0.06,
-          },
-          0.68
-        )
-        // 7. Bottom actions fade in
-        .to(
-          footerRef.current,
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.42,
-          },
-          0.78
-        );
-    }, overlayRef);
-
-    const focusTimer = requestAnimationFrame(() => {
-      if (!embedded) closeBtnRef.current?.focus({ preventScroll: true });
-    });
-
+    document.body.style.overflow = 'hidden';
+    const focusTimer = requestAnimationFrame(() => closeBtnRef.current?.focus({ preventScroll: true }));
     return () => {
       cancelAnimationFrame(focusTimer);
-      timelineRef.current?.kill();
-      ctx.revert();
-      if (!embedded) {
-        document.body.style.overflow = previousOverflow;
-        previousFocus?.focus?.({ preventScroll: true });
-      }
+      document.body.style.overflow = previousOverflow;
+      previousFocus?.focus?.({ preventScroll: true });
     };
   }, [isOpen, embedded]);
 
-  // ESC key to close and Focus Trap for accessibility
+  /* --------------------------------------------------------------------------
+     Cinematic choreography
+     One hero timeline (ABOUT rises → portrait descends → brush → copy → facts),
+     light scrubbed parallax afterwards, and once-only reveals for Anime/Football.
+     -------------------------------------------------------------------------- */
+  useLayoutEffect(() => {
+    if (!isOpen) return undefined;
+    const root = overlayRef.current;
+    if (!root) return undefined;
+    const scroller = embedded
+      ? root.closest('.portfolio-2d-wrapper')
+      : root.querySelector('.about-editorial-scroll-container');
+    const q = gsap.utils.selector(root);
+    const hero = root.querySelector('.ab-hero');
+    const mm = gsap.matchMedia(root);
+
+    mm.add(
+      {
+        desktop: '(min-width: 761px) and (prefers-reduced-motion: no-preference)',
+        mobile: '(max-width: 760px) and (prefers-reduced-motion: no-preference)',
+      },
+      (ctx) => {
+        const { desktop } = ctx.conditions;
+        let cancelled = false;
+        let splits = [];
+        const st = (trigger, start = 'top 80%') => ({ trigger, scroller, start, toggleActions: 'play none none none' });
+
+        // ---- Initial (pre-reveal) states, set before first paint -------------
+        const textBlocks = q('.ab-headline, .ab-copy p');
+        gsap.set(q('.ab-word'), { yPercent: 112 });
+        gsap.set(q('.ab-portrait'), { yPercent: desktop ? -120 : -70, scale: 1.05, autoAlpha: 0 });
+        gsap.set(q('.ab-portrait-frame, .ab-katakana'), { autoAlpha: 0 });
+        gsap.set(q('.ab-brush'), { clipPath: 'inset(0% 100% 0% 0%)' });
+        gsap.set(q('.ab-eyebrow, .ab-headline-brush'), { autoAlpha: 0, y: 14 });
+        gsap.set(textBlocks, { autoAlpha: 0 });
+        gsap.set(q('.ab-fact'), { autoAlpha: 0, y: 22 });
+        gsap.set(q('.ab-divider-line'), { scaleX: 0 });
+        gsap.set(q('.ab-divider-mark'), { autoAlpha: 0, scale: 0.6 });
+        if (!embedded) gsap.set(root, { opacity: 0 });
+
+        // ---- Hero timeline (built once fonts are ready so lines split correctly)
+        const buildHero = () => {
+          if (cancelled) return;
+          ctx.add(() => {
+            splits = Array.from(textBlocks, (el) =>
+              SplitText.create(el, { type: 'lines', mask: 'lines', linesClass: 'ab-line' })
+            );
+            gsap.set(textBlocks, { autoAlpha: 1 });
+            const headLines = splits[0]?.lines || [];
+            const copyLines = splits.slice(1).flatMap((s) => s.lines);
+
+            const tl = gsap.timeline({
+              paused: true,
+              defaults: { ease: 'power3.out' },
+              onComplete: () => {
+                // Restore the original, selectable DOM once everything has settled.
+                splits.forEach((s) => s.revert());
+                splits = [];
+              },
+            });
+
+            if (!embedded) tl.to(root, { opacity: 1, duration: 0.35, ease: 'power2.out' }, 0);
+
+            tl.addLabel('word', embedded ? 0 : 0.1)
+              // PHASE 1 — giant ABOUT rises through its mask, with a soft settle
+              .to(q('.ab-word'), { yPercent: -2.5, duration: 1.15, ease: 'expo.out' }, 'word')
+              .to(q('.ab-word'), { yPercent: 0, duration: 0.5, ease: 'sine.inOut' }, 'word+=1.05')
+              // PHASE 2 — portrait descends from above, in front of the type
+              .addLabel('photo', 'word+=0.3')
+              .to(q('.ab-portrait'), { yPercent: 0, scale: 1, duration: 1.4, ease: 'power3.out' }, 'photo')
+              .to(q('.ab-portrait'), { autoAlpha: 1, duration: 0.5, ease: 'power1.out' }, 'photo')
+              .fromTo(
+                q('.ab-portrait-frame'),
+                { autoAlpha: 0, x: -8, y: 8 },
+                { autoAlpha: 0.75, x: 0, y: 0, duration: 0.7, ease: 'power2.out' },
+                'photo+=0.95'
+              )
+              .to(q('.ab-katakana'), { autoAlpha: 1, duration: 0.5 }, 'photo+=1.05')
+              // PHASE 3 — red brushstroke sweeps left → right
+              .addLabel('brush', 'word+=1.2')
+              .to(q('.ab-brush'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.65, ease: 'power2.inOut' }, 'brush')
+              .to(q('.ab-divider-line'), { scaleX: 1, duration: 0.8, ease: 'power3.inOut' }, 'brush+=0.1')
+              .to(q('.ab-divider-mark'), { autoAlpha: 1, scale: 1, duration: 0.5 }, 'brush+=0.35')
+              // PHASE 4 — editorial copy, line by line
+              .addLabel('copy', 'word+=1.3')
+              .to(q('.ab-eyebrow'), { autoAlpha: 1, y: 0, duration: 0.55, ease: 'power2.out' }, 'copy')
+              .fromTo(headLines, { yPercent: 105 }, { yPercent: 0, duration: 0.8, stagger: 0.12 }, 'copy+=0.05')
+              .to(q('.ab-headline-brush'), { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out' }, 'copy+=0.45')
+              .fromTo(
+                copyLines,
+                { autoAlpha: 0, y: 22 },
+                { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.07, ease: 'power2.out' },
+                'copy+=0.25'
+              )
+              // Right column facts follow with a short stagger
+              .to(q('.ab-fact'), { autoAlpha: 1, y: 0, duration: 0.65, stagger: 0.13, ease: 'power2.out' }, 'word+=1.6');
+
+            if (embedded) {
+              ScrollTrigger.create({ trigger: hero, scroller, start: 'top 72%', once: true, onEnter: () => tl.play() });
+            } else {
+              tl.play();
+            }
+          });
+        };
+        const fontsReady = document.fonts?.ready ?? Promise.resolve();
+        fontsReady.then(buildHero, buildHero);
+
+        // ---- Scroll-driven parallax as the hero leaves -----------------------
+        const scrub = { trigger: hero, scroller, start: 'top top', end: 'bottom top', scrub: 0.6 };
+        gsap.to(q('.ab-word-layer'), { yPercent: desktop ? 22 : 10, ease: 'none', scrollTrigger: scrub });
+        gsap.to(q('.ab-photo-col'), { y: desktop ? -46 : -18, ease: 'none', scrollTrigger: { ...scrub } });
+        if (!embedded) gsap.to(q('.about-background'), { yPercent: 5, ease: 'none', scrollTrigger: { ...scrub } });
+
+        // ---- My Top 3 Anime ---------------------------------------------------
+        const animeSection = root.querySelector('.ab-anime');
+        const cards = q('.ab-anime-card');
+        gsap.set(q('.ab-anime-title'), { yPercent: 110 });
+        gsap.set(q('.ab-anime-rule'), { scaleX: 0 });
+        gsap.set(q('.ab-anime-kicker'), { autoAlpha: 0, y: 10 });
+        gsap.set(cards, { clipPath: 'inset(100% 0% 0% 0%)' });
+        gsap.set(q('.ab-anime-media'), { scale: 1.08 });
+        gsap.set(q('.ab-anime-caption > *'), { autoAlpha: 0, yPercent: 60 });
+
+        const head = gsap.timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(animeSection, 'top 80%') });
+        head
+          .to(q('.ab-anime-title'), { yPercent: 0, duration: 0.85 })
+          .to(q('.ab-anime-rule'), { scaleX: 1, duration: 0.9, ease: 'power3.inOut' }, '<0.15')
+          .to(q('.ab-anime-kicker'), { autoAlpha: 1, y: 0, duration: 0.6 }, '<0.25');
+
+        const revealCard = (card, tl, at) => {
+          tl.to(card, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.85 }, at)
+            .to(card.querySelector('.ab-anime-media'), { scale: 1, duration: 1.1 }, '<')
+            .to(card.querySelectorAll('.ab-anime-caption > *'), { autoAlpha: 1, yPercent: 0, duration: 0.6, stagger: 0.08 }, '<0.35');
+        };
+        if (desktop) {
+          // Left → right as one choreographed row
+          const row = gsap.timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(root.querySelector('.ab-anime-grid'), 'top 82%') });
+          cards.forEach((card, i) => revealCard(card, row, i * 0.15));
+        } else {
+          // Each poster reveals as it approaches the viewport
+          cards.forEach((card, i) => {
+            const tl = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: i * 0.12, scrollTrigger: st(card, 'top 88%') });
+            revealCard(card, tl, 0);
+          });
+        }
+
+        // ---- Football -----------------------------------------------------------
+        const fb = root.querySelector('.ab-football');
+        gsap.set(q('.ab-fb-media'), { clipPath: 'inset(0% 100% 0% 0%)' });
+        gsap.set(q('.ab-fb-media img'), { scale: 1.12 });
+        gsap.set(q('.ab-fb-title'), { yPercent: 110 });
+        gsap.set(q('.ab-fb-pitch .pitch-line'), { strokeDashoffset: 1 });
+        gsap.set(q('.ab-fb-role'), { autoAlpha: 0, scale: 0.92 });
+        gsap.set(q('.ab-fb-text, .ab-fb-icon'), { autoAlpha: 0, y: 18 });
+        gsap
+          .timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(fb, desktop ? 'top 80%' : 'top 86%') })
+          .to(q('.ab-fb-media'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.05, ease: 'power3.inOut' }, 0)
+          .to(q('.ab-fb-media img'), { scale: 1, duration: 1.4 }, 0)
+          .to(q('.ab-fb-icon'), { autoAlpha: 1, y: 0, duration: 0.5 }, 0.2)
+          .to(q('.ab-fb-title'), { yPercent: 0, duration: 0.9 }, 0.25)
+          .to(q('.ab-fb-pitch .pitch-line'), { strokeDashoffset: 0, duration: 1.3, stagger: 0.12, ease: 'power2.inOut' }, 0.35)
+          .to(q('.ab-fb-role'), { autoAlpha: 1, scale: 1, duration: 0.65 }, 0.75)
+          .to(q('.ab-fb-text'), { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, 0.9);
+
+        // ---- Closing actions ---------------------------------------------------------
+        gsap.from(q('.about-bottom-bar'), { autoAlpha: 0, y: 16, duration: 0.6, ease: 'power2.out', scrollTrigger: st(q('.about-bottom-bar')[0], 'top 92%') });
+
+        return () => {
+          cancelled = true;
+          splits.forEach((s) => s.revert());
+        };
+      }
+    );
+
+    // Recalculate trigger positions once artwork has decoded.
+    let raf = 0;
+    const refresh = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => ScrollTrigger.refresh());
+    };
+    const pending = Array.from(root.querySelectorAll('img')).filter((img) => !img.complete);
+    pending.forEach((img) => img.addEventListener('load', refresh, { once: true }));
+
+    return () => {
+      cancelAnimationFrame(raf);
+      pending.forEach((img) => img.removeEventListener('load', refresh));
+      mm.revert();
+    };
+  }, [isOpen, embedded]);
+
+  // ESC key to close and focus trap (3D modal only)
   useEffect(() => {
-    if (!isOpen || embedded) return;
+    if (!isOpen || embedded) return undefined;
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -400,9 +316,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
       }
       if (event.key === 'Tab' && overlayRef.current) {
         const focusable = [
-          ...overlayRef.current.querySelectorAll(
-            'button:not(:disabled), a[href], [tabindex="0"]'
-          ),
+          ...overlayRef.current.querySelectorAll('button:not(:disabled), a[href], [tabindex="0"]'),
         ].filter((el) => el.getClientRects().length > 0);
         if (focusable.length === 0) return;
         const first = focusable[0];
@@ -422,23 +336,17 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
 
   if (!isOpen) return null;
 
-  const handleInterestToggle = (id) => {
-    setActiveInterestId((prev) => (prev === id ? null : id));
-  };
-
   return (
     <div
       ref={overlayRef}
       className="about-editorial-overlay"
-      role={embedded ? "region" : "dialog"}
+      role={embedded ? 'region' : 'dialog'}
       aria-modal={embedded ? undefined : true}
       aria-labelledby="about-main-heading"
     >
-      {/* Full-Viewport Dark Japanese Landscape Background */}
-      <div ref={bgRef} className="about-background" aria-hidden="true" />
+      <div className="about-background" aria-hidden="true" />
       <div className="about-background-scrim" aria-hidden="true" />
 
-      {/* Minimal Top-Right Close Button (No Top Navigation Bar) */}
       <button
         ref={closeBtnRef}
         type="button"
@@ -453,183 +361,160 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
         </svg>
       </button>
 
-      {/* Main Scrollable Viewport Container */}
       <div className="about-editorial-scroll-container">
         <div className="about-editorial-shell">
-          {/* Upper 3-Column Editorial Grid */}
-          <div className="about-editorial-grid">
-            {/* ================= LEFT COLUMN: PERSONAL PORTRAIT PHOTO ================= */}
-            <aside className="about-col-photo" aria-label="Portrait of Ashutosh">
-              <div className="about-photo-stage">
-                {/* Thin Muted Red Offset Border */}
-                <div className="about-photo-offset-frame" aria-hidden="true" />
-
-                {/* Subtle Vertical Katakana Nameplate */}
-                <div className="about-photo-katakana-tag" aria-hidden="true">
-                  <span>ア</span>
-                  <span>シ</span>
-                  <span>ュ</span>
-                  <span>ト</span>
-                  <span>シ</span>
-                  <span>ュ</span>
-                </div>
-
-                {/* Actual Personal Portrait Image */}
-                <div ref={photoFrameRef} className="about-photo-mask">
-                  <img
-                    ref={photoImgRef}
-                    src={about?.photoUrl || "/about/ashutosh-photo.jpg"}
-                    alt="Ashutosh"
-                    className="about-portrait-image"
-                    draggable={false}
-                  />
-                </div>
-              </div>
-            </aside>
-
-            {/* ================= CENTER COLUMN: ABOUT ME & INTERESTS ================= */}
-            <main className="about-col-center">
-              <div ref={eyebrowRef} className="about-eyebrow-row">
-                <span className="about-eyebrow-text">{about?.badge || "ABOUT ME"}</span>
-                <span className="about-eyebrow-line" aria-hidden="true" />
+          {/* ================= HERO — ABOUT × PORTRAIT ================= */}
+          <section className="ab-hero" aria-labelledby="about-main-heading">
+            <div className="ab-hero-grid">
+              <div className="ab-head">
+                <p className="ab-eyebrow">
+                  <span>{badge}</span>
+                  <span className="ab-eyebrow-rule" aria-hidden="true" />
+                </p>
+                <h1 id="about-main-heading" className="ab-headline">{headline}</h1>
+                <svg className="ab-headline-brush" viewBox="0 0 160 10" preserveAspectRatio="none" aria-hidden="true">
+                  <path d="M2 7C40 3 104 2 158 5" stroke="#A63C38" strokeWidth="3" strokeLinecap="round" fill="none" />
+                </svg>
               </div>
 
-              <h1 ref={headingRef} id="about-main-heading" className="about-hero-heading">
-                {!about?.title && <>Hi, I&rsquo;m </>}
-                <span className="about-name-accent">
-                  {about?.title || 'Ashutosh.'}
-                  <svg
-                    className="about-heading-brush"
-                    viewBox="0 0 210 12"
-                    fill="none"
-                    preserveAspectRatio="none"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M3 8.5C54 3.2 135 2.4 207 6.8"
-                      stroke="#A63C38"
-                      strokeWidth="3.2"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-              </h1>
-
-              <p ref={subtitleRef} className="about-hero-subtitle">
-                {about?.subtitle || <>Developer <span className="about-dot">•</span> Creator{' '}
-                <span className="about-dot">•</span> Anime Enthusiast{' '}
-                <span className="about-dot">•</span> Football Fan</>}
-              </p>
-
-              <div ref={introRef} className="about-intro-prose">
-                {about?.bioParagraphs ? about.bioParagraphs.map((p,i)=><p key={i}>{p}</p>) : <>
-                <p>
-                  I&rsquo;m Ashutosh, a developer who enjoys turning ideas into{' '}
-                  <span className="prose-highlight">interactive, meaningful experiences</span>.
-                </p>
-                <p>
-                  I love building things, experimenting with new technologies, and solving problems
-                  creatively. Whether it&rsquo;s developing a{' '}
-                  <span className="prose-highlight">full-stack application</span> or exploring{' '}
-                  <span className="prose-highlight">AI and machine learning</span>, I&rsquo;m always
-                  curious about what I can create next.
-                </p>
-                <p>
-                  Outside the screen, I&rsquo;m usually watching anime, playing football, or
-                  discovering somewhere new to eat. I enjoy staying busy, learning new things, and
-                  making the most of whatever I&rsquo;m working on.
-                </p>
-              </>}</div>
-
-              {/* MY INTERESTS — 5 COMPACT INTERACTIVE TILES */}
-              <section
-                ref={interestsRef}
-                className="about-interests-section"
-                aria-labelledby="about-interests-heading"
-              >
-                <div className="about-sub-header">
-                  <h2 id="about-interests-heading" className="about-sub-title">
-                    My Interests
-                  </h2>
-                  <span className="about-sub-rule" aria-hidden="true" />
-                </div>
-
-                <div className="about-interests-row" role="list">
-                  {(about?.interestItems?.map((x,i)=>({...x,id:x._id || i,detail:x.sub})) ?? INTEREST_ITEMS).map((item) => {
-                    const isActive = activeInterestId === item.id;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        role="listitem"
-                        className={`about-interest-tile ${isActive ? 'is-active' : ''}`}
-                        onClick={() => handleInterestToggle(item.id)}
-                        aria-expanded={isActive}
-                      >
-                        <span className="interest-tile-icon">{item.icon}</span>
-                        <span className="interest-tile-label">{item.label}</span>
-                        <span className="interest-tile-detail">{item.detail}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            </main>
-
-            {/* ================= RIGHT COLUMN: PROFESSIONAL SNAPSHOT & WHAT DRIVES ME ================= */}
-            <aside className="about-col-right" aria-label="Professional Snapshot and Values">
-              <div ref={snapshotRef} className="about-snapshot-list">
-                {(about?.snapshotItems?.map((x,i)=>({...x,id:x._id || i,primary:x.title,secondary:x.desc,icon:SNAPSHOT_ITEMS[i]?.icon})) ?? SNAPSHOT_ITEMS).map((item) => (
-                  <div key={item.id} className="about-snapshot-item">
-                    <span className="snapshot-item-icon">{item.icon}</span>
-                    <div className="snapshot-item-body">
-                      <span className="snapshot-item-kicker">{item.label}</span>
-                      <p className="snapshot-item-primary">{item.primary}</p>
-                      {item.secondary && (
-                        <p className="snapshot-item-secondary">{item.secondary}</p>
-                      )}
-                    </div>
-                  </div>
+              <div className="ab-copy">
+                {bio.map((p, i) => (
+                  <p key={i}>{p}</p>
                 ))}
               </div>
 
-              {/* WHAT DRIVES ME — 3 CORE VALUES */}
-              <section
-                ref={drivesRef}
-                className="about-drives-section"
-                aria-labelledby="about-drives-heading"
-              >
-                <div className="about-sub-header">
-                  <h2 id="about-drives-heading" className="about-sub-title">
-                    What Drives Me
-                  </h2>
-                  <span className="about-sub-rule" aria-hidden="true" />
-                </div>
+              <div className="ab-photo-col">
+                <figure className="ab-portrait-stage">
+                  <div className="ab-portrait-frame" aria-hidden="true" />
+                  <div className="ab-katakana" aria-hidden="true">
+                    {'アシュトシュ'.split('').map((c, i) => (
+                      <span key={i}>{c}</span>
+                    ))}
+                  </div>
+                  <div className="ab-portrait">
+                    <img
+                      src={about?.photoUrl || '/about/ashutosh-photo.jpg'}
+                      alt={`Portrait of ${about?.title || 'Ashutosh Kadam'}`}
+                      draggable={false}
+                      decoding="async"
+                    />
+                  </div>
+                </figure>
+              </div>
 
-                <div className="about-drives-list">
-                  {(about?.driveValues?.map((x,i)=>({...x,id:x._id || i,description:x.desc,icon:x.num})) ?? DRIVE_VALUES).map((val) => (
-                    <div key={val.id} className="about-drive-item">
-                      <span className="drive-item-icon">{val.icon}</span>
-                      <div className="drive-item-copy">
-                        <h3 className="drive-item-title">{val.title}</h3>
-                        <p className="drive-item-desc">{val.description}</p>
-                      </div>
+              <ul className="ab-facts" aria-label="Personal details">
+                {facts.map((f, i) => (
+                  <li key={f._id || i} className="ab-fact">
+                    <span className="ab-fact-icon">{FACT_ICONS[i % FACT_ICONS.length]}</span>
+                    <div>
+                      <span className="ab-fact-label">{f.label}</span>
+                      <p className="ab-fact-title">{f.title}</p>
+                      {f.desc && <p className="ab-fact-desc">{f.desc}</p>}
                     </div>
-                  ))}
-                </div>
-              </section>
-            </aside>
-          </div>
+                  </li>
+                ))}
+              </ul>
 
-          {/* ================= BOTTOM BAR: QUOTE & ACTIONS ================= */}
-          <footer ref={footerRef} className="about-bottom-bar">
-            <blockquote className="about-pull-quote">
-              <span className="quote-mark" aria-hidden="true">
-                &ldquo;
+              <div className="ab-word-layer" aria-hidden="true">
+                <div className="ab-word-mask">
+                  <span className="ab-word">ABOUT</span>
+                </div>
+                <svg className="ab-brush" viewBox="0 0 420 34" preserveAspectRatio="none">
+                  <path
+                    d="M6 22C70 12 160 8 250 10c58 1 118 5 164 3-40 6-108 10-176 11-80 1-156 2-232-2z"
+                    fill="#A63C38"
+                    opacity="0.9"
+                  />
+                  <path d="M40 26c90-5 190-7 300-4" stroke="#7d2a27" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.7" />
+                </svg>
+              </div>
+            </div>
+
+            <div className="ab-divider" aria-hidden="true">
+              <span className="ab-divider-line" />
+              <LeafMark className="ab-divider-mark" />
+              <span className="ab-divider-line is-right" />
+            </div>
+          </section>
+
+          {/* ================= MY TOP 3 ANIME ================= */}
+          <section className="ab-anime" aria-labelledby="ab-anime-heading">
+            <header className="ab-section-head">
+              <svg className="ab-shuriken" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 2l2.2 7.8L22 12l-7.8 2.2L12 22l-2.2-7.8L2 12l7.8-2.2z" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
+                <circle cx="12" cy="12" r="1.8" fill="currentColor" />
+              </svg>
+              <span className="ab-mask">
+                <h2 id="ab-anime-heading" className="ab-anime-title">My Top 3 Anime</h2>
               </span>
+              <span className="ab-anime-rule" aria-hidden="true" />
+              <span className="ab-anime-kicker">The series that shaped my mindset</span>
+            </header>
+
+            <div className="ab-anime-grid">
+              {anime.map((a, i) => (
+                <article key={a._id || i} className="ab-anime-card">
+                  <div className="ab-anime-media">
+                    <img src={a.imageUrl || FALLBACK_ANIME[i]?.imageUrl} alt={`${a.title} poster`} loading="lazy" decoding="async" />
+                  </div>
+                  <div className="ab-anime-caption">
+                    <h3>{a.title}</h3>
+                    {a.tags && <p>{a.tags}</p>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          {/* ================= FOOTBALL ================= */}
+          <section className="ab-football" aria-labelledby="ab-football-heading">
+            <div className="ab-fb-media">
+              <img src={football.imageUrl} alt="Football resting on a floodlit pitch" loading="lazy" decoding="async" />
+            </div>
+            <svg className="ab-fb-pitch" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true">
+              <path className="pitch-line" pathLength="1" d="M300 0V160" />
+              <circle className="pitch-line" pathLength="1" cx="300" cy="80" r="46" />
+              <path className="pitch-line" pathLength="1" d="M600 30H520V130H600" />
+              <path className="pitch-line" pathLength="1" d="M0 30H80V130H0" />
+            </svg>
+            <div className="ab-fb-body">
+              <svg className="ab-fb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9" />
+                <polygon points="12 7.5 15.2 9.8 14 13.6 10 13.6 8.8 9.8" />
+                <line x1="12" y1="3" x2="12" y2="7.5" />
+                <line x1="15.2" y1="9.8" x2="20.4" y2="8.8" />
+                <line x1="14" y1="13.6" x2="17.5" y2="18.8" />
+                <line x1="10" y1="13.6" x2="6.5" y2="18.8" />
+                <line x1="8.8" y1="9.8" x2="3.6" y2="8.8" />
+              </svg>
+              <div className="ab-fb-copy">
+                <span className="ab-mask">
+                  <h2 id="ab-football-heading" className="ab-fb-title">{football.title}</h2>
+                </span>
+                <p className="ab-fb-text">{football.description}</p>
+              </div>
+            </div>
+            <div className="ab-fb-role-wrap">
+              <span className="ab-fb-text ab-fb-role-kicker">Playing role</span>
+              <p className="ab-fb-role">
+                <svg viewBox="0 0 24 16" width="22" height="15" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
+                  <rect x="1" y="1" width="22" height="14" rx="1" />
+                  <line x1="12" y1="1" x2="12" y2="15" />
+                  <circle cx="12" cy="8" r="2.6" />
+                  <path d="M1 5h3v6H1M23 5h-3v6h3" />
+                </svg>
+                <span>{football.position}</span>
+              </p>
+            </div>
+          </section>
+
+          {/* ================= CLOSING ACTIONS ================= */}
+          <footer className="about-bottom-bar">
+            <blockquote className="about-pull-quote">
+              <span className="quote-mark" aria-hidden="true">&ldquo;</span>
               <p>
-                Beyond code, you&rsquo;ll probably find me watching anime, playing football, trying
-                new food spots, or planning my next creative project.&rdquo;
+                Beyond code, you&rsquo;ll probably find me watching anime, playing football, trying new food spots,
+                or planning my next creative project.&rdquo;
               </p>
             </blockquote>
 
@@ -639,17 +524,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                 className="about-btn-resume"
                 onClick={embedded ? onOpenResume : () => triggerClose(() => onOpenResume?.())}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                   <line x1="8" y1="13" x2="16" y2="13" />
@@ -666,40 +541,16 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                   title="Open Hokage Monument Contact page"
                 >
                   <span>Get in Touch</span>
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="16"
-                    height="16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="13 6 19 12 13 18" />
                   </svg>
                 </button>
               )}
 
-              <button
-                type="button"
-                className="about-btn-return"
-                onClick={() => triggerClose()}
-              >
+              <button type="button" className="about-btn-return" onClick={() => triggerClose()}>
                 <span>Return to Village</span>
-                <svg
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="13 6 19 12 13 18" />
                 </svg>
@@ -711,4 +562,3 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
     </div>
   );
 }
-

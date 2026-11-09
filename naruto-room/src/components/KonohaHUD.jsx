@@ -4,11 +4,11 @@ import { KONOHA_LOCATIONS } from '../config/locations';
 import { LOCATION_SVGS } from './locationIcons';
 
 const TOP_NAV_ITEMS = [
-  { number: '01', label: 'Intro', modalKey: 'intro', locId: 'main-street' },
-  { number: '02', label: 'Projects', modalKey: 'projects', locId: 'ichiraku-ramen' },
-  { number: '03', label: 'About', modalKey: 'about', locId: 'hokage-office' },
-  { number: '04', label: 'Skills', modalKey: 'skills', locId: 'training-grounds' },
-  { number: '05', label: 'Missions', modalKey: 'achievements', locId: 'mission-board' },
+  { number: '01', label: 'Home', modalKey: 'intro', locId: 'main-street' },
+  { number: '02', label: 'About', modalKey: 'about', locId: 'hokage-office' },
+  { number: '03', label: 'Projects', modalKey: 'projects', locId: 'ichiraku-ramen' },
+  { number: '04', label: 'Experience', modalKey: 'achievements', locId: 'mission-board' },
+  { number: '05', label: 'Skills', modalKey: 'skills', locId: 'training-grounds' },
   { number: '06', label: 'Contact', modalKey: 'contact', locId: 'hokage-monument' },
 ];
 
