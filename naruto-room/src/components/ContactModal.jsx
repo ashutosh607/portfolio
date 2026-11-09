@@ -1,3 +1,4 @@
+import { sectionEntrance } from '../utils/sectionEntrance';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import './ContactModal.css';
@@ -8,6 +9,7 @@ const LINKEDIN_URL = 'https://www.linkedin.com/in/Ashutosh-kadam';
 
 export default function ContactModal({
   isOpen,
+  embedded = false,
   onClose,
   onOpenResume,
   onTeleportToMonument,
@@ -108,7 +110,7 @@ export default function ContactModal({
     isClosingRef.current = false;
     const previousFocus = document.activeElement;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (!embedded) document.body.style.overflow = 'hidden';
 
     const reduced = prefersReducedMotion();
     const ctx = gsap.context(() => {
@@ -129,7 +131,7 @@ export default function ContactModal({
       gsap.set(cards, { opacity: 0, y: 16 });
       gsap.set(footerRef.current, { opacity: 0, y: 12 });
 
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      const tl = sectionEntrance(overlayRef.current, embedded);
       timelineRef.current = tl;
 
       // 1. Dark overlay & background artwork reveal gently
@@ -182,7 +184,7 @@ export default function ContactModal({
 
     // Subtle pointer parallax on the background artwork (desktop only, respects reduced motion)
     let handlePointerMove = null;
-    if (!reduced && bgRef.current) {
+    if (!embedded && !reduced && bgRef.current) {
       const xTo = gsap.quickTo(bgRef.current, 'x', { duration: 0.7, ease: 'power2.out' });
       const yTo = gsap.quickTo(bgRef.current, 'y', { duration: 0.7, ease: 'power2.out' });
       handlePointerMove = (e) => {
@@ -195,7 +197,7 @@ export default function ContactModal({
     }
 
     const focusTimer = requestAnimationFrame(() => {
-      closeBtnRef.current?.focus({ preventScroll: true });
+      if (!embedded) closeBtnRef.current?.focus({ preventScroll: true });
     });
 
     return () => {
@@ -205,14 +207,16 @@ export default function ContactModal({
       }
       timelineRef.current?.kill();
       ctx.revert();
-      document.body.style.overflow = previousOverflow;
-      previousFocus?.focus?.({ preventScroll: true });
+      if (!embedded) {
+        document.body.style.overflow = previousOverflow;
+        previousFocus?.focus?.({ preventScroll: true });
+      }
     };
-  }, [isOpen]);
+  }, [isOpen, embedded]);
 
   // ESC to close & Focus Trap
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || embedded) return;
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -239,7 +243,7 @@ export default function ContactModal({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, triggerClose]);
+  }, [isOpen, embedded, triggerClose]);
 
   if (!isOpen) return null;
 
@@ -247,8 +251,8 @@ export default function ContactModal({
     <div
       ref={overlayRef}
       className="contact-monument-overlay"
-      role="dialog"
-      aria-modal="true"
+      role={embedded ? "region" : "dialog"}
+      aria-modal={embedded ? undefined : true}
       aria-labelledby="contact-main-heading"
     >
       {/* Full-Viewport Hokage Monument Background Artwork */}
@@ -497,7 +501,7 @@ export default function ContactModal({
                 <button
                   type="button"
                   className="contact-action-pill"
-                  onClick={() => triggerClose(() => onOpenResume?.())}
+                  onClick={embedded ? onOpenResume : () => triggerClose(() => onOpenResume?.())}
                 >
                   <span>View Resume</span>
                   <span className="action-arrow" aria-hidden="true">

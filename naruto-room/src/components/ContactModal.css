@@ -484,6 +484,7 @@
     flex-direction: column;
   }
 
+  .contact-btn-resume,
   .contact-btn-teleport,
   .contact-btn-return {
     width: 100%;

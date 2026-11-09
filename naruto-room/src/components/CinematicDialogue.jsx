@@ -171,8 +171,11 @@ export default function CinematicDialogue({
       // Second press: Advance to the next dialogue line
       setCurrentLineIndex((prev) => prev + 1);
       setIsTyping(true);
+    } else {
+      // Final press: Cleanly close dialogue
+      performAnimatedClose();
     }
-  }, [isClosing, currentLine, isTyping, isFinalLine]);
+  }, [isClosing, currentLine, isTyping, isFinalLine, performAnimatedClose]);
 
   // Fast Forward Button: Jump straight to final line & reveal choices
   const handleFastForward = useCallback(() => {
@@ -228,6 +231,8 @@ export default function CinematicDialogue({
 
         if (!isFinalLine || isTyping) {
           handleAdvance();
+        } else {
+          performAnimatedClose();
         }
       }
     };

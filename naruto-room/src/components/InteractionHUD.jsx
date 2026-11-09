@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useRef, useMemo, useCallback } from 'react';
 import gsap from 'gsap';
 import './InteractionHUD.css';
 
@@ -9,91 +9,24 @@ const InteractionHUD = React.memo(function InteractionHUD({
   onActivateTarget,
   isBlocked = false,
 }) {
-  const pillRef = useRef(null);
-  const dockRef = useRef(null);
   const highlightRef = useRef(null);
   const listRef = useRef(null);
 
-  // Keep a displayed copy so exit fade-out animation can complete cleanly
-  const [renderedTargets, setRenderedTargets] = useState([]);
-  const [renderedMode, setRenderedMode] = useState('none'); // 'none' | 'single' | 'multiple'
-  const fadeTimelineRef = useRef(null);
-
+  // If blocked (e.g. dialogue or modal active) or no targets nearby, immediately render nothing!
   const activeTargets = isBlocked ? [] : nearbyTargets;
-  const targetMode =
-    activeTargets.length === 0
-      ? 'none'
-      : activeTargets.length === 1
-      ? 'single'
-      : 'multiple';
-
-  const prefersReducedMotion = () =>
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Sync rendered targets and run restrained 150-200ms GSAP transitions between states
-  useEffect(() => {
-    fadeTimelineRef.current?.kill();
-
-    if (targetMode === 'none') {
-      if (renderedMode === 'none') return;
-
-      const activeEl = renderedMode === 'single' ? pillRef.current : dockRef.current;
-      if (!activeEl || prefersReducedMotion()) {
-        setRenderedMode('none');
-        setRenderedTargets([]);
-        return;
-      }
-
-      fadeTimelineRef.current = gsap.to(activeEl, {
-        opacity: 0,
-        y: 5,
-        duration: 0.15,
-        ease: 'power2.in',
-        onComplete: () => {
-          setRenderedMode('none');
-          setRenderedTargets([]);
-        },
-      });
-      return;
-    }
-
-    // Entering range or switching between single <-> multiple
-    setRenderedTargets(activeTargets);
-    setRenderedMode(targetMode);
-  }, [targetMode, activeTargets, renderedMode]);
-
-  // Animate entrance when renderedMode becomes 'single' or 'multiple'
-  useEffect(() => {
-    if (renderedMode === 'none') return;
-    const el = renderedMode === 'single' ? pillRef.current : dockRef.current;
-    if (!el) return;
-
-    if (prefersReducedMotion()) {
-      gsap.set(el, { opacity: 1, y: 0 });
-      return;
-    }
-
-    gsap.killTweensOf(el);
-    gsap.fromTo(
-      el,
-      { opacity: 0, y: 6 },
-      { opacity: 1, y: 0, duration: 0.18, ease: 'power2.out' }
-    );
-  }, [renderedMode]);
 
   // Resolve currently selected index
   const selectedIndex = useMemo(() => {
-    if (renderedTargets.length === 0) return 0;
-    const idx = renderedTargets.findIndex((t) => t.uid === selectedUid);
+    if (activeTargets.length === 0) return 0;
+    const idx = activeTargets.findIndex((t) => t.uid === selectedUid);
     return idx >= 0 ? idx : 0;
-  }, [renderedTargets, selectedUid]);
+  }, [activeTargets, selectedUid]);
 
-  const selectedTarget = renderedTargets[selectedIndex] || renderedTargets[0] || null;
+  const selectedTarget = activeTargets[selectedIndex] || activeTargets[0] || null;
 
   // Smooth GSAP highlight bar slide when switching targets in the multi-interaction dock
   useEffect(() => {
-    if (renderedMode !== 'multiple' || !highlightRef.current || !listRef.current) return;
+    if (activeTargets.length <= 1 || !highlightRef.current || !listRef.current) return;
     const rows = listRef.current.querySelectorAll('.rpg-dock-row');
     const activeRow = rows[selectedIndex];
     if (!activeRow) return;
@@ -101,7 +34,11 @@ const InteractionHUD = React.memo(function InteractionHUD({
     const topOffset = activeRow.offsetTop;
     const rowHeight = activeRow.offsetHeight;
 
-    if (prefersReducedMotion()) {
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) {
       gsap.set(highlightRef.current, { y: topOffset, height: rowHeight });
     } else {
       gsap.to(highlightRef.current, {
@@ -112,7 +49,7 @@ const InteractionHUD = React.memo(function InteractionHUD({
         overwrite: 'auto',
       });
     }
-  }, [renderedMode, selectedIndex, renderedTargets.length]);
+  }, [selectedIndex, activeTargets.length]);
 
   const handleTrigger = useCallback(
     (target) => {
@@ -196,15 +133,15 @@ const InteractionHUD = React.memo(function InteractionHUD({
     };
   }, [isBlocked, activeTargets, selectedUid, onSelectTarget, onActivateTarget]);
 
-  if (renderedMode === 'none' || renderedTargets.length === 0) {
+  // NEVER render if no targets are active!
+  if (activeTargets.length === 0) {
     return null;
   }
 
   return (
     <div className="rpg-interaction-layer" aria-live="polite">
-      {renderedMode === 'single' && selectedTarget && (
+      {activeTargets.length === 1 && selectedTarget && (
         <button
-          ref={pillRef}
           type="button"
           className="rpg-single-pill"
           onClick={() => handleTrigger(selectedTarget)}
@@ -217,9 +154,8 @@ const InteractionHUD = React.memo(function InteractionHUD({
         </button>
       )}
 
-      {renderedMode === 'multiple' && (
+      {activeTargets.length > 1 && (
         <aside
-          ref={dockRef}
           className="rpg-nearby-dock"
           aria-label="Nearby Interactions"
         >
@@ -233,7 +169,7 @@ const InteractionHUD = React.memo(function InteractionHUD({
           <div ref={listRef} className="rpg-dock-list" role="listbox">
             <div ref={highlightRef} className="rpg-dock-highlight" aria-hidden="true" />
 
-            {renderedTargets.map((item, idx) => {
+            {activeTargets.map((item, idx) => {
               const isSelected = idx === selectedIndex;
               return (
                 <button
@@ -263,4 +199,3 @@ const InteractionHUD = React.memo(function InteractionHUD({
 });
 
 export default InteractionHUD;
-

@@ -196,12 +196,12 @@
 .p2d-main {
   position: relative;
   z-index: 1;
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 2.2rem 1.75rem 5rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4.5rem;
+  gap: clamp(32px, 8vh, 100px);
 }
 
 /* WebGL Notice Banner */
@@ -222,11 +222,7 @@
 .p2d-section {
   scroll-margin-top: 5.5rem;
   position: relative;
-  border-radius: 22px;
-  border: 1px solid rgba(177, 89, 76, 0.32);
-  background: rgba(20, 13, 17, 0.88);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.52);
-  overflow: hidden;
+  min-width: 0;
 }
 
 .p2d-section-bg {
@@ -1079,12 +1075,12 @@
 
 @media (max-width: 768px) {
   .p2d-navbar {
-    padding: 0.7rem 1rem;
-    flex-wrap: wrap;
+    padding: 0.65rem 1rem;
+    flex-wrap: nowrap;
   }
 
   .p2d-section-inner {
-    padding: 1.65rem 1.25rem;
+    padding: 1.5rem 1.15rem;
   }
 
   .p2d-projects-grid,
@@ -1097,3 +1093,44 @@
   }
 }
 
+
+/* The village's interactive surfaces participate in the 2D page's scroll flow. */
+.p2d-root {overflow-x:clip;overflow-y:visible}
+.p2d-book-section {container-type:inline-size}
+.ramen-inline.ramen-book-overlay {
+  position:relative; inset:auto; z-index:0; min-height:min(82dvh,820px); padding:55px 0 48px;
+}
+.ramen-inline .ramen-book-container {
+  width:min(85cqw,160dvh);height:min(68dvh,41cqw);top:0;
+  left:calc(-.25 * min(85cqw,160dvh) * (1 - var(--open-progress)));
+}
+.ramen-inline .ramen-menu-close-trigger[hidden] {display:none}
+.ramen-inline .ramen-top-header {inset:12px 4% auto}
+.ramen-inline .menu-page-body,.ramen-inline .spread2-content-body {overscroll-behavior-y:auto}
+.ms-inline.ms-root {position:relative;inset:auto;display:grid;place-items:center;height:auto;min-height:65dvh;padding:clamp(32px,5vw,78px) 0}
+.ms-inline .ms-stage {width:87%;height:auto}
+.ms-inline .ms-paper,.ms-inline .ms-interior,.ms-inline .ms-index,.ms-inline .ms-list,.ms-inline .ms-detailwrap {height:auto;overflow:visible}
+.ms-inline .ms-paper {min-height:54dvh;background-color:#f0dfbc}
+.ms-inline .ms-interior {min-height:54dvh}
+.ms-inline .ms-index[hidden] {display:none}
+.ms-inline .ms-bundle {top:min(32dvh,50%)}
+.ms-inline .ms-viewer {height:min(75dvh,760px)}
+.ms-inline .ms-spindle::before,.ms-inline .ms-spindle::after {height:clamp(9px,1.5vw,20px)}
+@media(max-width:860px){
+ .ramen-inline.ramen-book-overlay {min-height:min(78dvh,700px);padding:48px 0 32px}
+ .ramen-inline .ramen-book-container {width:90cqw;max-width:540px;left:0;height:min(74dvh,640px)}
+ .ms-inline .ms-stage {width:94%}
+ .ms-inline .ms-interior {padding:16px 16px}
+}
+@media(prefers-reduced-motion:reduce){.portfolio-2d-wrapper {scroll-behavior:auto!important}}
+.p2d-village-scene > :is(.about-editorial-overlay,.skills-modal-overlay,.contact-monument-overlay) {
+  position:relative;inset:auto;z-index:0;height:auto;overflow:clip;
+}
+.p2d-village-scene :is(.about-editorial-scroll-container,.contact-scroll-container) {height:auto;overflow:visible}
+.p2d-village-scene :is(.skills-env-bg,.skills-env-vignette) {position:absolute}
+.p2d-village-scene :is(.about-minimal-close-btn,.about-btn-return,.contact-minimal-close-btn,.contact-btn-return,.skills-close-btn) {display:none}
+.p2d-village-scene .skills-modal-stage {min-height:auto}
+.entry-gate.gate-inline {position:relative;inset:auto;height:auto;display:block}
+.gate-inline .gate-surface {max-height:none;width:100%;overflow:visible;border:0;background:#140d11}
+.gate-inline .gate-blossom {z-index:1;opacity:.4;width:70px}
+.gate-inline .gate-dimmer {pointer-events:none}

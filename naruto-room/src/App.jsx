@@ -15,6 +15,7 @@ import PortfolioModals from './components/PortfolioModals';
 import FallbackPortfolio2D from './components/FallbackPortfolio2D';
 import './App.css';
 import { INITIAL_SPAWN } from './utils/constants';
+import { KONOHA_LOCATIONS } from './config/locations';
 import {
   buildInteractableRegistry,
   detectNearbyTargets,
@@ -107,9 +108,9 @@ class AppErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <FallbackPortfolio2D
-          webglError={this.state.error?.message || 'WebGL initialization error'}
-        />
+        <div className="portfolio-2d-wrapper">
+          <FallbackPortfolio2D webglError={this.state.error?.message || 'WebGL initialization error'}/>
+        </div>
       );
     }
     return this.props.children;
@@ -245,25 +246,57 @@ function AppContent() {
     setActiveDialogueCharacter(null);
   }, []);
 
-  const handleTriggerAction = useCallback((action) => {
-    if (action === 'open_projects') {
-      setActiveModal('projects');
-    } else if (action === 'open_skills') {
-      setActiveModal('skills');
-    } else if (action === 'open_about') {
-      setActiveModal('about');
-    } else if (action === 'open_resume') {
-      setActiveModal('resume');
-    } else if (action === 'open_achievements') {
-      setActiveModal('achievements');
-    } else if (action === 'open_contact') {
-      setActiveModal('contact');
+  // Auto-close dialogue if player ever walks away from active character (> 5.5m)
+  useEffect(() => {
+    if (!activeDialogueCharacter) return;
+    const charPos = activeDialogueCharacter.position;
+    if (!charPos) return;
+
+    const dx = narutoPos[0] - charPos[0];
+    const dz = narutoPos[2] - charPos[2];
+    const dist = Math.hypot(dx, dz);
+    const maxAllowedDist = (activeDialogueCharacter.interactionDistance || 3.5) + 2.0;
+
+    if (dist > maxAllowedDist) {
+      setActiveDialogueCharacter(null);
     }
-  }, []);
+  }, [narutoPos, activeDialogueCharacter]);
 
   const handleOpenModal = useCallback((modalKey) => {
     setActiveModal(modalKey);
+    if (modalKey) {
+      const matchedLoc = KONOHA_LOCATIONS.find((l) => l.modalKey === modalKey);
+      if (matchedLoc) {
+        const curPos = narutoPosRef.current || INITIAL_SPAWN.position;
+        const distToLandmark = Math.hypot(
+          curPos[0] - matchedLoc.position[0],
+          curPos[2] - matchedLoc.position[2]
+        );
+        if (distToLandmark > 3.5) {
+          setFastTravelTarget([...matchedLoc.position]);
+        }
+      }
+    }
   }, []);
+
+  const handleTriggerAction = useCallback(
+    (action) => {
+      if (action === 'open_projects') {
+        handleOpenModal('projects');
+      } else if (action === 'open_skills') {
+        handleOpenModal('skills');
+      } else if (action === 'open_about') {
+        handleOpenModal('about');
+      } else if (action === 'open_resume') {
+        setActiveModal('resume');
+      } else if (action === 'open_achievements') {
+        handleOpenModal('achievements');
+      } else if (action === 'open_contact') {
+        handleOpenModal('contact');
+      }
+    },
+    [handleOpenModal]
+  );
 
   const handleCloseModal = useCallback(() => {
     setActiveModal(null);

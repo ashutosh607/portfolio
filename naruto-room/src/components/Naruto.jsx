@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useGLTF, useAnimations } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import {
   INITIAL_SPAWN,
   VILLAGE_BOUNDS,
@@ -25,6 +25,14 @@ const shadowDiscMat = new THREE.MeshBasicMaterial({
   depthWrite: false,
 });
 
+// Pre-allocated scratch math objects for 0-GC skeletal walk/sprint blending in useFrame
+const _axisX = new THREE.Vector3(1, 0, 0);
+const _axisY = new THREE.Vector3(0, 1, 0);
+const _axisZ = new THREE.Vector3(0, 0, 1);
+const _tmpQuat = new THREE.Quaternion();
+const _tmpQuat2 = new THREE.Quaternion();
+const _walkQuat = new THREE.Quaternion();
+
 const Naruto = React.memo(function Naruto({
   terrainMesh,
   cameraAngleRef,
@@ -40,6 +48,7 @@ const Naruto = React.memo(function Naruto({
 }) {
   const group = useRef();
   const innerModel = useRef();
+  const { invalidate } = useThree();
 
   // Load the Naruto GLTF
   const { scene, animations } = useGLTF('/models/naruto/source/untitled.glb');
@@ -82,9 +91,11 @@ const Naruto = React.memo(function Naruto({
   // Keep track of active key codes for HUD display
   const activeKeyMap = useRef({});
 
-  // Bones cache and custom idle pose blend state (0 = hands-down standing idle, 1 = running clip)
+  // Bones cache, upright walk cycle phase, and smooth blend weights (idle <-> walk <-> ninja sprint)
   const boneDataRef = useRef([]);
   const animBlendRef = useRef(0);
+  const sprintBlendRef = useRef(0);
+  const walkPhaseRef = useRef(0);
   const idleLockedRef = useRef(false);
 
   // Reset character position if requested
@@ -168,10 +179,12 @@ const Naruto = React.memo(function Naruto({
         playerPosRef.current[0] = tx;
         playerPosRef.current[1] = ty;
         playerPosRef.current[2] = tz;
+        playerPosRef.current[3] = nextRot;
       }
       onPositionUpdate?.([tx, ty, tz]);
+      invalidate();
     }
-  }, [fastTravelTarget, onPositionUpdate, playerPosRef, terrainMesh]);
+  }, [fastTravelTarget, onPositionUpdate, playerPosRef, terrainMesh, invalidate]);
 
   // Clear keys when movement is paused (e.g. dialogue or portfolio modal open)
   useEffect(() => {
@@ -182,12 +195,20 @@ const Naruto = React.memo(function Naruto({
       keys.current.right = false;
       keys.current.sprint = false;
       keys.current.jump = false;
+      if (touchInputRef?.current) {
+        touchInputRef.current.forward = false;
+        touchInputRef.current.backward = false;
+        touchInputRef.current.left = false;
+        touchInputRef.current.right = false;
+        touchInputRef.current.sprint = false;
+        touchInputRef.current.jump = false;
+      }
       if (Object.keys(activeKeyMap.current).length > 0) {
         activeKeyMap.current = {};
         onKeysChange?.({});
       }
     }
-  }, [isMovementPaused, onKeysChange]);
+  }, [isMovementPaused, onKeysChange, touchInputRef]);
 
   // Configure model materials & immediately apply natural hands-down standing pose to skeleton
   useEffect(() => {
@@ -230,9 +251,11 @@ const Naruto = React.memo(function Naruto({
           child.quaternion.copy(idleQuat);
         }
 
+        const shortName = child.name.replace(/^mixamorig:?/, '');
         bonesList.push({
           bone: child,
           name: child.name,
+          shortName,
           baseQuat: child.userData.__baseQuat,
           basePos: child.userData.__basePos,
           idleQuat: child.userData.__idleQuat,
@@ -454,7 +477,7 @@ const Naruto = React.memo(function Naruto({
     group.current.position.set(p.x, p.y, p.z);
     group.current.rotation.y = p.rotation;
 
-    // ================= GLITCH-FREE ANIMATION & STANDING HANDS-DOWN POSE =================
+    // ================= GLITCH-FREE ANIMATION: IDLE <-> NORMAL WALK <-> NINJA SPRINT =================
     const runClip = actions['Armature|mixamo.com|Layer0'];
 
     let stateStr = 'idle';
@@ -464,55 +487,153 @@ const Naruto = React.memo(function Naruto({
       stateStr = isSprinting ? 'sprinting' : 'walking';
     }
 
-    // Smoothly ramp animation blend weight between 0 (standing hands-down) and 1 (running)
-    const wantsRun = p.speed > 0.4;
-    const targetBlend = wantsRun ? 1.0 : 0.0;
-    animBlendRef.current += (targetBlend - animBlendRef.current) * Math.min(1, dt * 11);
-    const blend = animBlendRef.current;
+    // 1. Overall locomotion blend: 0 = standing idle, 1 = moving (walking or sprinting)
+    const wantsMove = p.speed > 0.4 || !p.isGrounded;
+    const targetMoveBlend = wantsMove ? 1.0 : 0.0;
+    animBlendRef.current += (targetMoveBlend - animBlendRef.current) * Math.min(1, dt * 11);
+    const moveBlend = animBlendRef.current;
+
+    // 2. Sprint posture blend: 0 = upright normal walk, 1 = leaning ninja sprint clip
+    const wantsSprintPose = (wantsMove && isSprinting) || !p.isGrounded;
+    const targetSprintBlend = wantsSprintPose ? 1.0 : 0.0;
+    sprintBlendRef.current += (targetSprintBlend - sprintBlendRef.current) * Math.min(1, dt * 9);
+    const sprintBlend = sprintBlendRef.current;
+
     const bones = boneDataRef.current;
 
-    if (runClip) {
-      if (blend > 0.01) {
-        idleLockedRef.current = false;
-        if (!runClip.isRunning()) {
-          runClip.reset();
-          runClip.setEffectiveWeight(1.0);
-          runClip.play();
-        }
-        runClip.timeScale = !p.isGrounded ? 0.35 : isSprinting ? 1.45 : 1.0;
+    if (moveBlend > 0.008 && bones.length > 0) {
+      idleLockedRef.current = false;
 
-        // Blend animated bone transforms directly with hands-down idleQuat (avoids PropertyMixer T-pose fade glitches)
-        const idleWeight = 1.0 - blend;
-        if (idleWeight > 0.005 && bones.length > 0) {
-          for (let i = 0, len = bones.length; i < len; i++) {
-            const b = bones[i];
-            b.bone.quaternion.slerp(b.idleQuat, idleWeight);
-            b.bone.position.lerp(b.basePos, idleWeight);
+      // Advance upright walk cycle phase proportional to movement speed
+      const stepRate = Math.max(2.2, Math.min(p.speed, WALK_SPEED * 1.15)) * 1.48;
+      walkPhaseRef.current = (walkPhaseRef.current + dt * stepRate) % (Math.PI * 2);
+      const phase = walkPhaseRef.current;
+
+      // Sine wave gait signals for alternating left/right stride & counter-swing
+      const leftSwing = Math.sin(phase);
+      const rightSwing = -leftSwing;
+      const leftKneeLift = Math.max(0, Math.cos(phase - 0.32));
+      const rightKneeLift = Math.max(0, -Math.cos(phase - 0.32));
+
+      // Only drive the Mixamo ninja-run clip when sprinting (or blending out of sprint / jumping)
+      if (runClip) {
+        if (sprintBlend > 0.008) {
+          if (!runClip.isRunning()) {
+            runClip.reset();
+            runClip.setEffectiveWeight(1.0);
+            runClip.play();
           }
-        }
-      } else {
-        if (runClip.isRunning()) {
+          runClip.timeScale = !p.isGrounded ? 0.35 : 1.45;
+        } else if (runClip.isRunning()) {
           runClip.stop();
-          idleLockedRef.current = false;
         }
-        // Lock skeleton cleanly into hands-down standing pose on the exact frame runClip stops
-        if (!idleLockedRef.current && bones.length > 0) {
-          for (let i = 0, len = bones.length; i < len; i++) {
-            const b = bones[i];
-            b.bone.quaternion.copy(b.idleQuat);
-            b.bone.position.copy(b.basePos);
+      }
+
+      const walkWeightFromIdle = 1.0 - moveBlend;
+      const walkWeightFromSprint = 1.0 - sprintBlend;
+
+      for (let i = 0, len = bones.length; i < len; i++) {
+        const b = bones[i];
+        _walkQuat.copy(b.idleQuat);
+
+        // Construct natural upright human walking pose per bone
+        switch (b.shortName) {
+          case 'LeftUpLeg':
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, leftSwing * 0.48));
+            break;
+          case 'RightUpLeg':
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, rightSwing * 0.48));
+            break;
+          case 'LeftLeg':
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, -(0.06 + 0.54 * leftKneeLift)));
+            break;
+          case 'RightLeg':
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, -(0.06 + 0.54 * rightKneeLift)));
+            break;
+          case 'LeftFoot':
+            _walkQuat.multiply(
+              _tmpQuat.setFromAxisAngle(_axisX, -0.14 * leftKneeLift + 0.12 * leftSwing)
+            );
+            break;
+          case 'RightFoot':
+            _walkQuat.multiply(
+              _tmpQuat.setFromAxisAngle(_axisX, -0.14 * rightKneeLift + 0.12 * rightSwing)
+            );
+            break;
+          case 'LeftArm':
+            // Natural arm counter-swing at sides (opposite to left leg)
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisZ, -leftSwing * 0.34));
+            break;
+          case 'RightArm':
+            // Same signed local Z angle swings right arm opposite to left arm in world space
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisZ, -leftSwing * 0.34));
+            break;
+          case 'LeftForeArm':
+            _walkQuat.multiply(
+              _tmpQuat.setFromAxisAngle(_axisZ, 0.2 + 0.16 * Math.max(0, -leftSwing))
+            );
+            break;
+          case 'RightForeArm':
+            _walkQuat.multiply(
+              _tmpQuat.setFromAxisAngle(_axisZ, -(0.2 + 0.16 * Math.max(0, leftSwing)))
+            );
+            break;
+          case 'Spine':
+            _walkQuat
+              .multiply(_tmpQuat.setFromAxisAngle(_axisX, 0.035))
+              .multiply(_tmpQuat2.setFromAxisAngle(_axisY, -leftSwing * 0.055));
+            break;
+          case 'Spine1':
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisY, -leftSwing * 0.045));
+            break;
+          default:
+            break;
+        }
+
+        // Smooth fade between standing idle and upright walk
+        if (walkWeightFromIdle > 0.005) {
+          _walkQuat.slerp(b.idleQuat, walkWeightFromIdle);
+        }
+
+        // Blend between upright normal walk (sprintBlend = 0) and ninja sprint clip (sprintBlend = 1)
+        if (sprintBlend > 0.008 && runClip) {
+          if (walkWeightFromSprint > 0.005) {
+            b.bone.quaternion.slerp(_walkQuat, walkWeightFromSprint);
+            b.bone.position.lerp(b.basePos, walkWeightFromSprint);
           }
-          idleLockedRef.current = true;
+        } else {
+          b.bone.quaternion.copy(_walkQuat);
+          b.bone.position.copy(b.basePos);
         }
+      }
+    } else {
+      if (runClip && runClip.isRunning()) {
+        runClip.stop();
+        idleLockedRef.current = false;
+      }
+      // Lock skeleton cleanly into hands-down standing pose on the exact frame movement stops
+      if (!idleLockedRef.current && bones.length > 0) {
+        for (let i = 0, len = bones.length; i < len; i++) {
+          const b = bones[i];
+          b.bone.quaternion.copy(b.idleQuat);
+          b.bone.position.copy(b.basePos);
+        }
+        idleLockedRef.current = true;
       }
     }
 
-    // Gentle breathing motion when idle on the ground
-    if (p.speed <= 0.4 && p.isGrounded && innerModel.current) {
-      const breathTime = state.clock.getElapsedTime();
-      innerModel.current.position.y = Math.sin(breathTime * 2.5) * 0.008;
-    } else if (innerModel.current) {
-      innerModel.current.position.y = 0;
+    // Subtle vertical cadence bob during normal walking & gentle breathing when idle
+    if (innerModel.current) {
+      if (p.speed <= 0.4 && p.isGrounded) {
+        const breathTime = state.clock.getElapsedTime();
+        innerModel.current.position.y = Math.sin(breathTime * 2.5) * 0.008;
+      } else if (p.isGrounded && sprintBlend < 0.99) {
+        const walkBob =
+          Math.abs(Math.sin(walkPhaseRef.current)) * 0.024 * moveBlend * (1.0 - sprintBlend);
+        innerModel.current.position.y = walkBob;
+      } else {
+        innerModel.current.position.y = 0;
+      }
     }
 
     // Update direct reference for 60fps smooth camera & proximity tracking without React re-renders

@@ -9,7 +9,7 @@ import './RamenBookModal.css';
 
 const PROJECTS_PER_SPREAD = 3;
 
-export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialProjectId = null }) {
+export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialProjectId = null, embedded = false, onVillage }) {
   const [bookState, setBookState] = useState('closed');
   const [currentSpread, setCurrentSpread] = useState(1);
   const [selectedProjectIndex, setSelectedProjectIndex] = useState(0);
@@ -72,7 +72,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     const generation = generationRef;
     const previousFocus = document.activeElement;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (!embedded) document.body.style.overflow = 'hidden';
     // Reset the external animation session when the modal is reopened.
     // eslint-disable-next-line react/set-state-in-effect
     setBookState('closed');
@@ -104,7 +104,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           interiorSpreadRef.current.querySelector('.is-current .page-left')
         );
       }
-      dialogRef.current?.querySelector('.cover-open-trigger-btn')?.focus({ preventScroll: true });
+      if (!embedded) dialogRef.current?.querySelector('.cover-open-trigger-btn')?.focus({ preventScroll: true });
     });
 
     return () => {
@@ -113,10 +113,12 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       timelineRef.current?.kill();
       surfaceRef.current?.dispose();
       surfaceRef.current = null;
-      document.body.style.overflow = previousOverflow;
-      previousFocus?.focus?.({ preventScroll: true });
+      if (!embedded) {
+        document.body.style.overflow = previousOverflow;
+        previousFocus?.focus?.({ preventScroll: true });
+      }
     };
-  }, [isOpen, initialProjectId, projects, unlock]);
+  }, [isOpen, initialProjectId, projects, unlock, embedded]);
 
   const handleOpenBook = useCallback(() => {
     if (bookState !== 'closed' || !lock()) return;
@@ -139,7 +141,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       onComplete: () => {
         setBookState('open');
         unlock();
-        requestAnimationFrame(() =>
+        if (!embedded) requestAnimationFrame(() =>
           interiorSpreadRef.current?.querySelector('.is-current .menu-dish-item')?.focus({ preventScroll: true })
         );
       },
@@ -199,12 +201,25 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           0
         );
     }
-  }, [bookState, lock, unlock]);
+  }, [bookState, lock, unlock, embedded]);
+
+  const autoOpened = useRef(false);
+  useEffect(() => {
+    if (!embedded || autoOpened.current || !isOpen) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting || autoOpened.current) return;
+      autoOpened.current = true;
+      observer.disconnect();
+      handleOpenBook();
+    }, { threshold: 0.35 });
+    observer.observe(dialogRef.current);
+    return () => observer.disconnect();
+  }, [embedded, isOpen, handleOpenBook]);
 
   const handleCloseBook = useCallback(() => {
     if (isTransitioningRef.current) return;
     if (bookState === 'closed') {
-      onClose();
+      if (!embedded) onClose();
       return;
     }
     if (!lock()) return;
@@ -229,7 +244,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         setBookState('closed');
         const action = afterCloseRef.current;
         afterCloseRef.current = null;
-        onClose();
+        if (!embedded) onClose();
         action?.();
       },
     });
@@ -287,7 +302,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
           0
         );
     }
-  }, [bookState, currentSpread, onClose, lock, unlock]);
+  }, [bookState, currentSpread, onClose, lock, unlock, embedded]);
 
   const handleSelectProject = useCallback(index => {
     if (bookState !== 'open' || currentSpread > menuPages || !lock()) return;
@@ -357,7 +372,8 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = event => {
-      if (event.key === 'Tab') {
+      if (embedded && !dialogRef.current?.contains(event.target)) return;
+      if (!embedded && event.key === 'Tab') {
         const controls = [...dialogRef.current.querySelectorAll('button:not(:disabled), a[href], [tabindex="0"]')].filter(node => node.getClientRects().length && getComputedStyle(node).visibility === 'visible' && !node.closest('[inert]'));
         const first = controls[0];
         const last = controls.at(-1);
@@ -384,7 +400,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, bookState, currentSpread, isMobileDetailView, selectedProjectIndex, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
+  }, [embedded, isOpen, bookState, currentSpread, isMobileDetailView, selectedProjectIndex, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
 
   const handleTouchEnd = event => {
     if (!touchRef.current || !mobileView() || busy) return;
@@ -409,11 +425,11 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   return (
     <div
       ref={dialogRef}
-      className="ramen-book-overlay"
+      className={embedded ? "ramen-book-overlay ramen-inline" : "ramen-book-overlay"}
       aria-busy={busy}
-      onClick={handleCloseBook}
-      role="dialog"
-      aria-modal="true"
+      onClick={embedded ? undefined : handleCloseBook}
+      role={embedded ? "region" : "dialog"}
+      aria-modal={embedded ? undefined : true}
       aria-label="Ichiraku Ramen Projects Menu"
     >
       <div className="ichiraku-scene" aria-hidden="true"><div className="ichiraku-atmosphere">
@@ -434,9 +450,10 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
             onClick={handleCloseBook}
             disabled={busy}
             title="Close Book (ESC)"
-            aria-label="Close menu"
+            aria-label={embedded ? "Close book" : "Close menu"}
+            hidden={embedded && bookState === "closed"}
           >
-            <span className="close-label-text">Projects Menu</span>
+            <span className="close-label-text">{embedded ? 'Close book' : 'Projects Menu'}</span>
             <span className="close-dash-sep">—</span>
             <span className="close-x-glyph">✕</span>
           </button>
@@ -539,7 +556,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
               inert={currentSpread !== number} aria-hidden={currentSpread !== number}>
               <ProjectSpread projects={entries} selected={currentSpread === number ? currentProject : entries[0]}
                 onSelect={project => handleSelectProject(projects.indexOf(project))}
-                onBack={() => setIsMobileDetailView(false)} onVillage={handleCloseBook} navigation={navigation(number)}/>
+                onBack={() => setIsMobileDetailView(false)} onVillage={embedded ? onVillage : handleCloseBook} navigation={navigation(number)}/>
             </div>;
           })}
           <div data-spread={totalSpreads} className={spreadClass(totalSpreads)} inert={currentSpread !== totalSpreads}

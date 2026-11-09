@@ -556,6 +556,62 @@
   }
 }
 
+@media (max-width: 480px) {
+  .dlg-bottom-gradient {
+    height: 56vh;
+    min-height: 290px;
+    max-height: 440px;
+  }
+
+  .dlg-stage-container {
+    padding: 0 12px max(14px, env(safe-area-inset-bottom));
+    gap: 8px;
+  }
+
+  .dlg-main-row {
+    gap: 11px;
+    align-items: flex-start;
+  }
+
+  .dlg-portrait-stage {
+    width: 66px;
+    height: 66px;
+    margin-top: 2px;
+  }
+
+  .dlg-portrait-medallion {
+    width: 56px;
+    height: 56px;
+  }
+
+  .dlg-speech-paragraph {
+    font-size: 16px;
+    line-height: 1.36;
+  }
+
+  .dlg-choices-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    max-height: 34dvh;
+    overflow-y: auto;
+  }
+
+  .dlg-choice-pill {
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: space-between;
+    padding: 9px 14px;
+    font-size: 12.5px;
+  }
+
+  .dlg-horizon-wave-svg {
+    left: 6px;
+    right: 112px;
+    width: calc(100% - 118px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .dlg-next-chevron-btn,
   .dlg-typewriter-caret,

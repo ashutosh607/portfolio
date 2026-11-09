@@ -1,3 +1,4 @@
+import { sectionEntrance } from '../utils/sectionEntrance';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import './AboutModal.css';
@@ -155,7 +156,7 @@ const DRIVE_VALUES = [
   },
 ];
 
-export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContact }) {
+export default function AboutModal({ embedded = false, isOpen, onClose, onOpenResume, onOpenContact }) {
   const overlayRef = useRef(null);
   const bgRef = useRef(null);
   const closeBtnRef = useRef(null);
@@ -239,7 +240,7 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
     isClosingRef.current = false;
     const previousFocus = document.activeElement;
     const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    if (!embedded) document.body.style.overflow = 'hidden';
 
     const reduced = prefersReducedMotion();
     const ctx = gsap.context(() => {
@@ -280,7 +281,7 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
       gsap.set(driveItems, { opacity: 0, y: 12 });
       gsap.set(footerRef.current, { opacity: 0, y: 12 });
 
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      const tl = sectionEntrance(overlayRef.current, embedded);
       timelineRef.current = tl;
 
       // 1. Background fades in smoothly
@@ -372,21 +373,23 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
     }, overlayRef);
 
     const focusTimer = requestAnimationFrame(() => {
-      closeBtnRef.current?.focus({ preventScroll: true });
+      if (!embedded) closeBtnRef.current?.focus({ preventScroll: true });
     });
 
     return () => {
       cancelAnimationFrame(focusTimer);
       timelineRef.current?.kill();
       ctx.revert();
-      document.body.style.overflow = previousOverflow;
-      previousFocus?.focus?.({ preventScroll: true });
+      if (!embedded) {
+        document.body.style.overflow = previousOverflow;
+        previousFocus?.focus?.({ preventScroll: true });
+      }
     };
-  }, [isOpen]);
+  }, [isOpen, embedded]);
 
   // ESC key to close and Focus Trap for accessibility
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || embedded) return;
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -413,7 +416,7 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, triggerClose]);
+  }, [isOpen, embedded, triggerClose]);
 
   if (!isOpen) return null;
 
@@ -425,8 +428,8 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
     <div
       ref={overlayRef}
       className="about-editorial-overlay"
-      role="dialog"
-      aria-modal="true"
+      role={embedded ? "region" : "dialog"}
+      aria-modal={embedded ? undefined : true}
       aria-labelledby="about-main-heading"
     >
       {/* Full-Viewport Dark Japanese Landscape Background */}
@@ -631,7 +634,7 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
               <button
                 type="button"
                 className="about-btn-resume"
-                onClick={() => triggerClose(() => onOpenResume?.())}
+                onClick={embedded ? onOpenResume : () => triggerClose(() => onOpenResume?.())}
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -656,7 +659,7 @@ export default function AboutModal({ isOpen, onClose, onOpenResume, onOpenContac
                 <button
                   type="button"
                   className="about-btn-contact"
-                  onClick={() => triggerClose(() => onOpenContact?.())}
+                  onClick={embedded ? onOpenContact : () => triggerClose(() => onOpenContact?.())}
                   title="Open Hokage Monument Contact page"
                 >
                   <span>Get in Touch</span>

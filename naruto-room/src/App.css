@@ -3093,6 +3093,19 @@
 /* ==========================================================================
    13. RESPONSIVE BREAKPOINTS (1440px, 1024px, 768px, 390px, 360px)
    ========================================================================== */
+.shinobi-mobile-menu-trigger,
+.pill-2d-short-text {
+  display: none;
+}
+
+.shinobi-bottom-bar.is-hud-obscured,
+.shinobi-coords-widget.is-hud-obscured {
+  opacity: 0;
+  pointer-events: none !important;
+  visibility: hidden;
+  transition: opacity 0.18s ease, visibility 0.18s ease;
+}
+
 @media (max-width: 1120px) {
   .shinobi-center-links {
     gap: 6px;
@@ -3104,23 +3117,27 @@
 
 @media (max-width: 920px) {
   .shinobi-top-nav {
-    padding: 0 max(12px, env(safe-area-inset-left));
+    padding: 0 max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left));
     height: 54px;
   }
   .shinobi-brand-logo-img {
     height: 30px;
-    max-width: 46px;
+    max-width: 44px;
   }
   .shinobi-center-links,
   .brand-vertical-divider,
   .shinobi-dest-trigger {
     display: none;
   }
+  .shinobi-nav-right {
+    gap: 6px;
+  }
   .shinobi-dest-trigger.mobile-dest-top-pill {
     display: inline-flex !important;
     align-items: center;
     gap: 4px;
-    padding: 5px 10px;
+    height: 32px;
+    padding: 0 10px;
     background: var(--charcoal-glass);
     border: 1px solid rgba(212, 175, 55, 0.4);
     border-radius: 999px;
@@ -3131,12 +3148,33 @@
   .dest-compass-mini {
     font-size: 13px;
   }
+  .shinobi-mobile-menu-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 32px;
+    border-radius: 999px;
+    background: var(--charcoal-glass);
+    border: 1px solid rgba(212, 175, 55, 0.42);
+    color: #faebd7;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .shinobi-mobile-menu-trigger.is-open {
+    background: var(--vermilion);
+    border-color: #ffd700;
+    color: #ffffff;
+  }
   .shinobi-hint-pill {
     display: none;
   }
   .shinobi-2d-pill {
     padding: 0 11px;
-    font-size: 13.5px;
+    font-size: 12.5px;
     height: 32px;
   }
   .shinobi-mobile-touchpad {
@@ -3195,35 +3233,6 @@
   }
 }
 
-@media (max-width: 440px) {
-  .touch-dpad-disc {
-    width: 124px;
-    height: 124px;
-  }
-  .touch-knob {
-    width: 38px;
-    height: 38px;
-  }
-  .touch-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 12px;
-  }
-  .mobile-action-circle {
-    width: 48px;
-    height: 48px;
-  }
-  .mobile-action-circle.jump-btn {
-    width: 52px;
-    height: 52px;
-  }
-  .mobile-interact-btn {
-    min-height: 40px;
-    padding: 6px 12px;
-    font-size: 12px;
-  }
-}
-
 @media (max-width: 768px) {
   /* Mobile bottom-sheet behavior for Destinations Drawer */
   .shinobi-destinations-drawer {
@@ -3232,8 +3241,9 @@
     left: 0;
     bottom: 0;
     width: 100%;
-    max-height: 74vh;
-    border-radius: 14px 14px 0 0;
+    max-height: 76dvh;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
     border-bottom: none;
     animation: bottomSheetEnter 0.26s cubic-bezier(0.22, 1, 0.36, 1);
   }
@@ -3250,10 +3260,13 @@
   }
 
   .shinobi-settings-popover {
-    top: 60px;
-    right: 12px;
-    left: 12px;
+    top: 58px;
+    right: 10px;
+    left: 10px;
     width: auto;
+    max-height: calc(100dvh - 72px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .shinobi-welcome-panel {
@@ -3268,8 +3281,10 @@
   .shinobi-controls-popover {
     right: 12px;
     left: 12px;
-    bottom: 70px;
+    bottom: calc(158px + env(safe-area-inset-bottom, 0px));
     width: auto;
+    max-height: calc(100dvh - 230px);
+    overflow-y: auto;
   }
 
   .dialogue-panel-body {
@@ -3303,14 +3318,60 @@
   }
 }
 
-@media (max-width: 420px) {
-  .brand-name {
-    font-size: 14px;
-    letter-spacing: 1.8px;
+@media (max-width: 560px) {
+  .shinobi-theme-toggle {
+    height: 32px;
+    padding: 0 9px;
+    gap: 4px;
+  }
+  .shinobi-theme-toggle .theme-toggle-label {
+    display: none;
+  }
+  .pill-2d-full-text {
+    display: none;
+  }
+  .pill-2d-short-text {
+    display: inline;
+  }
+  .shinobi-2d-pill {
+    padding: 0 10px;
+    gap: 5px;
   }
   .brand-sub {
-    font-size: 7.5px;
-    letter-spacing: 2px;
+    display: none;
+  }
+  .brand-name {
+    font-size: 14px;
+    letter-spacing: 1.6px;
+  }
+}
+
+@media (max-width: 440px) {
+  .touch-dpad-disc {
+    width: 118px;
+    height: 118px;
+  }
+  .touch-knob {
+    width: 36px;
+    height: 36px;
+  }
+  .touch-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 11.5px;
+  }
+  .mobile-action-circle {
+    width: 46px;
+    height: 46px;
+  }
+  .mobile-action-circle.jump-btn {
+    width: 50px;
+    height: 50px;
+  }
+  .mobile-interact-btn {
+    min-height: 40px;
+    padding: 6px 12px;
+    font-size: 12px;
   }
   .welcome-serif-heading {
     font-size: 24px;
@@ -3328,9 +3389,35 @@
     gap: 6px;
   }
   .shinobi-show-controls-pill {
-    height: 34px;
-    padding: 0 12px;
+    height: 32px;
+    padding: 0 10px;
     font-size: 11px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .shinobi-top-nav {
+    height: 44px;
+  }
+  .touch-dpad-disc {
+    width: 102px;
+    height: 102px;
+  }
+  .touch-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 10px;
+  }
+  .mobile-action-circle {
+    width: 42px;
+    height: 42px;
+  }
+  .mobile-action-circle.jump-btn {
+    width: 46px;
+    height: 46px;
+  }
+  .shinobi-coords-widget {
+    display: none;
   }
 }
 

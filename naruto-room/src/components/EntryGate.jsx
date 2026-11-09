@@ -27,12 +27,12 @@ function DestinationCard({ destination, onOpen, onTravel }) {
     </header>
     <p className="gate-description">{d.description}</p>
     <div className="gate-actions"><button className="gate-red" aria-label={'Open ' + d.title + ' section'} onClick={() => onOpen(d.sectionId)}>Open Section <span aria-hidden="true">→</span></button>
-      <button aria-label={'Teleport to ' + d.title} onClick={() => onTravel(d.teleportLocationId)}><Icon name="travel"/> Teleport Here</button>
+      {onTravel && <button aria-label={'Teleport to ' + d.title} onClick={() => onTravel(d.teleportLocationId)}><Icon name="travel"/> Teleport Here</button>}
     </div>
   </article>;
 }
 
-export default function EntryGate({ onClose, onOpenModal, onTeleport }) {
+export default function EntryGate({ onClose, onOpenModal, onTeleport, embedded = false }) {
   const dialog = useRef(null);
   const surface = useRef(null);
   const heading = useRef(null);
@@ -41,8 +41,10 @@ export default function EntryGate({ onClose, onOpenModal, onTeleport }) {
   const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
   useLayoutEffect(() => {
     const root = dialog.current;
-    root.showModal();
-    heading.current.focus({preventScroll:true});
+    if (!embedded) {
+      root.showModal();
+      heading.current.focus({preventScroll:true});
+    }
     leaving.current = false;
     const context = gsap.context(() => {
       if (reduced()) return;
@@ -51,10 +53,10 @@ export default function EntryGate({ onClose, onOpenModal, onTeleport }) {
         .from(surface.current, {opacity:0,duration:.34}, 0)
         .from('.gate-titles,.gate-roles', {opacity:0,y:8,stagger:.07,duration:.4}, .18)
         .from('.gate-copy,.gate-main-actions', {opacity:0,y:5,stagger:.06,duration:.32}, .46)
-        .from('.gate-card', {opacity:0,y:8,stagger:.045,duration:.28,clearProps:'transform,opacity'}, .68);
+        .from(embedded ? '.gate-route-stop' : '.gate-card', {opacity:0,y:8,stagger:.045,duration:.28,clearProps:'transform,opacity'}, .68);
     }, root);
-    return () => { motion.current?.kill(); context.revert(); root.close(); };
-  }, []);
+    return () => { motion.current?.kill(); context.revert(); if (!embedded) root.close(); };
+  }, [embedded]);
 
   function leave(next, teleport) {
     if (leaving.current) return;
@@ -68,35 +70,42 @@ export default function EntryGate({ onClose, onOpenModal, onTeleport }) {
     tl.to(dialog.current, {opacity:0,duration:teleport ? .25 : .12});
   }
   function open(section) {
+    if (embedded) { onOpenModal(section); return; }
     if (section === 'intro') {
       surface.current.scrollTo({top:0,behavior:reduced() ? 'instant' : 'smooth'});
       heading.current.focus({preventScroll:true});
     } else leave(() => onOpenModal(section));
   }
   const cards = entryDestinations.filter(d => d.visible).sort((a,b) => a.order-b.order);
-  return <dialog className="entry-gate" ref={dialog} aria-labelledby="entry-heading"
+  const Surface = embedded ? 'section' : 'dialog';
+  return <Surface className={embedded ? 'entry-gate gate-inline' : 'entry-gate'} ref={dialog} aria-labelledby="entry-heading"
     onCancel={e => { e.preventDefault(); leave(onClose); }}>
     <div className="gate-dimmer" onClick={() => leave(onClose)} aria-hidden="true"/>
     <div className="gate-blossom" aria-hidden="true"/>
-    <main className="gate-surface" ref={surface}>
-      <div className="gate-close-row"><button className="gate-close" onClick={() => leave(onClose)}><Icon name="close"/> Close</button></div>
+    <div className="gate-surface" ref={surface}>
+      {!embedded && <div className="gate-close-row"><button className="gate-close" onClick={() => leave(onClose)}><Icon name="close"/> Close</button></div>}
       <header className="gate-hero">
         <div className="gate-hero-art" aria-hidden="true"/>
         <div className="gate-titles"><p className="gate-label">{LOCATION_SVGS['main-street']} Location 01 · Main Entry Gate</p>
           <h1 id="entry-heading" ref={heading} tabIndex={-1}>Hello, I’m <span>Ashutosh</span>.</h1></div>
         <div className="gate-roles">{[['laptop','AI/ML Developer'],['layers','Full-Stack Developer'],['target','Problem Solver']].map(([icon,label]) => <span key={icon}><Icon name={icon}/>{label}</span>)}</div>
         <div className="gate-copy"><blockquote>“A shinobi of code, building things worth discovering.”</blockquote>
-          <p>Welcome to my interactive 3D Hidden Leaf Village portfolio. Walk down the streets of Konoha, interact with familiar shinobi, or travel directly to one of the <strong>six village destinations</strong> to explore my projects, development skills, AI/ML work, and experience.</p></div>
+          <p>{embedded ? <>Scroll through the <strong>six village destinations</strong> to explore my projects, skills, and experience. Open the menu at Ichiraku Ramen or unroll a mission dossier along the way.</> : <>Welcome to my interactive 3D Hidden Leaf Village portfolio. Walk down the streets of Konoha, interact with familiar shinobi, or travel directly to one of the <strong>six village destinations</strong> to explore my projects, development skills, AI/ML work, and experience.</>}</p></div>
         <div className="gate-actions gate-main-actions">
-          <button className="gate-red" onClick={() => leave(onClose)}>{LOCATION_SVGS['main-street']} Explore My World <span aria-hidden="true">→</span></button>
+          {onClose && <button className="gate-red" onClick={embedded ? onClose : () => leave(onClose)}>{LOCATION_SVGS['main-street']} {embedded ? 'Enter 3D Village' : 'Explore My World'} <span aria-hidden="true">→</span></button>}
           <button onClick={() => open('projects')}><Icon name="layers"/> View My Projects</button>
           <button onClick={() => open('contact')}><Icon name="mail"/> Contact Me</button>
         </div>
       </header>
       <section className="gate-directory" aria-labelledby="gate-directory-title"><h2 id="gate-directory-title"><Icon name="torii"/>Six village destinations — click to visit or explore</h2>
-        <div className="gate-grid">{cards.map(d => <DestinationCard key={d.id} destination={d} onOpen={open}
-          onTravel={id => leave(onClose, () => onTeleport(id))}/>)}</div>
+        {embedded ? <nav className="gate-route" aria-label="Jump to a village destination">
+          {cards.map(d => <button key={d.id} className="gate-route-stop" onClick={() => open(d.sectionId)}>
+            <span className="gate-route-number">{d.number}</span><span>{d.title}</span>
+            <span className="gate-route-arrow" aria-hidden="true">↗</span>
+          </button>)}
+        </nav> : <div className="gate-grid">{cards.map(d => <DestinationCard key={d.id} destination={d} onOpen={open}
+          onTravel={onTeleport && (id => leave(onClose, () => onTeleport(id)))}/>)}</div>}
       </section>
-    </main>
-  </dialog>;
+    </div>
+  </Surface>;
 }

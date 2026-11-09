@@ -41,7 +41,7 @@ export function ProjectSpread({ projects, selected, onSelect, onBack, onVillage,
         {!!selected.technologies.length && <><h3>Technology stack</h3><div className="book-tech">{selected.technologies.map(t => <span key={t}>{t}</span>)}</div></>}
         {!!selected.features.length && <><h3>Key features</h3><ul>{selected.features.map(f => <li key={f}>{f}</li>)}</ul></>}
         <div className="book-links">
-          {selected.villageEntry && <button onClick={onVillage}>Explore the village →</button>}
+          {selected.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
           {selected.liveUrl && !selected.liveUrl.startsWith('#') && <a href={selected.liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}
           {selected.githubUrl && <a href={selected.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
         </div>

@@ -1,3 +1,4 @@
+import { sectionEntrance } from '../../utils/sectionEntrance';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { getSkillCategories } from '../../data/skillsData';
@@ -11,6 +12,7 @@ import './SkillsModal.css';
  */
 export default function SkillsModal({
   isOpen = true,
+  embedded = false,
   onClose,
   onInspectProject,
   onFastTravel,
@@ -49,6 +51,7 @@ export default function SkillsModal({
 
   // Keyboard Escape Handler
   useEffect(() => {
+    if (embedded) return;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' || e.code === 'Escape') {
         handleRequestClose();
@@ -56,7 +59,7 @@ export default function SkillsModal({
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleRequestClose]);
+  }, [handleRequestClose, embedded]);
 
   // GSAP Entrance Timeline (Sequence: BG fade -> Header rise -> Nav stagger -> Details reveal)
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function SkillsModal({
     if (prefersReducedMotion) return;
 
     const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+      const tl = sectionEntrance(overlayRef.current, embedded);
 
       tl.fromTo(
         overlayRef.current,
@@ -95,7 +98,7 @@ export default function SkillsModal({
     }, overlayRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [embedded]);
 
   if (!isOpen) return null;
 
@@ -103,8 +106,8 @@ export default function SkillsModal({
     <div
       ref={overlayRef}
       className="skills-modal-overlay"
-      role="dialog"
-      aria-modal="true"
+      role={embedded ? "region" : "dialog"}
+      aria-modal={embedded ? undefined : true}
       aria-label="Technical Skills and Jutsu Scrolls"
     >
       {/* 1. Atmospheric Training Room Dojo Background */}

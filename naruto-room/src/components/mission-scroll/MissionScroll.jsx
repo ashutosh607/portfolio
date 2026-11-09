@@ -13,17 +13,17 @@ function LeafSeal() {
   </svg>;
 }
 
-export default function MissionScroll({ onClose, onContact }) {
+export default function MissionScroll({ onClose, onContact, embedded = false }) {
   const [records, setRecords] = useState(null);
   useEffect(() => {
     let active = true;
     listMissions().then(data => { if (active) setRecords(data); });
     return () => { active = false; };
   }, []);
-  return records && <LoadedScroll records={records} onClose={onClose} onContact={onContact}/>;
+  return records && <LoadedScroll embedded={embedded} records={records} onClose={onClose} onContact={onContact}/>;
 }
 
-function LoadedScroll({ records, onClose, onContact }) {
+function LoadedScroll({ records, onClose, onContact, embedded }) {
   const root = useRef(null);
   const timeline = useRef(null);
   const panel = useRef(null);
@@ -32,26 +32,31 @@ function LoadedScroll({ records, onClose, onContact }) {
   const locked = useRef(false);
   const [phase, setPhase] = useState('closed');
   const [tab, setTab] = useState('all');
-  const [view, setView] = useState(() => history.state?.missionScroll || board);
+  const [view, setView] = useState(() => (!embedded && history.state?.missionScroll) || board);
   const mission = records.find(record => record.id === view.id);
   const certificates = mission ? certificatesFor(mission) : [];
   const hasPreview = view.certificate != null && Boolean(certificates[view.certificate]);
   const back = useCallback(() => {
+    if (embedded) {
+      setView(current => current.certificate != null ? { ...current, certificate: null } : board);
+      return;
+    }
     if (locked.current) return;
     locked.current = true;
     history.back();
-  }, []);
+  }, [embedded]);
   function navigate(next, replace = false) {
-    history[replace ? 'replaceState' : 'pushState']({ ...history.state, missionScroll: next }, '');
+    if (!embedded) history[replace ? 'replaceState' : 'pushState']({ ...history.state, missionScroll: next }, '');
     setView(next);
   }
 
   useLayoutEffect(() => {
     const dialog = root.current;
-    dialog.showModal();
-    if (!history.state?.missionScroll) history.pushState({ ...history.state, missionScroll: board }, '');
+    if (!embedded) dialog.showModal();
+    if (!embedded && !history.state?.missionScroll) history.pushState({ ...history.state, missionScroll: board }, '');
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
+        paused: embedded,
         onComplete: () => setPhase('open'),
         onReverseComplete: () => { setPhase('closed'); finish.current(); },
       });
@@ -85,14 +90,24 @@ function LoadedScroll({ records, onClose, onContact }) {
         timeline.current.reverse();
       }
     };
-    window.addEventListener('popstate', pop);
+    let observer;
+    if (embedded) {
+      observer = new IntersectionObserver(([entry]) => {
+        if (entry.isIntersecting) {
+          timeline.current.play();
+          observer.disconnect();
+        }
+      }, { threshold: 0.08 });
+      observer.observe(dialog);
+    } else window.addEventListener('popstate', pop);
     return () => {
       window.removeEventListener('popstate', pop);
       filterTween.current?.kill();
       ctx.revert();
-      dialog.close();
+      observer?.disconnect();
+      if (!embedded) dialog.close();
     };
-  }, []);
+  }, [embedded]);
 
   useLayoutEffect(() => {
     if (view.id) root.current.querySelector('[data-detail-close]')?.focus();
@@ -107,10 +122,12 @@ function LoadedScroll({ records, onClose, onContact }) {
       .call(() => setTab(id)).to(list, { opacity: 1, duration });
   }
   const visible = records.filter(record => tab === 'all' || record.type === tab);
-  return <dialog ref={root} className="ms-root" aria-label="Konoha Mission Board" data-phase={phase}
+  const Surface = embedded ? 'section' : 'dialog';
+  return <Surface ref={root} className={embedded ? 'ms-root ms-inline' : 'ms-root'}
+    onKeyDown={event => { if (embedded && view.id && event.key === 'Escape') back(); }} aria-label="Konoha Mission Board" data-phase={phase}
     onCancel={event => { event.preventDefault(); back(); }}>
     <div className="ms-scene"/>
-    <button className="ms-close" autoFocus onClick={back} disabled={phase === 'closing'}>× <span>Close</span></button>
+    <button hidden={embedded} className="ms-close" autoFocus={!embedded} onClick={back} disabled={phase === 'closing'}>× <span>Close</span></button>
     <div className="ms-stage">
       <div className="ms-bundle" aria-hidden="true"><div className="ms-binding"><i className="ms-cord"/><b className="ms-medallion"><LeafSeal/></b></div></div>
       <div className="ms-paper" inert={phase !== 'open'}>
@@ -122,7 +139,7 @@ function LoadedScroll({ records, onClose, onContact }) {
             <nav className="ms-tabs" aria-label="Mission categories">{tabs.map(([id,label]) => <button key={id} aria-pressed={id === tab}
               onClick={() => filter(id)}>{label} <span>{id === 'all' ? records.length : records.filter(r => r.type === id).length}</span></button>)}</nav>
             <div className="ms-list" ref={panel}>{visible.map(record => <MissionCard key={record.id} mission={record}
-              onDetail={() => navigate({id: record.id, certificate: null})} onContact={() => { finish.current = onContact; back(); }}/>)}</div>
+              onDetail={() => navigate({id: record.id, certificate: null})} onContact={() => { if (embedded) onContact(); else { finish.current = onContact; back(); } }}/>)}</div>
           </div>
           {mission && (!hasPreview ? <div className="ms-detailwrap">
             <button data-detail-close onClick={back}>← All dossiers</button>
@@ -133,6 +150,6 @@ function LoadedScroll({ records, onClose, onContact }) {
       </div>
       {['left','right'].map(side => <div aria-hidden="true" key={side} className={'ms-rail ms-' + side}><i className="ms-spindle"/></div>)}
     </div>
-    <button className="ms-return" hidden={!!mission} onClick={back} disabled={phase !== 'open'}>← Return to Village</button>
-  </dialog>;
+    <button className="ms-return" hidden={embedded || !!mission} onClick={back} disabled={phase !== 'open'}>← Return to Village</button>
+  </Surface>;
 }

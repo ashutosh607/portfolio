@@ -190,6 +190,37 @@ const KonohaHUD = React.memo(function KonohaHUD({
     [setTouchKey]
   );
 
+  // Clear mobile D-pad & sprint toggle whenever dialogue or modal is active
+  useEffect(() => {
+    if (isDialogueActive) {
+      dpadPointerId.current = null;
+      setDpadActive({ forward: false, backward: false, left: false, right: false });
+      setKnobOffset({ x: 0, y: 0 });
+      setIsSprintToggled(false);
+    }
+  }, [isDialogueActive]);
+
+  const handleSelectNavSection = useCallback(
+    (item) => {
+      const matchedLoc = KONOHA_LOCATIONS.find(
+        (loc) => loc.id === item.locId || loc.modalKey === item.modalKey
+      );
+      if (matchedLoc) {
+        setVisitedIds((prev) => {
+          if (prev.has(matchedLoc.id)) return prev;
+          const next = new Set(prev);
+          next.add(matchedLoc.id);
+          return next;
+        });
+        onFastTravel?.(matchedLoc.position);
+      }
+      setIsDestinationsOpen(false);
+      setIsMenuOpen(false);
+      onOpenModal?.(item.modalKey);
+    },
+    [onFastTravel, onOpenModal]
+  );
+
   const handleOpenDestination = useCallback(
     (loc) => {
       setVisitedIds((prev) => {
@@ -199,9 +230,10 @@ const KonohaHUD = React.memo(function KonohaHUD({
       });
       setIsDestinationsOpen(false);
       setIsMenuOpen(false);
+      onFastTravel?.(loc.position);
       onOpenModal?.(loc.modalKey);
     },
-    [onOpenModal]
+    [onFastTravel, onOpenModal]
   );
 
   const handleTeleportTo = useCallback(
@@ -211,7 +243,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
         next.add(loc.id);
         return next;
       });
-      setShowWelcomeCard(false);
       setIsDestinationsOpen(false);
       setIsMenuOpen(false);
       onFastTravel?.(loc.position);
@@ -262,10 +293,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
                 <button
                   type="button"
                   className={`shinobi-nav-item ${isActive ? 'is-active' : ''}`}
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenModal?.(item.modalKey);
-                  }}
+                  onClick={() => handleSelectNavSection(item)}
                 >
                   <span className="nav-item-num">{item.number}</span>
                   <span className="nav-item-label">{item.label}</span>
@@ -390,14 +418,31 @@ const KonohaHUD = React.memo(function KonohaHUD({
                 <path d="M3 9h18" />
                 <path d="M9 21V9" />
               </svg>
-              <span>2D Portfolio</span>
+              <span className="pill-2d-full-text">2D Portfolio</span>
+              <span className="pill-2d-short-text">2D</span>
             </button>
           )}
+
+          {/* Mobile Portfolio Sections & Settings Menu Button */}
+          <button
+            type="button"
+            className={`shinobi-mobile-menu-trigger ${isMenuOpen ? 'is-open' : ''}`}
+            onClick={() => {
+              setIsMenuOpen((prev) => !prev);
+              setIsDestinationsOpen(false);
+            }}
+            aria-label="Open Portfolio Sections & Settings"
+            title="Portfolio Sections & Settings"
+          >
+            <span className="mobile-menu-bars" aria-hidden="true">
+              {isMenuOpen ? '✕' : '☰'}
+            </span>
+          </button>
         </div>
       </header>
 
       {/* Live Interactive Coordinates Display (Right Side) */}
-      <div className={`shinobi-coords-widget ${isCoordsExpanded ? 'is-expanded' : 'is-collapsed'}`}>
+      <div className={`shinobi-coords-widget ${isCoordsExpanded ? 'is-expanded' : 'is-collapsed'} ${isDialogueActive ? 'is-hud-obscured' : ''}`}>
         <div
           className="coords-toggle-header"
           onClick={() => setIsCoordsExpanded((prev) => !prev)}
@@ -469,10 +514,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
                   key={item.modalKey}
                   type="button"
                   className={`popover-nav-btn ${activeNavModalKey === item.modalKey ? 'active' : ''}`}
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onOpenModal?.(item.modalKey);
-                  }}
+                  onClick={() => handleSelectNavSection(item)}
                 >
                   <span className="popover-num">{item.number}</span>
                   <span>{item.label}</span>
@@ -796,7 +838,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
       )}
 
       {/* ================= 7. MINIMAL BOTTOM HUD BAR ================= */}
-      <footer className="shinobi-bottom-bar">
+      <footer className={`shinobi-bottom-bar ${isDialogueActive ? 'is-hud-obscured' : ''}`}>
         {/* Bottom-Left: Keyboard Hint Pill on Desktop + Ergonomic 8-Way Thumbpad on Mobile */}
         <div className="shinobi-bottom-left">
           <div className="shinobi-hint-pill">

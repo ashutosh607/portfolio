@@ -1,0 +1,101 @@
+/* Shared scenery stays behind the entire reading surface, including the book and scroll. */
+.p2d-root {
+  --page-inset: max(5vw, calc((100vw - 1320px) / 2));
+  --page-rule: rgb(227 194 155 / 25%);
+  isolation: isolate;
+}
+.p2d-ambient-bg {background: #191215; overflow: hidden}
+.p2d-village-landscape {
+  position: absolute; inset: -4% 0;
+  background: url('/missions/konoha-sunset.webp') center 42% / cover no-repeat;
+}
+.p2d-ambient-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgb(15 10 15 / 91%), rgb(18 12 18 / 75%) 43%, rgb(18 12 18 / 27%)),
+    linear-gradient(0deg, rgb(21 13 18 / 83%), transparent 67%);
+}
+.p2d-root .p2d-main {max-width: none; padding: 0; overflow: visible}
+.p2d-root .p2d-section {background: none; border: 0; box-shadow: none; border-radius: 0}
+.p2d-root .gate-inline, .p2d-root .gate-inline .gate-surface,
+.p2d-root .p2d-village-scene > :is(.about-editorial-overlay,.skills-modal-overlay,.contact-monument-overlay),
+.p2d-root .ramen-inline, .p2d-root .ms-inline {background: transparent; box-shadow: none}
+.p2d-root .gate-inline :is(.gate-hero-art,.gate-blossom,.gate-dimmer),
+.p2d-root .p2d-village-scene :is(.about-background,.about-background-scrim,.skills-env-bg,.skills-env-vignette,.contact-background,.contact-background-scrim),
+.p2d-root .ramen-inline .ichiraku-scene, .p2d-root .ms-inline .ms-scene {visibility: hidden}
+.p2d-root .gate-hero {
+  padding: clamp(54px,9vh,124px) var(--page-inset) clamp(40px,7vh,84px);
+  min-height: 58dvh; display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+}
+.p2d-root .gate-label {font-size: clamp(10px,.85vw,13px); letter-spacing: .2em}
+.p2d-root .gate-titles h1 {margin-top: 16px; font-size: clamp(50px,6.8vw,108px); letter-spacing: -.055em; line-height: 1.04}
+.p2d-root .gate-titles h1 .village-word::after {display: none}
+.p2d-root .gate-titles h1 span:not(.village-word)::after {height: .065em}
+.p2d-root .gate-copy {max-width: 67ch}
+.p2d-root .gate-copy blockquote {font-size: clamp(21px,2vw,34px); font-weight: 500}
+.p2d-root .gate-copy p {line-height: 1.65; color: #dfd1c7}
+.p2d-root .gate-roles {margin: 20px 0 18px; gap: 18px}
+.p2d-root .gate-roles > span {background: none; border: 0; padding: 0; font-size: 14px}
+.p2d-root .gate-directory {margin-inline: var(--page-inset); padding: 20px 0 0; border-color: var(--page-rule)}
+.p2d-root .gate-directory h2 {font-size: 11px; letter-spacing: .17em; margin-bottom: 16px}
+.gate-route {display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); column-gap: clamp(18px,3vw,54px)}
+.entry-gate .gate-route-stop {
+  justify-content: flex-start; padding: 14px 0; border-radius: 0; border: 0; border-bottom: 1px solid var(--page-rule);
+  background: none; font: 500 clamp(18px,1.55vw,24px)/1.2 'Cormorant Garamond',Georgia,serif; text-align: left;
+}
+.entry-gate .gate-route-stop:hover {color: #ffcf9e; background: none; border-color: #c49774}
+.gate-route-number {color: #e5b38a; font: 600 11px/1 system-ui,sans-serif; letter-spacing: .08em; margin-right: 8px}
+.gate-route-arrow {margin-left: auto; color: #c8a78d; font-family: system-ui,sans-serif; font-size: 15px}
+.p2d-root :is(.gate-route-stop,.about-col-photo,.about-col-right,.skills-workbench-grid > div,.contact-directory-item) {translate: var(--village-slide,0px) 0}
+.p2d-root .p2d-navbar {box-shadow: none}
+.p2d-root .p2d-navbar::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
+  transform-origin: left; transform: scaleX(var(--reading-progress,0));
+  background: linear-gradient(90deg,#9d3834,#eac18c); pointer-events: none;
+}
+.p2d-root .ramen-inline {padding-block: 80px 46px}
+.p2d-root .ramen-inline .ramen-top-header {inset: 16px var(--page-inset) auto}
+.p2d-root .ramen-inline .ramen-brand-title {font: 600 11px/1.4 system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#e0bc96}
+.p2d-root .p2d-village-scene :is(.about-editorial-scroll-container,.skills-modal-stage,.contact-scroll-container) {
+  max-width: none; width: 100%; padding: clamp(40px,7vh,92px) var(--page-inset);
+}
+.p2d-root :is(.about-editorial-shell,.contact-editorial-shell) {max-width: none}
+.p2d-root :is(.about-interests-section,.about-snapshot-panel,.about-drive-item,.about-interest-tile,.contact-directory-item,.contact-bottom-bar,.skill-details-panel) {
+  box-shadow: none; border: 0; border-radius: 0; background: transparent;
+}
+.p2d-root :is(.about-interest-tile,.about-drive-item,.contact-directory-item) {border-top: 1px solid var(--page-rule)}
+.p2d-root .contact-directory-item {padding-inline: 0}
+.p2d-root .contact-directory-grid {column-gap: clamp(24px,5vw,90px)}
+.p2d-root .skill-details-panel {border-left: 1px solid var(--page-rule)}
+.p2d-root .skill-nav-btn:not(.is-active) {background: transparent;border-color:transparent;border-bottom-color:var(--page-rule);border-radius:0}
+.p2d-root :is(.about-intro-text,.skills-subtitle,.contact-hero-description,.contact-item-desc,.details-description-text) {color:#e3d6ce}
+.p2d-root .ms-inline {padding-block:clamp(36px,7vw,90px)}
+.p2d-root .p2d-footer {margin-inline:var(--page-inset); padding-block:24px; border-top:1px solid var(--page-rule)}
+@media(max-width:760px) {
+  .p2d-root {--page-inset:clamp(16px,4.5vw,28px)}
+  .p2d-root .p2d-main {gap:clamp(20px,5vh,48px)}
+  .p2d-root .p2d-section {scroll-margin-top:4.2rem}
+  .p2d-village-landscape {background-position:65% center}
+  .p2d-ambient-bg::after {background:linear-gradient(90deg,#100c12dc,#130e15a8),linear-gradient(0deg,#160e14bb,transparent)}
+  .p2d-root .gate-hero {min-height:0;padding:34px var(--page-inset) 26px}
+  .p2d-root .gate-titles h1 {font-size:clamp(34px,9.2vw,54px);letter-spacing:-.04em;margin-top:12px}
+  .p2d-root .gate-copy {width:100%}
+  .p2d-root .gate-copy blockquote {font-size:clamp(18px,4.8vw,24px)}
+  .p2d-root .gate-roles {gap:8px 14px;margin:14px 0}
+  .p2d-root .gate-roles > span {font-size:12px}
+  .gate-route {grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px}
+  .entry-gate .gate-route-stop {font-size:16.5px;min-height:48px;gap:4px}
+  .gate-route-number {margin-right:3px}
+  .p2d-root .ramen-inline {padding-block:54px 28px}
+  .p2d-root .ramen-inline .ramen-book-container {width:calc(100vw - 2 * var(--page-inset));height:min(76dvh,620px)}
+  .p2d-root .p2d-village-scene :is(.about-editorial-scroll-container,.skills-modal-stage,.contact-scroll-container) {padding:32px var(--page-inset)}
+  .p2d-root .skill-details-panel {border-left:0;border-top:1px solid var(--page-rule)}
+  .p2d-root .p2d-footer {font-size:12.5px;text-align:center}
+}
+@media(max-width:460px) {
+  .gate-route {grid-template-columns:minmax(0,1fr)}
+  .p2d-root .gate-main-actions {width:100%}
+  .p2d-root .gate-main-actions button {flex:1 1 auto}
+}
+@media(prefers-reduced-motion:reduce) {
+  .p2d-root *, .p2d-root *::before, .p2d-root *::after {scroll-behavior:auto!important}
+}

@@ -10,7 +10,18 @@ const CameraController = React.memo(function CameraController({
   fastTravelTarget,
   dialogueTarget = null,
 }) {
-  const { camera, gl } = useThree();
+  const { camera, gl, size, invalidate } = useThree();
+
+  // Adapt camera FOV on portrait mobile screens so horizontal field of view stays comfortable
+  useEffect(() => {
+    const aspect = size.width / Math.max(1, size.height);
+    const targetFov = aspect < 0.75 ? 56 : aspect < 1.0 ? 51 : 46;
+    if (camera.isPerspectiveCamera && Math.abs(camera.fov - targetFov) > 0.5) {
+      camera.fov = targetFov;
+      camera.updateProjectionMatrix();
+      invalidate();
+    }
+  }, [size.width, size.height, camera, invalidate]);
 
   const orbitRef = useRef({
     yaw: INITIAL_SPAWN.cameraYaw, // look toward the monument from Main Street
@@ -51,8 +62,11 @@ const CameraController = React.memo(function CameraController({
         ty + targetH + Math.sin(pitch) * dist,
         tz + Math.cos(targetYaw) * Math.cos(pitch) * dist
       );
+      camera.position.copy(smoothCamPos.current);
+      camera.lookAt(smoothLookTarget.current);
+      invalidate();
     }
-  }, [fastTravelTarget, cameraAngleRef]);
+  }, [fastTravelTarget, cameraAngleRef, camera, invalidate]);
 
   // Sync external ref so Naruto movement can align with camera yaw
   useEffect(() => {
@@ -200,10 +214,11 @@ const CameraController = React.memo(function CameraController({
     const dt = Math.min(delta, 0.05);
 
     const pos = playerPosRef?.current || INITIAL_SPAWN.position;
+    const isPortrait = size.width < size.height;
     let targetX = pos[0];
-    let targetY = pos[1] + CAMERA_CONFIG.targetHeight;
+    let targetY = pos[1] + CAMERA_CONFIG.targetHeight - (isPortrait ? 0.14 : 0);
     let targetZ = pos[2];
-    let activeDist = distance;
+    let activeDist = distance + (isPortrait ? 0.75 : 0);
 
     // Subtle cinematic framing toward the active NPC during dialogue
     if (dialogueTarget) {
