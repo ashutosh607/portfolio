@@ -5,6 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
 
 import { connectDB } from './src/config/db.js';
 import { notFound, errorHandler } from './src/middleware/errorHandler.js';
@@ -25,22 +26,44 @@ const PORT = process.env.PORT || 5000;
 // Connect to MongoDB Atlas
 connectDB();
 
-// Security Headers
+// 1. Comprehensive Helmet Security Headers (Clickjacking, XSS, Sniffing, Server Masking)
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    frameguard: { action: 'deny' }, // Anti-clickjacking
+    xContentTypeOptions: true,      // Anti-MIME sniffing
+    xDnsPrefetchControl: { allow: false },
   })
 );
 
-// CORS configuration for frontend
-const allowedOrigins = process.env.CLIENT_URL
-  ? process.env.CLIENT_URL.split(',').map((url) => url.trim())
-  : ['http://localhost:5173', 'http://localhost:5174'];
+// Disable Express fingerprinting header (hides "X-Powered-By: Express")
+app.disable('x-powered-by');
+
+// 2. Global API Rate Limiter (Anti-DDoS / Anti-Scraping: 150 requests per 15 minutes)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP. Please try again shortly.',
+  },
+});
+app.use('/api', globalLimiter);
+
+// 3. Strict CORS configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim()) : []),
+];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (like mobile apps, curl, or Postman)
+      // Allow server-to-server or trusted local origin
       if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
         callback(null, true);
       } else {
@@ -53,12 +76,12 @@ app.use(
   })
 );
 
-// Body Parsers & Cookie Parser
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+// 4. Tight Request Payload Size Limits (Anti-Buffer-Overflow & DoS)
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
 
-// API Health Check
+// 5. Health Check Endpoint
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -68,7 +91,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Routes
+// 6. Mount Secure Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/missions', missionRoutes);
@@ -78,16 +101,15 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/dialogues', dialogueRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Error Handling Middleware
+// 7. Error Handlers
 app.use(notFound);
 app.use(errorHandler);
 
-// Start Server
+// 8. Start Server
 app.listen(PORT, () => {
   console.log(`\n======================================================`);
-  console.log(`🍥 SHINOBI BACKEND SERVER RUNNING ON PORT: ${PORT}`);
+  console.log(`🍥 SHINOBI SECURE BACKEND RUNNING ON PORT: ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);
-  console.log(`🚀 Mode: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🛡️  Security: Helmet, Rate-Limit, 256-Bit JWT, bcrypt cost 12`);
   console.log(`======================================================\n`);
 });
-

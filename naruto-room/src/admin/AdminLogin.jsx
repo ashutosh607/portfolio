@@ -4,8 +4,8 @@ import { useAdminAuth } from './AdminAuthContext';
 import { Lock, Mail, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('ashutoshkadam607@gmail.com');
-  const [password, setPassword] = useState('ShinobiHokage2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');

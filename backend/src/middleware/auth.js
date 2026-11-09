@@ -2,7 +2,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 /**
- * Protect routes: requires valid JWT in Bearer Authorization header or httpOnly cookie
+ * Protect routes: requires valid JWT in Bearer Authorization header or httpOnly cookie.
+ * Defends against 'none' algorithm attacks and token tampering.
  */
 export const protectAdmin = async (req, res, next) => {
   let token;
@@ -13,21 +14,24 @@ export const protectAdmin = async (req, res, next) => {
     token = req.cookies.adminToken;
   }
 
-  if (!token) {
+  if (!token || typeof token !== 'string') {
     return res.status(401).json({
       success: false,
-      message: 'Not authorized. Shinobi authentication token required.',
+      message: 'Unauthorized. Authentication token required.',
     });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      algorithms: ['HS256'],
+    });
+
     const user = await User.findById(decoded.id).select('-password');
 
-    if (!user) {
-      return res.status(401).json({
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({
         success: false,
-        message: 'Admin account not found.',
+        message: 'Forbidden. Admin privileges required.',
       });
     }
 
@@ -36,8 +40,7 @@ export const protectAdmin = async (req, res, next) => {
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Token expired or invalid. Please log in again.',
+      message: 'Session expired or invalid signature. Please log in again.',
     });
   }
 };
-

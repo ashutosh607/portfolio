@@ -1,14 +1,19 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/User.js';
 
+// Dummy hash used for constant-time comparison to prevent timing attacks
+const DUMMY_HASH = '$2a$12$e8ZbzK1jL/qF1pT.3j0z6eF0T4pA9F9pA9F9pA9F9pA9F9pA9F9pA';
+
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'fallback_secret', {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    algorithm: 'HS256',
   });
 };
 
 /**
- * @desc Admin Login
+ * @desc Secure Admin Login with Anti-Brute-Force, Anti-Timing, and Anti-NoSQL-Injection defense
  * @route POST /api/auth/login
  * @access Public
  */
@@ -16,19 +21,39 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    // 1. Strict Type & Length Validation (Defeats NoSQL Injection object payloads)
+    if (
+      !email ||
+      !password ||
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      email.length > 120 ||
+      password.length > 120
+    ) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide both email and password.',
+        message: 'Invalid credentials format.',
       });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    const cleanEmail = email.toLowerCase().trim();
 
-    if (!user || !(await user.comparePassword(password))) {
+    // 2. Query user by sanitized string
+    const user = await User.findOne({ email: cleanEmail }).select('+password');
+
+    // 3. Constant-time comparison to eliminate Timing Attack user enumeration
+    let passwordMatches = false;
+    if (user) {
+      passwordMatches = await user.comparePassword(password);
+    } else {
+      // Run dummy compare so response time is identical whether email exists or not
+      await bcrypt.compare(password, DUMMY_HASH);
+    }
+
+    if (!user || !passwordMatches) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid shinobi credentials.',
+        message: 'Invalid shinobi admin credentials.',
       });
     }
 
@@ -37,7 +62,7 @@ export const login = async (req, res, next) => {
 
     const token = generateToken(user._id);
 
-    // Set HTTP-only cookie for secure browser access
+    // 4. Secure HTTP-only Cookie flag configuration
     res.cookie('adminToken', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -47,7 +72,7 @@ export const login = async (req, res, next) => {
 
     res.json({
       success: true,
-      message: 'Authentication successful. Welcome, Shinobi Admin.',
+      message: 'Authentication verified.',
       token,
       user: {
         id: user._id,
@@ -70,7 +95,13 @@ export const login = async (req, res, next) => {
 export const getMe = async (req, res) => {
   res.json({
     success: true,
-    user: req.user,
+    user: {
+      id: req.user._id,
+      email: req.user.email,
+      name: req.user.name,
+      role: req.user.role,
+      lastLogin: req.user.lastLogin,
+    },
   });
 };
 
@@ -83,6 +114,8 @@ export const logout = (req, res) => {
   res.cookie('adminToken', '', {
     httpOnly: true,
     expires: new Date(0),
+    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production',
   });
   res.json({
     success: true,
@@ -98,6 +131,21 @@ export const logout = (req, res) => {
 export const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
+
+    if (
+      !currentPassword ||
+      !newPassword ||
+      typeof currentPassword !== 'string' ||
+      typeof newPassword !== 'string' ||
+      newPassword.length < 6 ||
+      newPassword.length > 120
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be between 6 and 120 characters.',
+      });
+    }
+
     const user = await User.findById(req.user._id);
 
     if (!(await user.comparePassword(currentPassword))) {
@@ -118,4 +166,3 @@ export const changePassword = async (req, res, next) => {
     next(error);
   }
 };
-

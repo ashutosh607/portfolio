@@ -5,13 +5,15 @@ import { protectAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Strict rate limiter for login endpoint to block brute-force attempts
+// Strict anti-brute-force limiter: 5 attempts per 15 minutes per IP
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many login attempts from this IP. Please try again after 15 minutes.',
+    message: 'Too many login attempts. Access temporarily locked for 15 minutes.',
   },
 });
 
@@ -21,4 +23,3 @@ router.get('/me', protectAdmin, getMe);
 router.put('/change-password', protectAdmin, changePassword);
 
 export default router;
-
