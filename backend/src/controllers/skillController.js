@@ -3,7 +3,7 @@ import Skill from '../models/Skill.js';
 
 export const getSkills = async (req, res, next) => {
   try {
-    const isPublic = req.query.all !== 'true';
+    const isPublic = !req.user || req.query.all !== 'true';
     const filter = isPublic ? { visible: true } : {};
     const skills = await Skill.find(filter).sort({ order: 1, createdAt: 1 });
 
@@ -65,4 +65,14 @@ export const deleteSkill = async (req, res, next) => {
   }
 };
 
-export const reorderSkills = reorder(Skill);
+export const reorderSkills = async (req, res, next) => {
+  try {
+    await reorder(Skill, req.body.items);
+    res.json({
+      success: true,
+      message: 'Skill order updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};

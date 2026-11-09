@@ -5,22 +5,23 @@ import {
   createProject,
   updateProject,
   deleteProject,
-  reorderProjects,
 } from '../controllers/projectController.js';
-import { protectAdmin } from '../middleware/auth.js';
+import { reorder } from '../controllers/reorder.js';
+import Project from '../models/Project.js';
+import { protectAdmin, checkAdminOptional } from '../middleware/auth.js';
+import { validateBody, projectSchema } from '../middleware/validate.js';
 
 const router = express.Router();
 
 router.route('/')
-  .get(getProjects)
-  .post(protectAdmin, createProject);
+  .get(checkAdminOptional, getProjects)
+  .post(protectAdmin, validateBody(projectSchema), createProject);
 
-router.post('/reorder', protectAdmin, reorderProjects);
+router.post('/reorder', protectAdmin, reorder(Project));
 
 router.route('/:slug')
-  .get(getProjectBySlug)
-  .put(protectAdmin, updateProject)
+  .get(checkAdminOptional, getProjectBySlug)
+  .put(protectAdmin, validateBody(projectSchema.partial()), updateProject)
   .delete(protectAdmin, deleteProject);
 
 export default router;
-

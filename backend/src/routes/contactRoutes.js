@@ -1,37 +1,37 @@
-import Contact from '../models/Contact.js';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import {
   getContact,
+  getContactMessages,
   updateContact,
   submitVisitorMessage,
+  updateVisitorMessageStatus,
   deleteVisitorMessage,
 } from '../controllers/contactController.js';
-import { protectAdmin } from '../middleware/auth.js';
+import { protectAdmin, checkAdminOptional } from '../middleware/auth.js';
+import { validateBody, contactMessageSchema } from '../middleware/validate.js';
 
 const router = express.Router();
 
+// Strict anti-spam rate limiter on public contact inquiries: max 5 messages per hour per IP
 const messageLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 5, // max 5 messages per hour per IP
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     success: false,
-    message: 'Too many messages sent. Please wait a bit before sending another scroll.',
+    message: 'Too many messages sent. Please wait before sending another inquiry.',
   },
 });
 
 router.route('/')
-  .get(getContact)
+  .get(checkAdminOptional, getContact)
   .put(protectAdmin, updateContact);
 
-router.post('/messages', messageLimiter, submitVisitorMessage);
-router.patch('/messages/:messageId', protectAdmin, async (req,res) => {
-  if (typeof req.body.read !== 'boolean') return res.status(400).json({message:'Expected read status'});
-  const result = await Contact.updateOne({'messages._id':req.params.messageId}, {$set:{'messages.$.read':req.body.read}});
-  if (!result.matchedCount) return res.status(404).json({message:'Message not found'});
-  res.json({success:true});
-});
+router.get('/messages', protectAdmin, getContactMessages);
+router.post('/messages', messageLimiter, validateBody(contactMessageSchema), submitVisitorMessage);
+router.patch('/messages/:messageId', protectAdmin, updateVisitorMessageStatus);
 router.delete('/messages/:messageId', protectAdmin, deleteVisitorMessage);
 
 export default router;
-

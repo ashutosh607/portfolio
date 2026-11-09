@@ -5,22 +5,23 @@ import {
   createMission,
   updateMission,
   deleteMission,
-  reorderMissions,
 } from '../controllers/missionController.js';
-import { protectAdmin } from '../middleware/auth.js';
+import { reorder } from '../controllers/reorder.js';
+import Mission from '../models/Mission.js';
+import { protectAdmin, checkAdminOptional } from '../middleware/auth.js';
+import { validateBody, missionSchema } from '../middleware/validate.js';
 
 const router = express.Router();
 
 router.route('/')
-  .get(getMissions)
-  .post(protectAdmin, createMission);
+  .get(checkAdminOptional, getMissions)
+  .post(protectAdmin, validateBody(missionSchema), createMission);
 
-router.post('/reorder', protectAdmin, reorderMissions);
+router.post('/reorder', protectAdmin, reorder(Mission));
 
 router.route('/:slug')
-  .get(getMissionBySlug)
-  .put(protectAdmin, updateMission)
+  .get(checkAdminOptional, getMissionBySlug)
+  .put(protectAdmin, validateBody(missionSchema.partial()), updateMission)
   .delete(protectAdmin, deleteMission);
 
 export default router;
-

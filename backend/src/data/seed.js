@@ -213,17 +213,20 @@ export const seedDatabase = async () => {
     await mongoose.connect(uri);
     console.log('🍃 [Seed] Connected to MongoDB Atlas. Seeding initial data...');
 
-    // 1. Seed Admin User
-    const adminEmail = (process.env.ADMIN_EMAIL || 'ashutoshkadam607@gmail.com').toLowerCase().trim();
-    const existingAdmin = await User.findOne({ email: adminEmail });
-    if (!existingAdmin) {
-      await User.create({
-        email: adminEmail,
-        password: process.env.ADMIN_INITIAL_PASSWORD,
-        name: 'Ashutosh Kadam',
-        role: 'admin',
-      });
-      console.log(`✅ [Seed] Admin account created: ${adminEmail}`);
+    // 1. Seed Admin User from Environment variables only
+    const adminEmail = process.env.ADMIN_EMAIL ? process.env.ADMIN_EMAIL.toLowerCase().trim() : null;
+    const adminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    if (adminEmail && adminPassword) {
+      const existingAdmin = await User.findOne({ email: adminEmail });
+      if (!existingAdmin) {
+        await User.create({
+          email: adminEmail,
+          password: adminPassword,
+          name: 'Ashutosh Kadam',
+          role: 'admin',
+        });
+        console.log(`✅ [Seed] Admin account created: ${adminEmail}`);
+      }
     }
 
     // 2. Seed Projects

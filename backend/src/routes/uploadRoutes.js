@@ -1,4 +1,5 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { uploadImageFile, uploadDocumentFile } from '../controllers/uploadController.js';
 import { uploadImage, uploadDocument } from '../middleware/upload.js';
 import { protectAdmin } from '../middleware/auth.js';
@@ -10,14 +11,28 @@ import Contact from '../models/Contact.js';
 import Mission from '../models/Mission.js';
 import Dialogue from '../models/Dialogue.js';
 import { deleteFromCloudinary } from '../config/cloudinary.js';
+
 const router = express.Router();
 
-router.post('/image', protectAdmin, uploadImage.single('file'), uploadImageFile);
-router.post('/document', protectAdmin, uploadDocument.single('file'), uploadDocumentFile);
+// Upload rate limiter: max 30 files per 15 minutes per IP
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Upload rate limit reached. Please wait before uploading more assets.',
+  },
+});
+
+router.post('/image', protectAdmin, uploadLimiter, uploadImage.single('file'), uploadImageFile);
+router.post('/document', protectAdmin, uploadLimiter, uploadDocument.single('file'), uploadDocumentFile);
 
 router.get('/', protectAdmin, async (req, res) => {
   res.json({ data: await Asset.find().sort({ createdAt: -1 }) });
 });
+
 router.delete('/:id', protectAdmin, async (req, res) => {
   const asset = await Asset.findById(req.params.id);
   if (!asset) return res.status(404).json({ message: 'File not found' });

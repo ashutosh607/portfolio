@@ -3,7 +3,8 @@ import Project from '../models/Project.js';
 
 export const getProjects = async (req, res, next) => {
   try {
-    const isPublic = req.query.all !== 'true';
+    // Only authenticated admin can view hidden or draft projects via ?all=true
+    const isPublic = !req.user || req.query.all !== 'true';
     const filter = isPublic ? { visible: true, status: 'published' } : {};
     const projects = await Project.find(filter).sort({ order: 1, createdAt: -1 });
 
@@ -19,7 +20,12 @@ export const getProjects = async (req, res, next) => {
 
 export const getProjectBySlug = async (req, res, next) => {
   try {
-    const project = await Project.findOne({ slug: req.params.slug, visible: true, status: 'published' });
+    const isPublic = !req.user;
+    const filter = {
+      slug: req.params.slug,
+      ...(isPublic ? { visible: true, status: 'published' } : {}),
+    };
+    const project = await Project.findOne(filter);
     if (!project) {
       return res.status(404).json({ success: false, message: 'Project not found' });
     }
@@ -77,4 +83,14 @@ export const deleteProject = async (req, res, next) => {
   }
 };
 
-export const reorderProjects = reorder(Project);
+export const reorderProjects = async (req, res, next) => {
+  try {
+    await reorder(Project, req.body.items);
+    res.json({
+      success: true,
+      message: 'Project order updated successfully',
+    });
+  } catch (error) {
+    next(error);
+  }
+};

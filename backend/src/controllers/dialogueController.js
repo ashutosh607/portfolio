@@ -2,7 +2,7 @@ import Dialogue from '../models/Dialogue.js';
 
 export const getDialogues = async (req, res, next) => {
   try {
-    const isPublic = req.query.all !== 'true';
+    const isPublic = !req.user || req.query.all !== 'true';
     const filter = isPublic ? { visible: true } : {};
     const dialogues = await Dialogue.find(filter);
 
@@ -18,7 +18,12 @@ export const getDialogues = async (req, res, next) => {
 
 export const getDialogueByCharacter = async (req, res, next) => {
   try {
-    const dialogue = await Dialogue.findOne({ characterId: req.params.characterId, visible: true });
+    const isPublic = !req.user;
+    const filter = {
+      characterId: req.params.characterId,
+      ...(isPublic ? { visible: true } : {}),
+    };
+    const dialogue = await Dialogue.findOne(filter);
     if (!dialogue) {
       return res.status(404).json({ success: false, message: 'Character dialogue not found' });
     }
@@ -30,8 +35,9 @@ export const getDialogueByCharacter = async (req, res, next) => {
 
 export const updateDialogue = async (req, res, next) => {
   try {
-    if (req.body.visible!==false && Array.isArray(req.body.dialogueSequence) && !req.body.dialogueSequence.length)
-      return res.status(400).json({message:'A published conversation requires a line.'});
+    if (req.body.visible !== false && Array.isArray(req.body.dialogueSequence) && !req.body.dialogueSequence.length) {
+      return res.status(400).json({ message: 'A published conversation requires a line.' });
+    }
     const dialogue = await Dialogue.findOneAndUpdate(
       { characterId: req.params.characterId },
       req.body,
@@ -47,4 +53,3 @@ export const updateDialogue = async (req, res, next) => {
     next(error);
   }
 };
-

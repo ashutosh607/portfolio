@@ -4,21 +4,21 @@ import {
   createSkill,
   updateSkill,
   deleteSkill,
-  reorderSkills,
 } from '../controllers/skillController.js';
-import { protectAdmin } from '../middleware/auth.js';
+import { reorder } from '../controllers/reorder.js';
+import Skill from '../models/Skill.js';
+import { protectAdmin, checkAdminOptional } from '../middleware/auth.js';
 
 const router = express.Router();
 
 router.route('/')
-  .get(getSkills)
+  .get(checkAdminOptional, getSkills)
   .post(protectAdmin, createSkill);
 
-router.post('/reorder', protectAdmin, reorderSkills);
+router.post('/reorder', protectAdmin, reorder(Skill));
 
 router.route('/:slug')
   .put(protectAdmin, updateSkill)
   .delete(protectAdmin, deleteSkill);
 
 export default router;
-

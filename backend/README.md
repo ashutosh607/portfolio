@@ -59,7 +59,7 @@ backend/
 ### 1. Configure `.env`
 Open `backend/.env` and replace `<db_username>` with your MongoDB Atlas database username:
 ```env
-MONGO_URI=mongodb+srv://<db_username>:QDuT6eGKbMLFjvIi@cluster0.pluvu0q.mongodb.net/naruto_portfolio?retryWrites=true&w=majority
+MONGO_URI=mongodb+srv://<db_username>:<db_password>@cluster0.pluvu0q.mongodb.net/naruto_portfolio?retryWrites=true&w=majority
 ```
 
 Add your free [Cloudinary](https://cloudinary.com) credentials for image & PDF uploads:

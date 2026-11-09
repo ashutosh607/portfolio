@@ -39,15 +39,64 @@ if (process.env.TRUST_PROXY_HOPS) {
 // Connect to MongoDB Atlas
 connectDB();
 
-// 1. Comprehensive Helmet Security Headers (Clickjacking, XSS, Sniffing, Server Masking)
+// 1. Comprehensive Helmet Security Headers (CSP, HSTS, Clickjacking, MIME sniffing)
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     frameguard: { action: 'deny' }, // Anti-clickjacking
     xContentTypeOptions: true,      // Anti-MIME sniffing
     xDnsPrefetchControl: { allow: false },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com'],
+        mediaSrc: ["'self'", 'blob:', 'https://res.cloudinary.com'],
+        connectSrc: [
+          "'self'",
+          'http://localhost:5000',
+          'http://localhost:5173',
+          'http://localhost:5174',
+          'https://res.cloudinary.com',
+          ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim()) : []),
+        ],
+        frameAncestors: ["'none'"],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+    hsts:
+      process.env.NODE_ENV === 'production'
+        ? {
+            maxAge: 31536000,
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false,
   })
 );
+
+// Permissions-Policy (disables browser APIs not needed by portfolio)
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), payment=(), usb=()'
+  );
+  next();
+});
+
+// Configure trust proxy for reverse proxies in production
+if (process.env.TRUST_PROXY_HOPS) {
+  const hops = Number(process.env.TRUST_PROXY_HOPS);
+  if (!Number.isInteger(hops) || hops < 1) throw new Error('TRUST_PROXY_HOPS must be a positive integer.');
+  app.set('trust proxy', hops);
+} else if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
 
 // Disable Express fingerprinting header (hides "X-Powered-By: Express")
 app.disable('x-powered-by');
