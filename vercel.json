@@ -4,8 +4,15 @@
   "buildCommand": "npm run build --prefix naruto-room",
   "outputDirectory": "naruto-room/dist",
   "installCommand": "npm install --prefix naruto-room",
-  "cleanUrls": true,
   "rewrites": [
+    {
+      "source": "/admin/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
