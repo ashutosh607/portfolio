@@ -254,11 +254,9 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
           const row = gsap.timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(root.querySelector('.ab-anime-grid'), 'top 82%') });
           cards.forEach((card, i) => revealCard(card, row, i * 0.15));
         } else {
-          // Each poster reveals as it approaches the viewport
-          cards.forEach((card, i) => {
-            const tl = gsap.timeline({ defaults: { ease: 'power3.out' }, delay: i * 0.12, scrollTrigger: st(card, 'top 88%') });
-            revealCard(card, tl, 0);
-          });
+          // On mobile, the 3 cards sit side-by-side in one compact row — reveal together with a tight stagger
+          const row = gsap.timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(root.querySelector('.ab-anime-grid'), 'top 85%') });
+          cards.forEach((card, i) => revealCard(card, row, i * 0.12));
         }
 
         // ---- Football -----------------------------------------------------------
@@ -347,19 +345,21 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
       <div className="about-background" aria-hidden="true" />
       <div className="about-background-scrim" aria-hidden="true" />
 
-      <button
-        ref={closeBtnRef}
-        type="button"
-        className="about-minimal-close-btn"
-        onClick={() => triggerClose()}
-        aria-label="Close About Me and return to Hidden Leaf Village"
-        title="Close (ESC)"
-      >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
+      {!embedded && (
+        <button
+          ref={closeBtnRef}
+          type="button"
+          className="about-minimal-close-btn"
+          onClick={() => triggerClose()}
+          aria-label="Close About Me and return to Hidden Leaf Village"
+          title="Close (ESC)"
+        >
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
+        </button>
+      )}
 
       <div className="about-editorial-scroll-container">
         <div className="about-editorial-shell">
@@ -428,12 +428,12 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                   <path d="M40 26c90-5 190-7 300-4" stroke="#7d2a27" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.7" />
                 </svg>
               </div>
-            </div>
 
-            <div className="ab-divider" aria-hidden="true">
-              <span className="ab-divider-line" />
-              <LeafMark className="ab-divider-mark" />
-              <span className="ab-divider-line is-right" />
+              <div className="ab-divider" aria-hidden="true">
+                <span className="ab-divider-line" />
+                <LeafMark className="ab-divider-mark" />
+                <span className="ab-divider-line is-right" />
+              </div>
             </div>
           </section>
 
@@ -458,8 +458,13 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                     <img src={a.imageUrl || FALLBACK_ANIME[i]?.imageUrl} alt={`${a.title} poster`} loading="lazy" decoding="async" />
                   </div>
                   <div className="ab-anime-caption">
-                    <h3>{a.title}</h3>
-                    {a.tags && <p>{a.tags}</p>}
+                    <h3 className="ab-anime-title-heading">
+                      <span className="ab-anime-title-full">{a.title}</span>
+                      <span className="ab-anime-title-short">
+                        {a.title === 'Attack on Titan' ? 'AOT' : a.title}
+                      </span>
+                    </h3>
+                    {a.tags && <p className="ab-anime-tags">{a.tags}</p>}
                   </div>
                 </article>
               ))}
@@ -548,13 +553,15 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
                 </button>
               )}
 
-              <button type="button" className="about-btn-return" onClick={() => triggerClose()}>
-                <span>Return to Village</span>
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="13 6 19 12 13 18" />
-                </svg>
-              </button>
+              {!embedded && (
+                <button type="button" className="about-btn-return" onClick={() => triggerClose()}>
+                  <span>Return to Village</span>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="13 6 19 12 13 18" />
+                  </svg>
+                </button>
+              )}
             </div>
           </footer>
         </div>

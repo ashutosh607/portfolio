@@ -1125,7 +1125,7 @@
 }
 .p2d-village-scene :is(.about-editorial-scroll-container,.contact-scroll-container) {height:auto;overflow:visible}
 .p2d-village-scene :is(.skills-env-bg,.skills-env-vignette) {position:absolute}
-.p2d-village-scene :is(.about-minimal-close-btn,.about-btn-return,.contact-minimal-close-btn,.contact-btn-return,.skills-close-btn) {display:none}
+.p2d-village-scene :is(.about-minimal-close-btn,.about-btn-return,.about-bottom-bar,.contact-minimal-close-btn,.contact-btn-return,.skills-close-btn) {display:none}
 .p2d-village-scene .skills-modal-stage {min-height:auto}
 .entry-gate.gate-inline {position:relative;inset:auto;height:auto;display:block}
 .gate-inline .gate-surface {max-height:none;width:100%;overflow:visible;border:0;background:#140d11}

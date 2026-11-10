@@ -92,7 +92,7 @@ const CameraController = React.memo(function CameraController({
       if (!target || !target.closest) return false;
       return Boolean(
         target.closest(
-          'button, a, input, select, textarea, [role="button"], [role="dialog"], .shinobi-mobile-touchpad, .touch-dpad, .touch-action-pad, .shinobi-context-prompt, .shinobi-coords-widget, .shinobi-settings-popover, .shinobi-destinations-drawer, .portfolio-modal-scroll'
+          'button, a, input, select, textarea, [role="button"], [role="dialog"], .shinobi-mobile-touchpad, .touch-dpad, .touch-action-pad, .shinobi-context-prompt, .shinobi-settings-popover, .shinobi-destinations-drawer, .portfolio-modal-scroll'
         )
       );
     };

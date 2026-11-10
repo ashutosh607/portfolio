@@ -53,10 +53,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
   }
 
   const [visitedIds, setVisitedIds] = useState(() => new Set(['main-street']));
-  const [copiedCoords, setCopiedCoords] = useState(false);
-  const [isCoordsExpanded, setIsCoordsExpanded] = useState(
-    typeof window !== 'undefined' ? window.innerWidth > 920 : false
-  );
   const [isSprintToggled, setIsSprintToggled] = useState(false);
 
   // Mobile virtual 8-way directional thumbpad state
@@ -477,52 +473,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
       </button>
       </div>
 
-      {/* Live Interactive Coordinates Display (Right Side) */}
-      <div className={`shinobi-coords-widget ${isCoordsExpanded ? 'is-expanded' : 'is-collapsed'} ${isDialogueActive ? 'is-hud-obscured' : ''}`}>
-        <button
-          type="button"
-          className="coords-toggle-header"
-          onClick={() => setIsCoordsExpanded((prev) => !prev)}
-          aria-expanded={isCoordsExpanded}
-          title="Toggle coordinates panel"
-        >
-          <span className="coords-icon-tag" aria-hidden="true">📍</span>
-          <span className="coords-title-text">
-            {isCoordsExpanded
-              ? 'COORDINATES'
-              : `[${currentPosition ? currentPosition[0].toFixed(1) : '0'}, ${currentPosition ? currentPosition[2].toFixed(1) : '0'}]`}
-          </span>
-          <span className="coords-chevron" aria-hidden="true">{isCoordsExpanded ? '▲' : '▼'}</span>
-        </button>
-
-        {isCoordsExpanded && (
-          <div className="coords-details-body">
-            <div className="coords-coord-row">
-              <span>X:</span> <strong>{currentPosition ? currentPosition[0].toFixed(2) : '0.00'}</strong>
-            </div>
-            <div className="coords-coord-row">
-              <span>Y:</span> <strong>{currentPosition ? currentPosition[1].toFixed(2) : '0.00'}</strong>
-            </div>
-            <div className="coords-coord-row">
-              <span>Z:</span> <strong>{currentPosition ? currentPosition[2].toFixed(2) : '0.00'}</strong>
-            </div>
-            <button
-              type="button"
-              className="coords-copy-pill"
-              onClick={(e) => {
-                e.stopPropagation();
-                const txt = `[${currentPosition[0].toFixed(2)}, ${currentPosition[1].toFixed(2)}, ${currentPosition[2].toFixed(2)}]`;
-                navigator.clipboard?.writeText(txt);
-                setCopiedCoords(true);
-                setTimeout(() => setCopiedCoords(false), 1500);
-              }}
-            >
-              {copiedCoords ? '✓ Copied Point' : 'Copy Point'}
-            </button>
-          </div>
-        )}
-      </div>
-
       {/* ================= 2. COMPACT MENU / SETTINGS DRAWER ================= */}
       {isMenuOpen && (
         <>
@@ -585,12 +535,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
               </button>
               <button type="button" className="popover-action-row" onClick={toggleNav}>
                 Hide navbar
-              </button>
-              <button type="button" className="popover-action-row" aria-pressed={isCoordsExpanded} onClick={() => {
-                setIsCoordsExpanded(!isCoordsExpanded);
-                setIsMenuOpen(false);
-              }}>
-                Coordinates <span className="popover-action-tag">{isCoordsExpanded ? 'On' : 'Off'}</span>
               </button>
 
               {onToggleNightMode && (
