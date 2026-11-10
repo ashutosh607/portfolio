@@ -1,0 +1,17 @@
+{
+  "name": "shinobi-portfolio-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Interactive Naruto 3D/2D Portfolio & Shinobi CMS",
+  "scripts": {
+    "build": "npm run build --prefix naruto-room",
+    "dev": "npm run dev --prefix naruto-room",
+    "start": "npm run start --prefix backend",
+    "backend:dev": "npm run dev --prefix backend",
+    "backend:start": "npm run start --prefix backend",
+    "frontend:build": "npm run build --prefix naruto-room",
+    "frontend:dev": "npm run dev --prefix naruto-room",
+    "test": "npm test --prefix naruto-room"
+  }
+}
+

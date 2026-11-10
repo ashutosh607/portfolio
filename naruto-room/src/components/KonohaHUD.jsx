@@ -55,7 +55,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
   const [visitedIds, setVisitedIds] = useState(() => new Set(['main-street']));
   const [copiedCoords, setCopiedCoords] = useState(false);
   const [isCoordsExpanded, setIsCoordsExpanded] = useState(
-    typeof window !== 'undefined' ? window.innerWidth > 768 : false
+    typeof window !== 'undefined' ? window.innerWidth > 920 : false
   );
   const [isSprintToggled, setIsSprintToggled] = useState(false);
 
@@ -275,7 +275,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
   const progressPercent = Math.round((visitedIds.size / KONOHA_LOCATIONS.length) * 100);
 
   return (
-    <div className="konoha-hud">
+    <div className="konoha-hud" data-panel-open={isMenuOpen || isControlsOpen || isDestinationsOpen}>
       {/* ================= 1. COMPACT TOP NAVIGATION BAR ================= */}
       <div className="shinobi-nav-shell">
       <header id="village-top-nav" className="shinobi-top-nav" hidden={!isNavVisible}>
@@ -409,7 +409,9 @@ const KonohaHUD = React.memo(function KonohaHUD({
               setIsDestinationsOpen((prev) => !prev);
               setIsMenuOpen(false);
             }}
-            title="Toggle Village Destinations Drawer"
+            aria-label="Village destinations"
+            aria-expanded={isDestinationsOpen}
+            title="Village destinations"
           >
             <span className="dest-compass-mini" aria-hidden="true">🧭</span>
             <span className="dest-trigger-count">{visitedIds.size}/6</span>
@@ -450,7 +452,9 @@ const KonohaHUD = React.memo(function KonohaHUD({
               setIsMenuOpen((prev) => !prev);
               setIsDestinationsOpen(false);
             }}
-            aria-label="Open Portfolio Sections & Settings"
+            aria-expanded={isMenuOpen}
+            aria-controls="village-settings"
+            aria-label={isMenuOpen ? 'Close village menu' : 'Open village menu'}
             title="Portfolio Sections & Settings"
           >
             <span className="mobile-menu-bars" aria-hidden="true">
@@ -475,11 +479,11 @@ const KonohaHUD = React.memo(function KonohaHUD({
 
       {/* Live Interactive Coordinates Display (Right Side) */}
       <div className={`shinobi-coords-widget ${isCoordsExpanded ? 'is-expanded' : 'is-collapsed'} ${isDialogueActive ? 'is-hud-obscured' : ''}`}>
-        <div
+        <button
+          type="button"
           className="coords-toggle-header"
           onClick={() => setIsCoordsExpanded((prev) => !prev)}
-          role="button"
-          tabIndex={0}
+          aria-expanded={isCoordsExpanded}
           title="Toggle coordinates panel"
         >
           <span className="coords-icon-tag" aria-hidden="true">📍</span>
@@ -489,7 +493,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
               : `[${currentPosition ? currentPosition[0].toFixed(1) : '0'}, ${currentPosition ? currentPosition[2].toFixed(1) : '0'}]`}
           </span>
           <span className="coords-chevron" aria-hidden="true">{isCoordsExpanded ? '▲' : '▼'}</span>
-        </div>
+        </button>
 
         {isCoordsExpanded && (
           <div className="coords-details-body">
@@ -527,7 +531,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
             onClick={() => setIsMenuOpen(false)}
             aria-hidden="true"
           />
-          <aside className="shinobi-settings-popover" role="dialog" aria-label="Portfolio Menu & Settings">
+          <aside className="shinobi-settings-popover" id="village-settings" role="dialog" aria-label="Portfolio Menu & Settings">
             <div className="popover-section-header">
               <span>PORTFOLIO SECTIONS</span>
               <button
@@ -557,7 +561,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
             <div className="popover-divider" />
 
             <div className="popover-section-header">
-              <span>WORLD & EXPERIENCE SETTINGS</span>
+              <span>VILLAGE SETTINGS</span>
             </div>
 
             <div className="popover-actions-list">
@@ -569,32 +573,24 @@ const KonohaHUD = React.memo(function KonohaHUD({
                   onOpenModal?.('resume');
                 }}
               >
-                <span>📄 View Printable Resume</span>
+                <span>View résumé</span>
                 <span className="popover-action-tag">PDF</span>
               </button>
 
-              <button
-                type="button"
-                className="popover-action-row"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setIsDestinationsOpen(true);
-                }}
-              >
-                <span>🧭 Village Destinations Map</span>
-                <span className="popover-action-tag">{visitedIds.size}/6</span>
+              <button type="button" className="popover-action-row" onClick={() => {
+                setIsMenuOpen(false);
+                setIsControlsOpen(true);
+              }}>
+                Controls guide
               </button>
-
-              <button
-                type="button"
-                className="popover-action-row"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onOpenModal?.('intro');
-                }}
-              >
-                <span>🍃 Village Tour & Intro</span>
-                <span className="popover-action-tag">Intro</span>
+              <button type="button" className="popover-action-row" onClick={toggleNav}>
+                Hide navbar
+              </button>
+              <button type="button" className="popover-action-row" aria-pressed={isCoordsExpanded} onClick={() => {
+                setIsCoordsExpanded(!isCoordsExpanded);
+                setIsMenuOpen(false);
+              }}>
+                Coordinates <span className="popover-action-tag">{isCoordsExpanded ? 'On' : 'Off'}</span>
               </button>
 
               {onToggleNightMode && (
@@ -605,7 +601,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
                     onToggleNightMode();
                   }}
                 >
-                  <span>{isNightMode ? '🏮 Village Time of Day' : '☀️ Village Time of Day'}</span>
+                  <span>Time of day</span>
                   <span className="popover-action-tag">
                     {isNightMode ? 'Night • 夜' : 'Day • 昼'}
                   </span>
@@ -620,7 +616,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
                     onToggleLiteMode();
                   }}
                 >
-                  <span>⚡ Graphics Quality</span>
+                  <span>Graphics quality</span>
                   <span className="popover-action-tag">{isLiteMode ? 'Max FPS' : 'Balanced'}</span>
                 </button>
               )}
@@ -633,23 +629,11 @@ const KonohaHUD = React.memo(function KonohaHUD({
                   setIsMenuOpen(false);
                 }}
               >
-                <span>📍 Respawn at Main Street</span>
+                <span>Return to Main Street</span>
                 <span className="popover-action-tag">Reset</span>
               </button>
 
-              {onSwitchTo2D && (
-                <button
-                  type="button"
-                  className="popover-action-row"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onSwitchTo2D();
-                  }}
-                >
-                  <span>📋 Switch to 2D Classic Portfolio</span>
-                  <span className="popover-action-tag">2D</span>
-                </button>
-              )}
+
             </div>
           </aside>
         </>

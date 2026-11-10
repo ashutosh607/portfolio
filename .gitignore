@@ -26,6 +26,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Temporary and test artifacts
+*-temp.mjs
+qa-*.png
+qa-*.jpg
+
 # OS files
 .DS_Store
 Thumbs.db

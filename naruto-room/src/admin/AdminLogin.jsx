@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from './AdminAuthContext';
-import { Eye, EyeOff } from 'lucide-react';
+import { getApiBaseUrl } from './api';
+import { Eye, EyeOff, Server, AlertCircle } from 'lucide-react';
 
 function KonohaLeafIcon({ className = '', style = {} }) {
   return (
@@ -28,10 +29,52 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [wakingServer, setWakingServer] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showConfig, setShowConfig] = useState(false);
+  const [customApiUrl, setCustomApiUrl] = useState(() => {
+    return (
+      (typeof window !== 'undefined' &&
+        (sessionStorage.getItem('shinobi_api_url') || localStorage.getItem('shinobi_api_url'))) ||
+      ''
+    );
+  });
 
   const { login } = useAdminAuth();
   const navigate = useNavigate();
+  const currentApiUrl = getApiBaseUrl();
+  const isVercelWithoutEnv =
+    typeof window !== 'undefined' &&
+    window.location.hostname.includes('vercel.app') &&
+    currentApiUrl === '/api' &&
+    !customApiUrl;
+
+  useEffect(() => {
+    let timer;
+    if (submitting) {
+      timer = setTimeout(() => {
+        setWakingServer(true);
+      }, 3000);
+    } else {
+      setWakingServer(false);
+    }
+    return () => clearTimeout(timer);
+  }, [submitting]);
+
+  const handleSaveApiUrl = (e) => {
+    e.preventDefault();
+    if (!customApiUrl.trim()) {
+      sessionStorage.removeItem('shinobi_api_url');
+      localStorage.removeItem('shinobi_api_url');
+    } else {
+      const clean = customApiUrl.trim().replace(/\/+$/, '');
+      const finalUrl = clean.endsWith('/api') ? clean : `${clean}/api`;
+      sessionStorage.setItem('shinobi_api_url', finalUrl);
+      localStorage.setItem('shinobi_api_url', finalUrl);
+      setCustomApiUrl(finalUrl);
+    }
+    window.location.reload();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -42,7 +85,11 @@ export default function AdminLogin() {
       await login(email, password);
       navigate('/admin');
     } catch (err) {
-      setErrorMsg(err.message || 'Invalid shinobi admin credentials.');
+      const msg = err.message || 'Invalid shinobi admin credentials.';
+      setErrorMsg(msg);
+      if (msg.includes('VITE_API_URL') || msg.includes('HTML') || msg.includes('Cannot connect')) {
+        setShowConfig(true);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -62,7 +109,6 @@ export default function AdminLogin() {
       {/* Silhouette of Konoha rooftops on bottom-left */}
       <div className="login-village-silhouette" aria-hidden="true">
         <svg viewBox="0 0 500 240" fill="currentColor">
-          {/* Pagoda watchtower and roofs */}
           <path d="M 60 80 L 100 80 L 105 60 L 55 60 Z" />
           <path d="M 70 60 L 90 60 L 80 40 Z" />
           <rect x="62" y="80" width="36" height="50" />
@@ -73,7 +119,6 @@ export default function AdminLogin() {
           <path d="M 210 180 L 320 180 L 330 160 L 200 160 Z" />
           <rect x="215" y="180" width="105" height="60" />
           <rect x="0" y="210" width="500" height="30" />
-          {/* Glowing windows */}
           <rect x="68" y="90" width="6" height="8" fill="#f59e0b" opacity="0.85" />
           <rect x="86" y="90" width="6" height="8" fill="#f59e0b" opacity="0.85" />
           <rect x="52" y="145" width="8" height="10" fill="#f59e0b" opacity="0.7" />
@@ -103,9 +148,64 @@ export default function AdminLogin() {
         <h1 className="same-login-title">Welcome back</h1>
         <p className="same-login-subtitle">Sign in to manage your portfolio.</p>
 
+        {isVercelWithoutEnv && !errorMsg && (
+          <div
+            style={{
+              background: 'rgba(245, 158, 11, 0.1)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              color: '#fcd34d',
+              padding: '10px 14px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              marginBottom: '16px',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              lineHeight: 1.45,
+            }}
+          >
+            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <span>Backend API URL not detected in build.</span>{' '}
+              <button
+                type="button"
+                onClick={() => setShowConfig(!showConfig)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#FF5A1F',
+                  textDecoration: 'underline',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontSize: '12px',
+                }}
+              >
+                Configure Render backend
+              </button>
+            </div>
+          </div>
+        )}
+
         {errorMsg && (
           <div className="same-login-alert">
             <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {wakingServer && (
+          <div
+            style={{
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              color: '#93c5fd',
+              padding: '8px 12px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              marginBottom: '16px',
+              textAlign: 'center',
+            }}
+          >
+            🍥 Reaching Render backend (waking up from idle, ~30s)...
           </div>
         )}
 
@@ -161,9 +261,94 @@ export default function AdminLogin() {
             className="same-signin-btn"
             disabled={submitting}
           >
-            {submitting ? 'Signing in...' : 'Sign in'}
+            {submitting
+              ? wakingServer
+                ? 'Waking Render backend...'
+                : 'Signing in...'
+              : 'Sign in'}
           </button>
         </form>
+
+        {/* Optional Collapsible Backend URL Setting */}
+        <div style={{ marginTop: '16px', textAlign: 'center' }}>
+          <button
+            type="button"
+            onClick={() => setShowConfig(!showConfig)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#B9ADA5',
+              fontSize: '11px',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              opacity: 0.75,
+            }}
+          >
+            <Server size={12} />
+            <span>{showConfig ? 'Hide API Connection' : 'API Connection: ' + currentApiUrl}</span>
+          </button>
+
+          {showConfig && (
+            <form
+              onSubmit={handleSaveApiUrl}
+              style={{
+                marginTop: '10px',
+                padding: '12px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid #39312D',
+                borderRadius: '8px',
+                textAlign: 'left',
+              }}
+            >
+              <label
+                htmlFor="render-api-input"
+                style={{
+                  display: 'block',
+                  fontSize: '11px',
+                  color: '#B9ADA5',
+                  marginBottom: '6px',
+                }}
+              >
+                Render Backend URL (e.g. <code>https://your-service.onrender.com/api</code>):
+              </label>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  id="render-api-input"
+                  type="text"
+                  value={customApiUrl}
+                  onChange={(e) => setCustomApiUrl(e.target.value)}
+                  placeholder="https://shinobi-backend.onrender.com/api"
+                  style={{
+                    flex: 1,
+                    background: '#141110',
+                    border: '1px solid #39312D',
+                    borderRadius: '6px',
+                    padding: '6px 10px',
+                    color: '#F3E6D3',
+                    fontSize: '11px',
+                  }}
+                />
+                <button
+                  type="submit"
+                  style={{
+                    background: '#FF5A1F',
+                    border: 'none',
+                    borderRadius: '6px',
+                    color: '#141110',
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
 
         {/* Back Link */}
         <div className="same-login-footer">

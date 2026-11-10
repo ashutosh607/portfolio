@@ -9,23 +9,29 @@ export function AdminAuthProvider({ children }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    localStorage.removeItem('shinobi_admin_token');
-    const end = () => setAdmin(null);
+    const end = () => {
+      sessionStorage.removeItem('shinobi_admin_token');
+      localStorage.removeItem('shinobi_admin_token');
+      setAdmin(null);
+    };
+
     window.addEventListener('cms-session-ended', end);
+
     apiRequest('/auth/me')
       .then((res) => {
         if (res.success && res.user) {
           setAdmin(res.user);
         } else {
-          localStorage.removeItem('shinobi_admin_token');
+          end();
         }
       })
       .catch(() => {
-        localStorage.removeItem('shinobi_admin_token');
+        end();
       })
       .finally(() => {
         setLoading(false);
       });
+
     return () => window.removeEventListener('cms-session-ended', end);
   }, []);
 
@@ -36,6 +42,11 @@ export function AdminAuthProvider({ children }) {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
+
+      if (res.token) {
+        sessionStorage.setItem('shinobi_admin_token', res.token);
+        localStorage.setItem('shinobi_admin_token', res.token);
+      }
 
       if (res.user) {
         setAdmin(res.user);
@@ -49,7 +60,12 @@ export function AdminAuthProvider({ children }) {
   };
 
   const logout = async () => {
-    await apiRequest('/auth/logout', { method: 'POST' });
+    try {
+      await apiRequest('/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignore logout errors
+    }
+    sessionStorage.removeItem('shinobi_admin_token');
     localStorage.removeItem('shinobi_admin_token');
     setAdmin(null);
   };
@@ -68,4 +84,3 @@ export const useAdminAuth = () => {
   }
   return context;
 };
-

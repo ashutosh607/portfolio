@@ -61,8 +61,11 @@ app.use(
           'http://localhost:5000',
           'http://localhost:5173',
           'http://localhost:5174',
+          'http://localhost:4173',
+          'https://*.vercel.app',
+          'https://*.onrender.com',
           'https://res.cloudinary.com',
-          ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim()) : []),
+          ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim().replace(/\/+$/, '')) : []),
         ],
         frameAncestors: ["'none'"],
         objectSrc: ["'none'"],
@@ -115,25 +118,47 @@ const globalLimiter = rateLimit({
 });
 app.use('/api', globalLimiter);
 
-// 3. Strict CORS configuration
+// 3. Strict & Dynamic CORS configuration (supports localhost, Vercel deployments, & Render)
 const allowedOrigins = [
-  ...(process.env.NODE_ENV === 'production' ? [] : ['http://localhost:5173','http://localhost:5174','http://localhost:3000']),
-  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim()) : []),
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://localhost:4173',
+  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim().replace(/\/+$/, '')) : []),
 ];
+
+const checkOrigin = (origin, callback) => {
+  // Allow server-to-server, curl, mobile, or same-origin requests with no origin header
+  if (!origin) return callback(null, true);
+
+  const cleanOrigin = origin.trim().replace(/\/+$/, '');
+
+  // Exact match from allowed list
+  if (allowedOrigins.includes(cleanOrigin)) {
+    return callback(null, true);
+  }
+
+  // Allow any Vercel deployment (both production and preview URLs)
+  if (/^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.vercel\.app$/i.test(cleanOrigin)) {
+    return callback(null, true);
+  }
+
+  // Allow Render host domains
+  if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(cleanOrigin)) {
+    return callback(null, true);
+  }
+
+  console.warn(`[CORS] Origin rejected: ${origin}`);
+  return callback(null, false);
+};
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow server-to-server or trusted local origin
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Blocked by Shinobi CORS Policy'));
-      }
-    },
+    origin: checkOrigin,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    exposedHeaders: ['Set-Cookie'],
   })
 );
 
@@ -212,8 +237,8 @@ app.use('/api/github', githubRoutes);
 app.use(notFound);
 app.use(errorHandler);
 
-// 8. Start Server
-app.listen(PORT, () => {
+// 8. Start Server (binds to 0.0.0.0 for Render / cloud container compatibility)
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n======================================================`);
   console.log(`🍥 SHINOBI SECURE BACKEND RUNNING ON PORT: ${PORT}`);
   console.log(`🌐 Health check: http://localhost:${PORT}/api/health`);

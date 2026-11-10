@@ -62,17 +62,20 @@ export const login = async (req, res, next) => {
 
     const token = generateToken(user._id, user.sessionVersion);
 
-    // 4. Secure HTTP-only Cookie flag configuration
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    // 4. Secure HTTP-only Cookie flag configuration (SameSite=None in production allows cross-origin Vercel<->Render communication)
     res.cookie('adminToken', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
     res.json({
       success: true,
       message: 'Authentication verified.',
+      token,
       user: {
         id: user._id,
         email: user.email,
@@ -110,12 +113,13 @@ export const getMe = async (req, res) => {
  * @access Public
  */
 export const logout = async (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   await User.updateOne({ _id: req.user._id }, { $inc: { sessionVersion: 1 } });
   res.cookie('adminToken', '', {
     httpOnly: true,
     expires: new Date(0),
-    sameSite: 'strict',
-    secure: process.env.NODE_ENV === 'production',
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction,
   });
   res.json({
     success: true,

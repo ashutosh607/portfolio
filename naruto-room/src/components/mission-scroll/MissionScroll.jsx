@@ -54,7 +54,16 @@ function LoadedScroll({ records, onClose, onContact, embedded }) {
     const dialog = root.current;
     if (!embedded) dialog.showModal();
     if (!embedded && !history.state?.missionScroll) history.pushState({ ...history.state, missionScroll: board }, '');
+    const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const ctx = gsap.context(() => {
+      if (reducedMotion) {
+        gsap.set('.ms-paper', { clipPath: 'none' });
+        gsap.set('.ms-bundle', { display: 'none' });
+        gsap.set('.ms-left', { xPercent: -100 });
+        gsap.set('.ms-right', { xPercent: 100 });
+        setPhase('open');
+        return;
+      }
       const tl = gsap.timeline({
         paused: embedded,
         onComplete: () => setPhase('open'),
@@ -77,29 +86,30 @@ function LoadedScroll({ records, onClose, onContact, embedded }) {
       if (dialog.querySelector('.ms-card')) {
         tl.from('.ms-card', { opacity: 0, y: 6, stagger: { amount: .16 }, duration: .3 }, 2.98);
       }
-      if (matchMedia('(prefers-reduced-motion: reduce)').matches) tl.timeScale(100);
+      if (embedded && matchMedia('(max-width: 768px)').matches) tl.timeScale(1.7);
     }, dialog);
     const pop = event => {
       if (event.state?.missionScroll) {
         locked.current = false;
         setView(event.state.missionScroll);
-        if (timeline.current.reversed()) { setPhase('opening'); timeline.current.play(); }
+        if (timeline.current?.reversed()) { setPhase('opening'); timeline.current.play(); }
       } else {
         locked.current = true;
         setPhase('closing');
-        timeline.current.reverse();
+        if (timeline.current) timeline.current.reverse();
+        else finish.current?.();
       }
     };
     let observer;
-    if (embedded) {
+    if (embedded && !reducedMotion) {
       observer = new IntersectionObserver(([entry]) => {
         if (entry.isIntersecting) {
           timeline.current.play();
           observer.disconnect();
         }
-      }, { threshold: 0.08 });
+      }, { root: dialog.closest('.portfolio-2d-wrapper'), threshold: 0 });
       observer.observe(dialog);
-    } else window.addEventListener('popstate', pop);
+    } else if (!embedded) window.addEventListener('popstate', pop);
     return () => {
       window.removeEventListener('popstate', pop);
       filterTween.current?.kill();

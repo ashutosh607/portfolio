@@ -18,6 +18,10 @@ export default function DialogueText({
   const onCompleteRef = useRef(onTypingComplete);
 
   useEffect(() => {
+    if (textContainerRef.current) textContainerRef.current.scrollTop = 0;
+  }, [text, textContainerRef]);
+
+  useEffect(() => {
     onCompleteRef.current = onTypingComplete;
   }, [onTypingComplete]);
 
