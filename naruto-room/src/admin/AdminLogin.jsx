@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from './AdminAuthContext';
-import { getApiBaseUrl } from './api';
-import { Eye, EyeOff, Server, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 function KonohaLeafIcon({ className = '', style = {} }) {
   return (
@@ -31,23 +30,9 @@ export default function AdminLogin() {
   const [submitting, setSubmitting] = useState(false);
   const [wakingServer, setWakingServer] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const [showConfig, setShowConfig] = useState(false);
-  const [customApiUrl, setCustomApiUrl] = useState(() => {
-    return (
-      (typeof window !== 'undefined' &&
-        (sessionStorage.getItem('shinobi_api_url') || localStorage.getItem('shinobi_api_url'))) ||
-      ''
-    );
-  });
 
   const { login } = useAdminAuth();
   const navigate = useNavigate();
-  const currentApiUrl = getApiBaseUrl();
-  const isVercelWithoutEnv =
-    typeof window !== 'undefined' &&
-    window.location.hostname.includes('vercel.app') &&
-    currentApiUrl === '/api' &&
-    !customApiUrl;
 
   useEffect(() => {
     let timer;
@@ -61,21 +46,6 @@ export default function AdminLogin() {
     return () => clearTimeout(timer);
   }, [submitting]);
 
-  const handleSaveApiUrl = (e) => {
-    e.preventDefault();
-    if (!customApiUrl.trim()) {
-      sessionStorage.removeItem('shinobi_api_url');
-      localStorage.removeItem('shinobi_api_url');
-    } else {
-      const clean = customApiUrl.trim().replace(/\/+$/, '');
-      const finalUrl = clean.endsWith('/api') ? clean : `${clean}/api`;
-      sessionStorage.setItem('shinobi_api_url', finalUrl);
-      localStorage.setItem('shinobi_api_url', finalUrl);
-      setCustomApiUrl(finalUrl);
-    }
-    window.location.reload();
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
@@ -87,9 +57,6 @@ export default function AdminLogin() {
     } catch (err) {
       const msg = err.message || 'Invalid shinobi admin credentials.';
       setErrorMsg(msg);
-      if (msg.includes('VITE_API_URL') || msg.includes('HTML') || msg.includes('Cannot connect')) {
-        setShowConfig(true);
-      }
     } finally {
       setSubmitting(false);
     }
@@ -268,87 +235,6 @@ export default function AdminLogin() {
               : 'Sign in'}
           </button>
         </form>
-
-        {/* Optional Collapsible Backend URL Setting */}
-        <div style={{ marginTop: '16px', textAlign: 'center' }}>
-          <button
-            type="button"
-            onClick={() => setShowConfig(!showConfig)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#B9ADA5',
-              fontSize: '11px',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              opacity: 0.75,
-            }}
-          >
-            <Server size={12} />
-            <span>{showConfig ? 'Hide API Connection' : 'API Connection: ' + currentApiUrl}</span>
-          </button>
-
-          {showConfig && (
-            <form
-              onSubmit={handleSaveApiUrl}
-              style={{
-                marginTop: '10px',
-                padding: '12px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid #39312D',
-                borderRadius: '8px',
-                textAlign: 'left',
-              }}
-            >
-              <label
-                htmlFor="render-api-input"
-                style={{
-                  display: 'block',
-                  fontSize: '11px',
-                  color: '#B9ADA5',
-                  marginBottom: '6px',
-                }}
-              >
-                Render Backend URL (e.g. <code>https://your-service.onrender.com/api</code>):
-              </label>
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <input
-                  id="render-api-input"
-                  type="text"
-                  value={customApiUrl}
-                  onChange={(e) => setCustomApiUrl(e.target.value)}
-                  placeholder="https://shinobi-backend.onrender.com/api"
-                  style={{
-                    flex: 1,
-                    background: '#141110',
-                    border: '1px solid #39312D',
-                    borderRadius: '6px',
-                    padding: '6px 10px',
-                    color: '#F3E6D3',
-                    fontSize: '11px',
-                  }}
-                />
-                <button
-                  type="submit"
-                  style={{
-                    background: '#FF5A1F',
-                    border: 'none',
-                    borderRadius: '6px',
-                    color: '#141110',
-                    fontWeight: 600,
-                    padding: '6px 12px',
-                    fontSize: '11px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
 
         {/* Back Link */}
         <div className="same-login-footer">
