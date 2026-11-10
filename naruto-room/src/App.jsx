@@ -129,7 +129,6 @@ function AppContent() {
   const [terrainMesh, setTerrainMesh] = useState(null);
   const [narutoPos, setNarutoPos] = useState(() => [...INITIAL_SPAWN.position]);
   const [characterState, setCharacterState] = useState('idle');
-  const [chakra, setChakra] = useState(100);
   const [activeKeys, setActiveKeys] = useState({});
   const [resetCount, setResetCount] = useState(0);
   const [isLiteMode, setIsLiteMode] = useState(detectInitialLiteMode);
@@ -197,11 +196,6 @@ function AppContent() {
 
   const handlePositionUpdate = useCallback((pos) => {
     setNarutoPos(pos);
-  }, []);
-
-  const handleStateChange = useCallback((stateStr, chakraVal) => {
-    setCharacterState(stateStr);
-    setChakra(chakraVal);
   }, []);
 
   const handleKeysChange = useCallback((keys) => {
@@ -409,6 +403,7 @@ function AppContent() {
 
           {/* Actual Konoha Village Environment, 6 Interactive Shrines, Lanterns & O(1) Spatial Collider */}
           <KonohaVillage
+            playerPosRef={narutoPosRef}
             onTerrainReady={handleTerrainReady}
             selectedTargetUid={selectedTargetUid}
             isInteractionBlocked={isMovementPaused}
@@ -431,7 +426,7 @@ function AppContent() {
             cameraAngleRef={cameraAngleRef}
             playerPosRef={narutoPosRef}
             onPositionUpdate={handlePositionUpdate}
-            onStateChange={handleStateChange}
+            onStateChange={setCharacterState}
             onKeysChange={handleKeysChange}
             resetSignal={resetCount}
             isMovementPaused={isMovementPaused}
@@ -463,7 +458,6 @@ function AppContent() {
       <KonohaHUD
         activeKeys={activeKeys}
         characterState={characterState}
-        chakra={chakra}
         currentPosition={narutoPos}
         onResetPosition={handleResetPosition}
         onStartDialogue={handleStartDialogue}

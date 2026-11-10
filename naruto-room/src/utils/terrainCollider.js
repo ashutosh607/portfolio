@@ -165,7 +165,7 @@ export function buildTerrainCollider(rootObject, cellSize = 2.5) {
  * O(1) ground elevation lookup at (x, z) using 2D barycentric interpolation.
  * Returns the highest valid walkable surface Y below maxAllowedY, or null if no hit.
  */
-export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = -2.5) {
+export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = -2.5, surfaceNormal = null) {
   if (!collider || !collider.isSpatialCollider) return null;
 
   const col = Math.floor((x - collider.minX) / collider.cellSize);
@@ -178,6 +178,7 @@ export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = 
   if (!list || list.length === 0) return null;
 
   let bestValidY = -Infinity;
+  let surface = null;
   const eps = -0.002; // small tolerance for shared triangle edges
 
   const tris = collider.groundTris;
@@ -195,11 +196,20 @@ export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = 
     const hitY = w1 * t.ay + w2 * t.by + w3 * t.cy;
 
     if (hitY >= minAllowedY && hitY <= maxAllowedY) {
-      if (hitY > bestValidY) bestValidY = hitY;
+      if (hitY > bestValidY) {
+        bestValidY = hitY;
+        surface = t;
+      }
     }
   }
 
-  if (bestValidY > -Infinity) return bestValidY;
+  if (surfaceNormal && surface) {
+    const t = surface;
+    const dhdx = ((t.bz - t.cz) * (t.ay - t.cy) + (t.cz - t.az) * (t.by - t.cy)) * t.invDenom;
+    const dhdz = ((t.cx - t.bx) * (t.ay - t.cy) + (t.ax - t.cx) * (t.by - t.cy)) * t.invDenom;
+    surfaceNormal.set(-dhdx, 1, -dhdz).normalize();
+  }
+  if (surface) return bestValidY;
   return null;
 }
 

@@ -14,7 +14,6 @@ const TOP_NAV_ITEMS = [
 
 const KonohaHUD = React.memo(function KonohaHUD({
   activeKeys = {},
-  chakra = 100,
   currentPosition = [-16.31, -0.07, -6.8],
   onResetPosition,
   nearbyCharacterInfo = null,
@@ -815,7 +814,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
             </li>
             <li>
               <kbd>SHIFT</kbd>
-              <span>Chakra Sprint</span>
+              <span>Sprint</span>
             </li>
             <li>
               <kbd>SPACE</kbd>
@@ -877,15 +876,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
               <span className="hint-label">Jump</span>
             </div>
 
-            {/* Subtle inline chakra bar only visible when sprinting/jumping */}
-            {chakra < 99 && (
-              <div className="inline-chakra-track" title={`Chakra: ${Math.round(chakra)}%`}>
-                <div
-                  className="inline-chakra-fill"
-                  style={{ width: `${Math.max(0, Math.min(100, chakra))}%` }}
-                />
-              </div>
-            )}
           </div>
 
           {/* Mobile Ergonomic 8-Way Touch D-Pad / Thumbpad */}

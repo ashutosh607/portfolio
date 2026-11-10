@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useMemo } from 'react';
+import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useFBX, useTexture } from '@react-three/drei';
 import { KONOHA_OFFSET } from '../utils/constants';
@@ -168,12 +169,27 @@ function createSignboardTexture(loc) {
 
 const KonohaVillage = React.memo(function KonohaVillage({
   onTerrainReady,
+  playerPosRef,
   selectedTargetUid = null,
   isInteractionBlocked = false,
   enableShadows = true,
   isNightMode = false,
 }) {
   const groupRef = useRef();
+  const keyLight = useRef();
+  const shadowTarget = useMemo(() => new THREE.Object3D(), []);
+  const lightOffset = useMemo(() => isNightMode ? [22, 76, -55] : [50, 80, 35], [isNightMode]);
+  useFrame(() => {
+    if (!keyLight.current || !playerPosRef?.current) return;
+    if (!enableShadows) {
+      shadowTarget.position.set(0, 0, 0);
+      keyLight.current.position.fromArray(lightOffset);
+      return;
+    }
+    const [x, y, z] = playerPosRef.current;
+    shadowTarget.position.set(x, y, z);
+    keyLight.current.position.set(x + lightOffset[0], y + lightOffset[1], z + lightOffset[2]);
+  });
   const offsetGroupRef = useRef();
   const colliderBuiltRef = useRef(false);
   const colliderRef = useRef(null);
@@ -314,19 +330,22 @@ const KonohaVillage = React.memo(function KonohaVillage({
       />
 
       {/* Main Directional Light (Warm Sunlight by Day / Silver-Blue Moonlight by Night) */}
+      <primitive object={shadowTarget} />
       <directionalLight
-        position={isNightMode ? [22, 76, -55] : [50, 80, 35]}
+        ref={keyLight}
+        target={shadowTarget}
+        position={lightOffset}
         color={isNightMode ? '#a8c7f7' : '#fff5e4'}
         intensity={isNightMode ? 1.38 : 2.0}
         castShadow={enableShadows}
         shadow-mapSize={[512, 512]}
         shadow-camera-near={15}
         shadow-camera-far={180}
-        shadow-camera-left={-45}
-        shadow-camera-right={45}
-        shadow-camera-top={45}
-        shadow-camera-bottom={-45}
-        shadow-bias={-0.0005}
+        shadow-camera-left={-10}
+        shadow-camera-right={10}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-10}
+        shadow-bias={-0.00012}
       />
 
       {/* Soft Ambient Fill so architecture & textures remain clear and never pitch-black */}

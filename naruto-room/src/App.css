@@ -1101,21 +1101,6 @@
   font-size: 12px;
 }
 
-.inline-chakra-track {
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 0;
-  height: 2px;
-  background: rgba(182, 165, 140, 0.15);
-}
-
-.inline-chakra-fill {
-  height: 100%;
-  background: var(--vermilion);
-  transition: width 0.15s linear;
-}
-
 /* Bottom Right Show Controls Button */
 .shinobi-show-controls-pill {
   display: inline-flex;

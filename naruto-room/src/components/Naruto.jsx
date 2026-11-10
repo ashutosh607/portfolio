@@ -17,13 +17,20 @@ import { sampleGroundY, isWallBlocking } from '../utils/terrainCollider';
 // Preload the Naruto model
 useGLTF.preload('/models/naruto/source/untitled.glb');
 
-const shadowDiscGeom = new THREE.CircleGeometry(0.42, 16);
-const shadowDiscMat = new THREE.MeshBasicMaterial({
-  color: '#120d0a',
-  transparent: true,
-  opacity: 0.38,
-  depthWrite: false,
-});
+// Single-channel radial mask for the lightweight ground shadow.
+const maskSize = 32;
+const maskPixels = new Uint8Array(maskSize * maskSize * 4);
+for (let y = 0; y < maskSize; y++) {
+  for (let x = 0; x < maskSize; x++) {
+    const radius = Math.hypot(2 * x / (maskSize - 1) - 1, 2 * y / (maskSize - 1) - 1);
+    maskPixels[(y * maskSize + x) * 4 + 1] = Math.round(255 * (1 - THREE.MathUtils.smoothstep(radius, 0, 1)));
+  }
+}
+const shadowMask = new THREE.DataTexture(maskPixels, maskSize, maskSize);
+shadowMask.minFilter = shadowMask.magFilter = THREE.LinearFilter;
+shadowMask.needsUpdate = true;
+const shadowNormal = new THREE.Vector3();
+const planeNormal = new THREE.Vector3(0, 0, 1);
 
 // Pre-allocated scratch math objects for 0-GC skeletal walk/sprint blending in useFrame
 const _axisX = new THREE.Vector3(1, 0, 0);
@@ -32,6 +39,23 @@ const _axisZ = new THREE.Vector3(0, 0, 1);
 const _tmpQuat = new THREE.Quaternion();
 const _tmpQuat2 = new THREE.Quaternion();
 const _walkQuat = new THREE.Quaternion();
+
+// One stride, sampled at contact, loading, mid-stance, toe-off and swing.
+const thighAngles = [0.48, 0.33, 0.03, -0.29, -0.38, -0.04, 0.39, 0.54];
+const kneeAngles = [-0.08, -0.27, -0.12, -0.1, -0.48, -0.98, -0.78, -0.32];
+const ankleAngles = [-0.18, -0.06, 0.08, 0.24, 0.37, 0.23, 0.07, -0.15];
+
+function sampleStride(angles, phase) {
+  const index = Math.floor(phase);
+  const t = phase - index;
+  const previous = angles[(index + 7) % 8];
+  const start = angles[index % 8];
+  const end = angles[(index + 1) % 8];
+  const next = angles[(index + 2) % 8];
+  // Periodic cubic interpolation keeps joint velocities continuous at contact.
+  return start + 0.5 * t * (end - previous + t * (2 * previous - 5 * start + 4 * end - next
+    + t * (3 * (start - end) + next - previous)));
+}
 
 const Naruto = React.memo(function Naruto({
   terrainMesh,
@@ -48,6 +72,7 @@ const Naruto = React.memo(function Naruto({
 }) {
   const group = useRef();
   const innerModel = useRef();
+  const contactShadow = useRef();
   const { invalidate } = useThree();
 
   // Load the Naruto GLTF
@@ -63,7 +88,6 @@ const Naruto = React.memo(function Naruto({
     velocityY: 0,
     isGrounded: true,
     rotation: INITIAL_SPAWN.facing, // face the visitor on initial arrival
-    chakra: 100,
     speed: 0, // for smooth acceleration
   });
 
@@ -73,9 +97,7 @@ const Naruto = React.memo(function Naruto({
     y: INITIAL_SPAWN.position[1],
     z: INITIAL_SPAWN.position[2],
     state: 'idle',
-    chakra: 100,
     lastPosTime: 0,
-    lastStateTime: 0,
   });
 
   // Track keyboard inputs
@@ -380,24 +402,16 @@ const Naruto = React.memo(function Naruto({
       }
     }
 
-    // Sprinting logic with chakra/stamina drain
-    let isSprinting = false;
-    if (isMoving && (k.sprint || tInput?.sprint) && p.chakra > 5) {
-      isSprinting = true;
-      p.chakra = Math.max(0, p.chakra - dt * 16);
-    } else {
-      p.chakra = Math.min(100, p.chakra + dt * 14);
-    }
+    const isSprinting = isMoving && (k.sprint || tInput?.sprint);
 
     // Smooth acceleration / deceleration
     const targetSpeed = isMoving ? (isSprinting ? SPRINT_SPEED : WALK_SPEED) : 0;
     p.speed += (targetSpeed - p.speed) * Math.min(1, dt * 14);
 
     // Jumping physics
-    if ((k.jump || tInput?.jump) && p.isGrounded && p.chakra >= 8 && !isMovementPaused) {
+    if ((k.jump || tInput?.jump) && p.isGrounded && !isMovementPaused) {
       p.velocityY = JUMP_VELOCITY;
       p.isGrounded = false;
-      p.chakra = Math.max(0, p.chakra - 6);
     }
 
     // Prospective new position
@@ -460,6 +474,8 @@ const Naruto = React.memo(function Naruto({
     newX = Math.max(VILLAGE_BOUNDS.minX, Math.min(VILLAGE_BOUNDS.maxX, newX));
     newZ = Math.max(VILLAGE_BOUNDS.minZ, Math.min(VILLAGE_BOUNDS.maxZ, newZ));
 
+    const distanceTraveled = Math.hypot(newX - p.x, newZ - p.z);
+    const groundSpeed = dt > 0 ? distanceTraveled / dt : 0;
     p.x = newX;
     p.z = newZ;
 
@@ -475,6 +491,19 @@ const Naruto = React.memo(function Naruto({
 
     // Apply transformation to character group
     group.current.position.set(p.x, p.y, p.z);
+    if (contactShadow.current) {
+      const shadow = contactShadow.current;
+      const floor = sampleGroundY(terrainMesh, p.x, p.z, p.groundY + 0.08, -2.5, shadowNormal);
+      shadow.visible = floor !== null;
+      if (shadow.visible) {
+        const clearance = Math.max(0, p.y - floor);
+        const spread = 1 + Math.min(clearance, 3) * 0.16;
+        shadow.position.set(p.x, floor + 0.013, p.z);
+        shadow.quaternion.setFromUnitVectors(planeNormal, shadowNormal);
+        shadow.scale.set(0.88 * spread, 0.88 * spread, 1);
+        shadow.material.opacity = 0.48 / (1 + clearance * 1.25);
+      }
+    }
     group.current.rotation.y = p.rotation;
 
     // ================= GLITCH-FREE ANIMATION: IDLE <-> NORMAL WALK <-> NINJA SPRINT =================
@@ -483,12 +512,12 @@ const Naruto = React.memo(function Naruto({
     let stateStr = 'idle';
     if (!p.isGrounded) {
       stateStr = 'jumping';
-    } else if (p.speed > 0.4) {
+    } else if (groundSpeed > 0.1) {
       stateStr = isSprinting ? 'sprinting' : 'walking';
     }
 
     // 1. Overall locomotion blend: 0 = standing idle, 1 = moving (walking or sprinting)
-    const wantsMove = p.speed > 0.4 || !p.isGrounded;
+    const wantsMove = groundSpeed > 0.1 || !p.isGrounded;
     const targetMoveBlend = wantsMove ? 1.0 : 0.0;
     animBlendRef.current += (targetMoveBlend - animBlendRef.current) * Math.min(1, dt * 11);
     const moveBlend = animBlendRef.current;
@@ -504,16 +533,14 @@ const Naruto = React.memo(function Naruto({
     if (moveBlend > 0.008 && bones.length > 0) {
       idleLockedRef.current = false;
 
-      // Advance upright walk cycle phase proportional to movement speed
-      const stepRate = Math.max(2.2, Math.min(p.speed, WALK_SPEED * 1.15)) * 1.48;
-      walkPhaseRef.current = (walkPhaseRef.current + dt * stepRate) % (Math.PI * 2);
+      // A full left/right stride spans 1.65 village units.
+      if (p.isGrounded) {
+        walkPhaseRef.current = (walkPhaseRef.current + distanceTraveled / 1.65) % 1;
+      }
       const phase = walkPhaseRef.current;
-
-      // Sine wave gait signals for alternating left/right stride & counter-swing
-      const leftSwing = Math.sin(phase);
-      const rightSwing = -leftSwing;
-      const leftKneeLift = Math.max(0, Math.cos(phase - 0.32));
-      const rightKneeLift = Math.max(0, -Math.cos(phase - 0.32));
+      const leftPhase = phase * 8;
+      const rightPhase = (leftPhase + 4) % 8;
+      const leftSwing = Math.cos(phase * 2 * Math.PI);
 
       // Only drive the Mixamo ninja-run clip when sprinting (or blending out of sprint / jumping)
       if (runClip) {
@@ -539,25 +566,25 @@ const Naruto = React.memo(function Naruto({
         // Construct natural upright human walking pose per bone
         switch (b.shortName) {
           case 'LeftUpLeg':
-            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, leftSwing * 0.48));
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, sampleStride(thighAngles, leftPhase)));
             break;
           case 'RightUpLeg':
-            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, rightSwing * 0.48));
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, sampleStride(thighAngles, rightPhase)));
             break;
           case 'LeftLeg':
-            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, -(0.06 + 0.54 * leftKneeLift)));
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, sampleStride(kneeAngles, leftPhase)));
             break;
           case 'RightLeg':
-            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, -(0.06 + 0.54 * rightKneeLift)));
+            _walkQuat.multiply(_tmpQuat.setFromAxisAngle(_axisX, sampleStride(kneeAngles, rightPhase)));
             break;
           case 'LeftFoot':
             _walkQuat.multiply(
-              _tmpQuat.setFromAxisAngle(_axisX, -0.14 * leftKneeLift + 0.12 * leftSwing)
+              _tmpQuat.setFromAxisAngle(_axisX, sampleStride(ankleAngles, leftPhase))
             );
             break;
           case 'RightFoot':
             _walkQuat.multiply(
-              _tmpQuat.setFromAxisAngle(_axisX, -0.14 * rightKneeLift + 0.12 * rightSwing)
+              _tmpQuat.setFromAxisAngle(_axisX, sampleStride(ankleAngles, rightPhase))
             );
             break;
           case 'LeftArm':
@@ -624,16 +651,12 @@ const Naruto = React.memo(function Naruto({
 
     // Subtle vertical cadence bob during normal walking & gentle breathing when idle
     if (innerModel.current) {
-      if (p.speed <= 0.4 && p.isGrounded) {
-        const breathTime = state.clock.getElapsedTime();
-        innerModel.current.position.y = Math.sin(breathTime * 2.5) * 0.008;
-      } else if (p.isGrounded && sprintBlend < 0.99) {
-        const walkBob =
-          Math.abs(Math.sin(walkPhaseRef.current)) * 0.024 * moveBlend * (1.0 - sprintBlend);
-        innerModel.current.position.y = walkBob;
-      } else {
-        innerModel.current.position.y = 0;
-      }
+      const gaitWeight = p.isGrounded ? moveBlend * (1 - sprintBlend) : 0;
+      const phaseAngle = walkPhaseRef.current * 2 * Math.PI;
+      innerModel.current.position.x = 0.018 * Math.sin(phaseAngle) * gaitWeight;
+      const breath = Math.sin(state.clock.elapsedTime * 2.5) * 0.008;
+      innerModel.current.position.y = (p.isGrounded ? breath * (1 - moveBlend) : 0)
+        - 0.022 * Math.cos(2 * phaseAngle) * gaitWeight;
     }
 
     // Update direct reference for 60fps smooth camera & proximity tracking without React re-renders
@@ -659,32 +682,27 @@ const Naruto = React.memo(function Naruto({
       onPositionUpdate?.([p.x, p.y, p.z]);
     }
 
-    // Only update chakra and state when actually changed
-    const roundedChakra = Math.round(p.chakra);
-    const stateChanged = stateStr !== rep.state;
-    const chakraChanged = Math.abs(roundedChakra - rep.chakra) >= 4;
-
-    if (stateChanged || (chakraChanged && now - rep.lastStateTime > 0.25)) {
+    if (stateStr !== rep.state) {
       rep.state = stateStr;
-      rep.chakra = roundedChakra;
-      rep.lastStateTime = now;
-      onStateChange?.(stateStr, roundedChakra);
+      onStateChange?.(stateStr);
     }
   });
 
   return (
-    <group ref={group} dispose={null}>
-      {/* Ground contact shadow disc (always keeps character grounded even in Lite/No-Shadow mode) */}
-      <mesh
-        position={[0, 0.02, 0]}
-        rotation={[-Math.PI / 2, 0, 0]}
-        geometry={shadowDiscGeom}
-        material={shadowDiscMat}
-      />
-      <group ref={innerModel}>
-        <primitive object={scene} />
+    <>
+      {!enableShadows && (
+        <mesh ref={contactShadow} visible={false}>
+          <planeGeometry />
+          <meshBasicMaterial color="#1a1412" alphaMap={shadowMask} transparent depthWrite={false}
+            polygonOffset polygonOffsetFactor={-1} />
+        </mesh>
+      )}
+      <group ref={group} dispose={null}>
+        <group ref={innerModel}>
+          <primitive object={scene} />
+        </group>
       </group>
-    </group>
+    </>
   );
 });
 

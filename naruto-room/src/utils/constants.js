@@ -19,7 +19,7 @@ export const VILLAGE_BOUNDS = {
 export const KONOHA_OFFSET = [-159.4, 9.284, 322.6];
 
 // Movement speeds (meters per second)
-export const WALK_SPEED = 5.2;
+export const WALK_SPEED = 2.15;
 export const SPRINT_SPEED = 9.6;
 export const JUMP_VELOCITY = 7.8;
 export const GRAVITY = -22.0;
