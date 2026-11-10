@@ -104,6 +104,43 @@
   z-index: 35;
 }
 
+.shinobi-nav-shell {
+  position: relative;
+  flex: 0 0 auto;
+  z-index: 35;
+}
+
+.shinobi-top-nav[hidden] {
+  display: none;
+}
+
+.shinobi-nav-visibility {
+  position: absolute;
+  top: 100%;
+  left: max(12px, env(safe-area-inset-left));
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid rgba(182, 165, 140, .4);
+  border-radius: 0 0 10px 10px;
+  background: rgba(34, 29, 24, .94);
+  color: var(--parchment);
+  font: 600 12px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.shinobi-nav-visibility:focus-visible {
+  outline: 2px solid var(--parchment);
+  outline-offset: 2px;
+}
+
+@media (pointer: coarse) {
+  .shinobi-nav-visibility { min-height: 44px; }
+}
+
 /* Left Brand Identity */
 .shinobi-brand-left {
   display: flex;

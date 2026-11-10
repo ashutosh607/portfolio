@@ -67,31 +67,17 @@ export default function DialogueControls({
           </defs>
         </svg>
 
-        {/* Center Minimal Next Chevron Indicator (only visible when current line finished typing & more lines remain) */}
-        {!isTyping && !isFinalLine && (
-          <button
-            type="button"
-            className="dlg-next-chevron-btn"
-            onClick={onAdvance}
-            title="Next line (Space / Enter / E)"
-            aria-label="Advance to next dialogue line"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="dlg-chevron-svg"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-        )}
-
-        {/* Right Compact Fast Forward / Close Pill Button */}
         <div className="dlg-right-actions">
+          {(!isFinalLine || isTyping) && (
+            <button
+              type="button"
+              className="dlg-next-pill"
+              onClick={onAdvance}
+              title={isTyping ? 'Reveal the full line' : 'Advance to the next line'}
+            >
+              Next <span aria-hidden="true">→</span>
+            </button>
+          )}
           {(!isFinalLine || isTyping) ? (
             <button
               type="button"

@@ -33,6 +33,25 @@ const KonohaHUD = React.memo(function KonohaHUD({
   const [isDestinationsOpen, setIsDestinationsOpen] = useState(false);
   const [isControlsOpen, setIsControlsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(() => {
+    try {
+      return localStorage.getItem('konoha-3d-navbar') !== 'hidden';
+    } catch {
+      return true;
+    }
+  });
+
+  function toggleNav() {
+    const visible = !isNavVisible;
+    setIsNavVisible(visible);
+    setIsMenuOpen(false);
+    try {
+      localStorage.setItem('konoha-3d-navbar', visible ? 'visible' : 'hidden');
+    } catch {
+      // The toggle still works when browser storage is unavailable.
+    }
+  }
+
   const [visitedIds, setVisitedIds] = useState(() => new Set(['main-street']));
   const [copiedCoords, setCopiedCoords] = useState(false);
   const [isCoordsExpanded, setIsCoordsExpanded] = useState(
@@ -258,7 +277,8 @@ const KonohaHUD = React.memo(function KonohaHUD({
   return (
     <div className="konoha-hud">
       {/* ================= 1. COMPACT TOP NAVIGATION BAR ================= */}
-      <header className="shinobi-top-nav">
+      <div className="shinobi-nav-shell">
+      <header id="village-top-nav" className="shinobi-top-nav" hidden={!isNavVisible}>
         {/* Left: Brand Identity */}
         <div className="shinobi-brand-left">
           <button
@@ -439,6 +459,19 @@ const KonohaHUD = React.memo(function KonohaHUD({
           </button>
         </div>
       </header>
+      <button
+        type="button"
+        className="shinobi-nav-visibility"
+        aria-controls="village-top-nav"
+        aria-expanded={isNavVisible}
+        onClick={toggleNav}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d={isNavVisible ? 'M3 10l5-5 5 5' : 'M3 6l5 5 5-5'} stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {isNavVisible ? 'Hide navbar' : 'Show navbar'}
+      </button>
+      </div>
 
       {/* Live Interactive Coordinates Display (Right Side) */}
       <div className={`shinobi-coords-widget ${isCoordsExpanded ? 'is-expanded' : 'is-collapsed'} ${isDialogueActive ? 'is-hud-obscured' : ''}`}>

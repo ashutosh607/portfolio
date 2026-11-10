@@ -341,7 +341,7 @@
 /* Bottom Bar: Wave Line + Next Chevron + Fast Forward */
 .dlg-bottom-bar {
   position: relative;
-  height: 36px;
+  min-height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,37 +357,23 @@
   pointer-events: none;
 }
 
-/* Minimal Downward Next Chevron */
-.dlg-next-chevron-btn {
-  position: relative;
-  z-index: 3;
-  background: transparent;
-  border: none;
-  color: #F5E9DD;
-  padding: 6px 12px;
-  cursor: pointer;
+.dlg-next-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  animation: dlgChevronFloat 1.8s ease-in-out infinite;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 19px;
+  border: 1px solid #f2d0a2;
+  border-radius: 999px;
+  background: #e8bf91;
+  color: #301c18;
+  font: 600 14px/1 'Outfit', sans-serif;
+  cursor: pointer;
 }
 
-.dlg-chevron-svg {
-  width: 20px;
-  height: 20px;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.8));
-}
-
-@keyframes dlgChevronFloat {
-  0%, 100% {
-    transform: translateY(0);
-    opacity: 0.65;
-  }
-  50% {
-    transform: translateY(3.5px);
-    opacity: 1;
-  }
-}
+.dlg-next-pill:hover { background: #f5d9b5; }
+.dlg-next-pill:focus-visible { outline: 2px solid #fff3df; outline-offset: 3px; }
 
 /* Right Fast Forward & Close Actions */
 .dlg-right-actions {
@@ -613,7 +599,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .dlg-next-chevron-btn,
   .dlg-typewriter-caret,
   .dlg-choice-pill,
   .dlg-fast-forward-pill {

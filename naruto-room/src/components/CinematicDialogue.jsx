@@ -224,6 +224,9 @@ export default function CinematicDialogue({
         return;
       }
 
+      // Let focused dialogue buttons receive native keyboard activation.
+      if (rootRef.current?.contains(e.target) && tag === 'button' && (e.code === 'Space' || e.code === 'Enter')) return;
+
       if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
         // Prevent Space from making Naruto jump or scrolling page
         e.preventDefault();
