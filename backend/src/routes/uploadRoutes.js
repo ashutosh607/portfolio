@@ -1,6 +1,11 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
-import { uploadImageFile, uploadDocumentFile } from '../controllers/uploadController.js';
+import {
+  uploadImageFile,
+  uploadDocumentFile,
+  serveDocumentFile,
+  deleteAssetStorage,
+} from '../controllers/uploadController.js';
 import { uploadImage, uploadDocument } from '../middleware/upload.js';
 import { protectAdmin } from '../middleware/auth.js';
 
@@ -10,7 +15,6 @@ import Profile from '../models/Profile.js';
 import Contact from '../models/Contact.js';
 import Mission from '../models/Mission.js';
 import Dialogue from '../models/Dialogue.js';
-import { deleteFromCloudinary } from '../config/cloudinary.js';
 
 const router = express.Router();
 
@@ -28,6 +32,7 @@ const uploadLimiter = rateLimit({
 
 router.post('/image', protectAdmin, uploadLimiter, uploadImage.single('file'), uploadImageFile);
 router.post('/document', protectAdmin, uploadLimiter, uploadDocument.single('file'), uploadDocumentFile);
+router.get('/documents/:file', serveDocumentFile);
 
 router.get('/', protectAdmin, async (req, res) => {
   res.json({ data: await Asset.find().sort({ createdAt: -1 }) });
@@ -48,7 +53,7 @@ router.delete('/:id', protectAdmin, async (req, res) => {
   );
   if (uses.some(Boolean))
     return res.status(409).json({ message: 'Replace references to this file before deleting it.' });
-  const result = await deleteFromCloudinary(asset.publicId, asset.resourceType);
+  const result = await deleteAssetStorage(asset);
   if (!['ok', 'not found'].includes(result.result))
     return res.status(502).json({ message: 'Storage did not confirm deletion' });
   await asset.deleteOne();

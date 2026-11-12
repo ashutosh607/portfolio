@@ -1,6 +1,15 @@
 import { certificatesFor } from '../../data/missionRepository';
 import React, { useRef, useState } from 'react';
 
+function isDocumentUrl(url = '') {
+  return (
+    /\.pdf(?:$|[?#])/i.test(url) ||
+    /\/upload\/documents\//i.test(url) ||
+    /\/raw\/upload\//i.test(url) ||
+    /drive\.google\.com\/file\//i.test(url)
+  );
+}
+
 export function ProjectLink({ mission }) {
   return <a href={mission.liveUrl} target="_blank" rel="noopener noreferrer">View Project ↗</a>;
 }
@@ -51,7 +60,7 @@ export function MissionDetail({ mission, onPreview }) {
       }).filter(([,v]) => v).map(([k,v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
     </section>)}
     {certificates.length ? certificates.map((item,i) => <button className="ms-thumb" key={item.url} onClick={() => onPreview(i)}>
-      {/\.pdf(?:$|[?#])/i.test(item.url) ? <span>View PDF certificate</span> : <img loading="lazy" src={item.url} alt={item.title || 'Participation certificate'}/>}</button>) :
+      {isDocumentUrl(item.url) ? <span>View PDF certificate</span> : <img loading="lazy" src={item.url} alt={item.title || 'Participation certificate'}/>}</button>) :
       !study && <p className="ms-empty">Participation certificates haven’t been added yet.</p>}</>}
   </section>;
 }
@@ -64,7 +73,7 @@ export function CertificateViewer({ items, index, onChange, onClose }) {
     <div className="ms-actions"><button onClick={onClose}>Close preview</button>
       <button onClick={() => setZoom(zoom === 1 ? 2 : 1)}>{zoom === 1 ? 'Zoom in' : 'Zoom out'}</button>
       {document.fullscreenEnabled && <button onClick={() => (document.fullscreenElement ? document.exitFullscreen() : frame.current.requestFullscreen()).catch(() => {})}>Full screen</button>}
-    </div><div className="ms-image">{/\.pdf(?:$|[?#])/i.test(item.url) ? <a href={item.url} target="_blank" rel="noreferrer">Open PDF certificate ↗</a> : <img style={{width: zoom * 100 + '%'}} src={item.url} alt={item.title || 'Participation certificate'}/>}</div>
+    </div><div className="ms-image">{isDocumentUrl(item.url) ? <a href={item.url} target="_blank" rel="noreferrer">Open PDF certificate ↗</a> : <img style={{width: zoom * 100 + '%'}} src={item.url} alt={item.title || 'Participation certificate'}/>}</div>
     <div className="ms-actions"><button disabled={!index} onClick={() => onChange(index - 1)}>Previous</button>
     <span>{index + 1} / {items.length}</span><button disabled={index === items.length - 1} onClick={() => onChange(index + 1)}>Next</button></div>
   </section>;

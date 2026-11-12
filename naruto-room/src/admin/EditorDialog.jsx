@@ -13,6 +13,7 @@ export default function EditorDialog({ title, onClose, children }) {
       className="admin-modal-backdrop cms-dialog"
       aria-label={title}
       onCancel={(e) => {
+        if (e.target !== e.currentTarget) return;
         e.preventDefault();
         onClose();
       }}

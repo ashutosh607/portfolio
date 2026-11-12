@@ -95,8 +95,17 @@ export const missionSchema = z.object({
   status: z.string().trim().max(80).default('Completed'),
   liveUrl: safeUrlSchema.default(''),
   thumbnail: safeUrlSchema.default(''),
+  startDate: z.string().trim().max(50).optional().nullable(),
+  endDate: z.string().trim().max(50).optional().nullable(),
+  availableFrom: z
+    .string()
+    .trim()
+    .refine((v) => !v || Number.isFinite(Date.parse(v)), 'Invalid availability date')
+    .optional()
+    .nullable(),
   description: z.string().trim().max(1500).default(''),
   technologies: z.array(z.string().trim().max(50)).max(30).default([]),
+  certificates: z.array(safeUrlSchema).default([]),
   caseStudy: z
     .object({
       requirements: z.array(z.string().trim().max(300)).max(20).default([]),
@@ -106,12 +115,13 @@ export const missionSchema = z.object({
       challenges: z.array(z.string().trim().max(300)).default([]),
       screenshots: z.array(safeUrlSchema).default([]),
     })
+    .nullable()
     .optional(),
   events: z
     .array(
       z.object({
         id: z.string().max(80),
-        title: z.string().max(150),
+        title: z.string().max(150).default(''),
         organiser: z.string().max(150).default(''),
         date: z.string().max(50).default(''),
         duration: z.string().max(50).default(''),

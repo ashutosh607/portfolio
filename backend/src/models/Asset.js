@@ -9,6 +9,12 @@ const schema = new mongoose.Schema(
     width: Number,
     height: Number,
     resourceType: { type: String, enum: ['raw', 'image'], required: true },
+    storage: {
+      type: String,
+      enum: ['cloudinary', 'cloudinary-proxy', 'gridfs'],
+      default: 'cloudinary',
+    },
+    gridfsId: { type: mongoose.Schema.Types.ObjectId, default: null },
   },
   { timestamps: true },
 );

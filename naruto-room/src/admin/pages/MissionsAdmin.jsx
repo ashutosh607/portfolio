@@ -20,6 +20,63 @@ import {
   Layers,
 } from 'lucide-react';
 
+function isDocumentUrl(url = '') {
+  return (
+    /\.pdf(?:$|[?#])/i.test(url) ||
+    /\/upload\/documents\//i.test(url) ||
+    /\/raw\/upload\//i.test(url) ||
+    /drive\.google\.com\/file\//i.test(url)
+  );
+}
+
+function EvidenceList({ items = [], kind = 'asset', onUpdateItem, onRemove }) {
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  if (!items.length) return null;
+
+  const copyUrl = async (url, index) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex((cur) => (cur === index ? null : cur)), 1800);
+    } catch {
+      /* Clipboard API unavailable */
+    }
+  };
+
+  return (
+    <div className="cms-evidence-list">
+      {items.map((url, i) => (
+        <div key={i} className="cms-evidence-item">
+          {isDocumentUrl(url) ? (
+            <span className="cms-pdf-pill">PDF</span>
+          ) : (
+            <img className="cms-thumb" src={url} alt="" />
+          )}
+          <input
+            type="text"
+            value={url}
+            aria-label={`${kind} ${i + 1} URL`}
+            onChange={(e) => onUpdateItem(i, e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault();
+            }}
+          />
+          <button type="button" onClick={() => copyUrl(url, i)}>
+            {copiedIndex === i ? 'Copied' : 'Copy'}
+          </button>
+          <a href={url} target="_blank" rel="noreferrer">
+            Open ↗
+          </a>
+          <button type="button" onClick={() => onRemove(i)}>
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function MissionsAdmin() {
   const [params, setParams] = useSearchParams();
   const [missions, setMissions] = useState([]);
@@ -41,6 +98,13 @@ export default function MissionsAdmin() {
     status: 'Completed',
     liveUrl: '',
     thumbnail: '',
+    startDate: '',
+    endDate: '',
+    availableFrom: '',
+    challenges: '',
+    screenshots: [],
+    certificates: [],
+    events: [],
     description: '',
     techText: '',
     requirementsText: '',
@@ -79,6 +143,13 @@ export default function MissionsAdmin() {
       status: 'Completed',
       liveUrl: '',
       thumbnail: '',
+      startDate: '',
+      endDate: '',
+      availableFrom: '',
+      challenges: '',
+      screenshots: [],
+      certificates: [],
+      events: [],
       description: '',
       techText: 'React, Node.js, Express, MongoDB, Tailwind CSS',
       requirementsText: '',
@@ -155,14 +226,19 @@ export default function MissionsAdmin() {
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean),
-        startDate: formData.startDate,
-        endDate: formData.endDate,
+        startDate: formData.startDate || '',
+        endDate: formData.endDate || '',
         availableFrom: formData.availableFrom || null,
-        events: formData.events,
-        certificates: formData.certificates,
+        events: (formData.events || []).map((ev, order) => ({
+          ...ev,
+          order,
+          technologies: (ev.technologies || []).map((t) => String(t || '').trim()).filter(Boolean),
+          certificates: (ev.certificates || []).map((u) => String(u || '').trim()).filter(Boolean),
+        })),
+        certificates: (formData.certificates || []).map((u) => String(u || '').trim()).filter(Boolean),
         caseStudy: {
           challenges: (formData.challenges || '').split('\n').filter(Boolean),
-          screenshots: formData.screenshots || [],
+          screenshots: (formData.screenshots || []).map((u) => String(u || '').trim()).filter(Boolean),
           requirements: formData.requirementsText
             .split('\n')
             .map((r) => r.trim())
@@ -417,7 +493,7 @@ export default function MissionsAdmin() {
           <div className="admin-modal-dialog large">
             <div className="admin-modal-header">
               <h2>{editingMission ? `Edit: ${editingMission.title}` : 'Add New Mission'}</h2>
-              <button onClick={() => setModalOpen(false)} className="close-modal-btn">
+              <button type="button" onClick={() => setModalOpen(false)} className="close-modal-btn">
                 <X size={18} />
               </button>
             </div>
@@ -526,6 +602,10 @@ export default function MissionsAdmin() {
                     value={formData.thumbnail}
                     onChange={(e) => setFormData({ ...formData, thumbnail: e.target.value })}
                     placeholder="/missions/thumb.webp or Cloudinary URL"
+                  />
+                  <AssetInput
+                    label="Upload or paste thumbnail"
+                    onUpload={(url) => setFormData((f) => ({ ...f, thumbnail: url }))}
                   />
                 </div>
               </div>
@@ -649,28 +729,33 @@ export default function MissionsAdmin() {
                     onChange={(e) => setFormData({ ...formData, challenges: e.target.value })}
                   />
                 </label>
-                {['screenshots', 'certificates'].map((k) => (
-                  <div key={k}>
+                {[
+                  ['screenshots', 'Add to screenshots (upload, Ctrl+V, or URL)', false, false],
+                  ['certificates', 'Add to certificates (PDF or image, Ctrl+V, or URL)', true, true],
+                ].map(([k, label, isDoc, allowBoth]) => (
+                  <div key={k} className="cms-evidence-block">
                     <AssetInput
-                      label={'Add to ' + k}
-                      document={k === 'certificates'}
+                      label={label}
+                      document={isDoc}
+                      acceptBoth={allowBoth}
                       onUpload={(url) => setFormData((f) => ({ ...f, [k]: [...(f[k] || []), url] }))}
                     />
-                    {(formData[k] || []).map((url, i) => (
-                      <div key={i}>
-                        <a href={url} target="_blank" rel="noreferrer">
-                          Preview {i + 1}
-                        </a>{' '}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormData({ ...formData, [k]: formData[k].filter((_, n) => n !== i) })
-                          }
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
+                    <EvidenceList
+                      items={formData[k] || []}
+                      kind={k === 'screenshots' ? 'screenshot' : 'certificate'}
+                      onUpdateItem={(idx, nextUrl) =>
+                        setFormData((f) => ({
+                          ...f,
+                          [k]: (f[k] || []).map((val, n) => (n === idx ? nextUrl : val)),
+                        }))
+                      }
+                      onRemove={(idx) =>
+                        setFormData((f) => ({
+                          ...f,
+                          [k]: (f[k] || []).filter((_, n) => n !== idx),
+                        }))
+                      }
+                    />
                   </div>
                 ))}
               </fieldset>
@@ -680,7 +765,10 @@ export default function MissionsAdmin() {
                   fields={['title', 'organiser', 'date', 'duration', 'team', 'project', 'achievement']}
                   rows={formData.events || []}
                   onChange={(events) =>
-                    setFormData({ ...formData, events: events.map((ev, order) => ({ ...ev, order })) })
+                    setFormData((f) => ({
+                      ...f,
+                      events: events.map((ev, order) => ({ ...ev, order })),
+                    }))
                   }
                 >
                   {(ev, update) => (
@@ -700,25 +788,52 @@ export default function MissionsAdmin() {
                         />{' '}
                         Show event
                       </label>
-                      {(ev.certificates || []).map((url, i) => (
-                        <div key={i}>
-                          <a href={url} target="_blank" rel="noreferrer">
-                            Preview certificate
-                          </a>{' '}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              update({ certificates: ev.certificates.filter((_, n) => n !== i) })
-                            }
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ))}
+                      <EvidenceList
+                        items={ev.certificates || []}
+                        kind="event certificate"
+                        onUpdateItem={(idx, nextUrl) =>
+                          setFormData((f) => ({
+                            ...f,
+                            events: (f.events || []).map((row) =>
+                              row.id === ev.id
+                                ? {
+                                    ...row,
+                                    certificates: (row.certificates || []).map((val, n) =>
+                                      n === idx ? nextUrl : val
+                                    ),
+                                  }
+                                : row
+                            ),
+                          }))
+                        }
+                        onRemove={(idx) =>
+                          setFormData((f) => ({
+                            ...f,
+                            events: (f.events || []).map((row) =>
+                              row.id === ev.id
+                                ? {
+                                    ...row,
+                                    certificates: (row.certificates || []).filter((_, n) => n !== idx),
+                                  }
+                                : row
+                            ),
+                          }))
+                        }
+                      />
                       <AssetInput
-                        label="Add event certificate"
+                        label="Add event certificate (PDF or image, Ctrl+V, or URL)"
                         document
-                        onUpload={(url) => update({ certificates: [...(ev.certificates || []), url] })}
+                        acceptBoth
+                        onUpload={(url) =>
+                          setFormData((f) => ({
+                            ...f,
+                            events: (f.events || []).map((row) =>
+                              row.id === ev.id
+                                ? { ...row, certificates: [...(row.certificates || []), url] }
+                                : row
+                            ),
+                          }))
+                        }
                       />
                     </>
                   )}

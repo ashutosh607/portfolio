@@ -105,12 +105,27 @@ export default function MediaAdmin() {
               </div>
             </div>
 
-            <div className="upload-dropzone" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault();if(!uploading)setSelectedFile(e.dataTransfer.files[0] || null)}}>
+            <div
+              className="upload-dropzone"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (!uploading) setSelectedFile(e.dataTransfer.files[0] || null);
+              }}
+              onPaste={(e) => {
+                const file = e.clipboardData?.files?.[0];
+                if (file && !uploading) {
+                  e.preventDefault();
+                  setSelectedFile(file);
+                }
+              }}
+            >
               <input
                 type="file"
                 id="fileUploadInput"
-                accept={uploadType === 'image' ? 'image/*' : '.pdf'}
-                onChange={(e) => setSelectedFile(e.target.files[0])}
+                accept={uploadType === 'image' ? 'image/*' : 'application/pdf,.pdf'}
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                onCancel={(e) => e.stopPropagation()}
               />
               <label htmlFor="fileUploadInput" className="dropzone-label">
                 <UploadCloud size={36} className="upload-icon" />
