@@ -86,13 +86,13 @@ export const projectSchema = z.object({
 
 // 4. Mission Schema
 export const missionSchema = z.object({
-  title: z.string().trim().min(1, 'Title is required').max(150),
+  title: z.string().trim().min(1, 'Title is required').max(180),
   slug: safeSlugSchema,
   type: z.enum(['freelance', 'hackathon', 'internship', 'leadership']),
-  category: z.string().trim().max(100).default('Missions'),
-  organization: z.string().trim().max(150).default(''),
-  role: z.string().trim().max(100).default(''),
-  status: z.string().trim().max(80).default('Completed'),
+  category: z.string().trim().max(120).default('Missions'),
+  organization: z.string().trim().max(200).default(''),
+  role: z.string().trim().max(150).default(''),
+  status: z.string().trim().max(100).default('Completed'),
   liveUrl: safeUrlSchema.default(''),
   thumbnail: safeUrlSchema.default(''),
   startDate: z.string().trim().max(50).optional().nullable(),
@@ -103,16 +103,16 @@ export const missionSchema = z.object({
     .refine((v) => !v || Number.isFinite(Date.parse(v)), 'Invalid availability date')
     .optional()
     .nullable(),
-  description: z.string().trim().max(1500).default(''),
-  technologies: z.array(z.string().trim().max(50)).max(30).default([]),
+  description: z.string().trim().max(5000).default(''),
+  technologies: z.array(z.string().trim().max(100)).max(50).default([]),
   certificates: z.array(safeUrlSchema).default([]),
   caseStudy: z
     .object({
-      requirements: z.array(z.string().trim().max(300)).max(20).default([]),
-      responsibilities: z.array(z.string().trim().max(300)).max(20).default([]),
-      features: z.array(z.string().trim().max(300)).max(20).default([]),
-      deployment: z.string().trim().max(300).default(''),
-      challenges: z.array(z.string().trim().max(300)).default([]),
+      requirements: z.array(z.string().trim().max(2000)).max(40).default([]),
+      responsibilities: z.array(z.string().trim().max(2000)).max(40).default([]),
+      features: z.array(z.string().trim().max(2000)).max(40).default([]),
+      deployment: z.string().trim().max(1000).default(''),
+      challenges: z.array(z.string().trim().max(2000)).max(40).default([]),
       screenshots: z.array(safeUrlSchema).default([]),
     })
     .nullable()
@@ -121,14 +121,14 @@ export const missionSchema = z.object({
     .array(
       z.object({
         id: z.string().max(80),
-        title: z.string().max(150).default(''),
-        organiser: z.string().max(150).default(''),
-        date: z.string().max(50).default(''),
-        duration: z.string().max(50).default(''),
-        team: z.string().max(100).default(''),
-        project: z.string().max(150).default(''),
-        technologies: z.array(z.string().max(50)).default([]),
-        achievement: z.string().max(100).default(''),
+        title: z.string().max(180).default(''),
+        organiser: z.string().max(180).default(''),
+        date: z.string().max(60).default(''),
+        duration: z.string().max(100).default(''),
+        team: z.string().max(200).default(''),
+        project: z.string().max(180).default(''),
+        technologies: z.array(z.string().max(100)).default([]),
+        achievement: z.string().max(300).default(''),
         certificates: z.array(safeUrlSchema).default([]),
         visible: z.boolean().default(true),
         order: z.number().int().default(0),
@@ -146,13 +146,23 @@ export const validateBody = (schema) => (req, res, next) => {
     next();
   } catch (error) {
     if (error instanceof z.ZodError) {
+      const issues = Array.isArray(error.issues)
+        ? error.issues
+        : Array.isArray(error.errors)
+          ? error.errors
+          : [];
+      const errors = issues.map((e) => ({
+        field: Array.isArray(e.path) ? e.path.join('.') : '',
+        message: e.message,
+      }));
+      const summary = errors
+        .slice(0, 3)
+        .map((e) => (e.field ? `${e.field}: ${e.message}` : e.message))
+        .join('; ');
       return res.status(400).json({
         success: false,
-        message: 'Input validation failed',
-        errors: error.errors.map((e) => ({
-          field: e.path.join('.'),
-          message: e.message,
-        })),
+        message: summary ? `Input validation failed — ${summary}` : 'Input validation failed',
+        errors,
       });
     }
     next(error);

@@ -85,7 +85,11 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   if (!response.ok || data.success === false || !Object.keys(data).length) {
-    throw new Error(data.message || `Request failed with status ${response.status}`);
+    const details = Array.isArray(data.errors) && data.errors.length
+      ? data.errors.map((e) => (e.field ? `${e.field}: ${e.message}` : e.message)).join('; ')
+      : '';
+    const baseMsg = data.message || `Request failed with status ${response.status}`;
+    throw new Error(details && !baseMsg.includes(details) ? `${baseMsg}: ${details}` : baseMsg);
   }
 
   return data;

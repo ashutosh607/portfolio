@@ -1610,6 +1610,8 @@ dialog.cms-dialog {inset:0;width:100vw;height:100dvh;max-width:none;max-height:n
 .cms-evidence-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 8px;border:1px solid #2a2e35;border-radius:6px;background:#101216;min-width:0}
 .cms-evidence-item input{flex:1 1 180px;min-width:0;font-size:12px;padding:5px 8px}
 .cms-evidence-item button,.cms-evidence-item a{font-size:12px;white-space:nowrap}
+.cms-evidence-item a{color:#f5b06c;text-decoration:none;padding:5px 8px;border-radius:5px;background:#1a1e26;border:1px solid #353a44}
+.cms-evidence-item a:hover{background:#232833}
 .cms-pdf-pill{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:4px;background:#2a1912;border:1px solid #e58a32;color:#f5b06c;font-size:11px;font-weight:600;letter-spacing:.04em}
 .cms-paste-notice{font-size:12px;padding:8px 10px;border-radius:6px;margin-bottom:12px;border:1px solid #2b2e35;background:#12141a;color:#cfd4dc}
 .cms-paste-notice.success{border-color:#264b33;background:#112317;color:#93e3af}

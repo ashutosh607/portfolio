@@ -75,6 +75,14 @@ function EvidenceList({ items = [], kind = 'asset', onUpdateItem, onRemove }) {
   );
 }
 
+const toSlug = (value = '') =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+
 export default function MissionsAdmin() {
   const [params, setParams] = useSearchParams();
   const [missions, setMissions] = useState([]);
@@ -82,6 +90,7 @@ export default function MissionsAdmin() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingMission, setEditingMission] = useState(null);
+  const [slugTouched, setSlugTouched] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [modalPasteNote, setModalPasteNote] = useState({ text: '', type: '' });
@@ -168,6 +177,7 @@ export default function MissionsAdmin() {
 
   const openAddModal = () => {
     setEditingMission(null);
+    setSlugTouched(false);
     setModalPasteNote({ text: '', type: '' });
     setFormData({
       title: '',
@@ -200,6 +210,7 @@ export default function MissionsAdmin() {
 
   const openEditModal = (m) => {
     setEditingMission(m);
+    setSlugTouched(true);
     setModalPasteNote({ text: '', type: '' });
     setFormData({
       events: m.events || [],
@@ -549,7 +560,14 @@ export default function MissionsAdmin() {
                     type="text"
                     required
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) => {
+                      const nextTitle = e.target.value;
+                      setFormData((f) => ({
+                        ...f,
+                        title: nextTitle,
+                        slug: !editingMission && !slugTouched ? toSlug(nextTitle) : f.slug,
+                      }));
+                    }}
                     placeholder="e.g. Freelance Full-Stack Developer"
                   />
                 </div>
@@ -562,7 +580,15 @@ export default function MissionsAdmin() {
                     required
                     disabled={!!editingMission}
                     value={formData.slug}
-                    onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                    onChange={(e) => {
+                      setSlugTouched(true);
+                      setFormData({ ...formData, slug: e.target.value });
+                    }}
+                    onBlur={(e) => {
+                      if (!editingMission) {
+                        setFormData((f) => ({ ...f, slug: toSlug(e.target.value) }));
+                      }
+                    }}
                     placeholder="e.g. ds-photography"
                   />
                 </div>

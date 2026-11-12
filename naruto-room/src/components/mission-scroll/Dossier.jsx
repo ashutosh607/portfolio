@@ -68,9 +68,9 @@ export function MissionDetail({ mission, onPreview }) {
     <h2>{mission.organization || mission.title}</h2>
     {sections?.filter(([,value]) => value?.length).map(([label,value]) => <section key={label}><h3>{label}</h3>
       {Array.isArray(value) ? <ul>{value.map(item => <li key={item}>{item}</li>)}</ul> : <p>{value}</p>}</section>)}
-    {study?.screenshots.map(image => <img key={image.url} src={image.url} alt={image.title} loading="lazy"/>)}
+    {study?.screenshots?.map(image => <img key={image.url} src={image.url} alt={image.title} loading="lazy"/>)}
     {mission.liveUrl && <div className="ms-actions"><ProjectLink mission={mission}/></div>}
-    {<>{!study && <p>{mission.description}</p>}{mission.events.map(event => <section key={event.id}>
+    {<>{!study && <p>{mission.description}</p>}{(mission.events || []).map(event => <section key={event.id}>
       <h3>{event.title || 'Hackathon record'}</h3><dl>{Object.entries({
         Organiser: event.organiser, Date: event.date, Duration: event.duration, Team: event.team,
         Project: event.project, Technologies: event.technologies.join(', '), Achievement: event.achievement,
