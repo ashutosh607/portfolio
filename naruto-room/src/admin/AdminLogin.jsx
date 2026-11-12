@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from './AdminAuthContext';
-import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 
 function KonohaLeafIcon({ className = '', style = {} }) {
   return (
@@ -35,20 +35,17 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let timer;
-    if (submitting) {
-      timer = setTimeout(() => {
-        setWakingServer(true);
-      }, 3000);
-    } else {
-      setWakingServer(false);
-    }
+    if (!submitting) return undefined;
+    const timer = setTimeout(() => {
+      setWakingServer(true);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [submitting]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
+    setWakingServer(false);
     setSubmitting(true);
 
     try {
@@ -59,6 +56,7 @@ export default function AdminLogin() {
       setErrorMsg(msg);
     } finally {
       setSubmitting(false);
+      setWakingServer(false);
     }
   };
 
@@ -114,44 +112,6 @@ export default function AdminLogin() {
         {/* Heading & Subtitle */}
         <h1 className="same-login-title">Welcome back</h1>
         <p className="same-login-subtitle">Sign in to manage your portfolio.</p>
-
-        {isVercelWithoutEnv && !errorMsg && (
-          <div
-            style={{
-              background: 'rgba(245, 158, 11, 0.1)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              color: '#fcd34d',
-              padding: '10px 14px',
-              borderRadius: '8px',
-              fontSize: '12px',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '8px',
-              lineHeight: 1.45,
-            }}
-          >
-            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <span>Backend API URL not detected in build.</span>{' '}
-              <button
-                type="button"
-                onClick={() => setShowConfig(!showConfig)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: '#FF5A1F',
-                  textDecoration: 'underline',
-                  cursor: 'pointer',
-                  padding: 0,
-                  fontSize: '12px',
-                }}
-              >
-                Configure Render backend
-              </button>
-            </div>
-          </div>
-        )}
 
         {errorMsg && (
           <div className="same-login-alert">

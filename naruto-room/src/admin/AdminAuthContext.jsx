@@ -17,7 +17,14 @@ export function AdminAuthProvider({ children }) {
 
     window.addEventListener('cms-session-ended', end);
 
-    apiRequest('/auth/me')
+    const hasStoredToken =
+      typeof window !== 'undefined' &&
+      Boolean(sessionStorage.getItem('shinobi_admin_token') || localStorage.getItem('shinobi_admin_token'));
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), hasStoredToken ? 45000 : 3500);
+
+    apiRequest('/auth/me', { signal: controller.signal })
       .then((res) => {
         if (res.success && res.user) {
           setAdmin(res.user);
@@ -29,10 +36,15 @@ export function AdminAuthProvider({ children }) {
         end();
       })
       .finally(() => {
+        clearTimeout(timeoutId);
         setLoading(false);
       });
 
-    return () => window.removeEventListener('cms-session-ended', end);
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+      window.removeEventListener('cms-session-ended', end);
+    };
   }, []);
 
   const login = async (email, password) => {

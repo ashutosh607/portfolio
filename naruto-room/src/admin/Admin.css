@@ -44,14 +44,16 @@
    ============================================================================== */
 .same-admin-login-screen {
   position: relative;
-  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100dvh;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   background: radial-gradient(circle at 50% 40%, #151720 0%, #0d0e13 60%, #07080b 100%);
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: var(--admin-font);
 }
 
@@ -1594,6 +1596,6 @@ dialog.cms-dialog {inset:0;width:100vw;height:100dvh;max-width:none;max-height:n
 
 .admin-main .admin-form>label{display:grid;max-width:420px;gap:6px}.admin-sidebar-footer>a{color:#a0a5ae}.compact .admin-sidebar-footer>a{display:none}
 
-.admin-shell .form-group label,.admin-shell .admin-table th,.admin-shell .stat-label,.admin-login-card label {text-transform:none;letter-spacing:normal}.admin-shell .page-header{border-bottom:1px solid var(--admin-border);padding-bottom:16px}.admin-shell .admin-page{width:100%}.admin-nav-item svg{stroke-width:1.6}.admin-shell .stat-value{font-variant-numeric:tabular-nums;font-weight:550}.admin-shell .admin-card h2{font-size:17px}.admin-login-wrapper{height:100dvh;overflow:auto}.admin-login-wrapper .admin-crest-badge{border-radius:8px}
+.admin-shell .form-group label,.admin-shell .admin-table th,.admin-shell .stat-label,.admin-login-card label {text-transform:none;letter-spacing:normal}.admin-shell .page-header{border-bottom:1px solid var(--admin-border);padding-bottom:16px}.admin-shell .admin-page{width:100%}.admin-nav-item svg{stroke-width:1.6}.admin-shell .stat-value{font-variant-numeric:tabular-nums;font-weight:550}.admin-shell .admin-card h2{font-size:17px}.admin-login-wrapper{height:100dvh;overflow:auto;display:flex;align-items:center;justify-content:center}.admin-login-wrapper .admin-crest-badge{border-radius:8px}
 
 .admin-shell .admin-details strong,.admin-shell .admin-details small{display:block;line-height:1.4}.admin-shell .admin-details{flex:1;min-width:0;font-size:12px}.admin-shell .admin-sidebar-footer{justify-content:flex-start}.admin-shell .admin-sidebar-footer .logout-btn{flex:none}.admin-shell .admin-primary-btn{text-decoration:none}
