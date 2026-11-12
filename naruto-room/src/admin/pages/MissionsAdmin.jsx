@@ -1,6 +1,13 @@
 import EditorDialog from '../EditorDialog';
 import { useSearchParams } from 'react-router-dom';
 import AssetInput from '../AssetInput';
+import {
+  extractClipboardFile,
+  isImageAssetFile,
+  isPdfAssetFile,
+  uploadAssetToServer,
+} from '../assetUploadHelpers';
+import { isDocumentUrl } from '../../data/missionRepository';
 import RecordFields from '../RecordFields';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
@@ -19,15 +26,6 @@ import {
   Calendar,
   Layers,
 } from 'lucide-react';
-
-function isDocumentUrl(url = '') {
-  return (
-    /\.pdf(?:$|[?#])/i.test(url) ||
-    /\/upload\/documents\//i.test(url) ||
-    /\/raw\/upload\//i.test(url) ||
-    /drive\.google\.com\/file\//i.test(url)
-  );
-}
 
 function EvidenceList({ items = [], kind = 'asset', onUpdateItem, onRemove }) {
   const [copiedIndex, setCopiedIndex] = useState(null);
@@ -86,6 +84,43 @@ export default function MissionsAdmin() {
   const [editingMission, setEditingMission] = useState(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
+  const [modalPasteNote, setModalPasteNote] = useState({ text: '', type: '' });
+
+  const handleModalPaste = async (e) => {
+    const pastedFile = extractClipboardFile(e.clipboardData);
+    if (!pastedFile) return;
+
+    const isPdf = isPdfAssetFile(pastedFile);
+    const isImg = isImageAssetFile(pastedFile);
+    if (!isPdf && !isImg) return;
+
+    e.preventDefault();
+    setModalPasteNote({
+      text: `Uploading pasted ${isPdf ? 'PDF' : 'snapshot'}…`,
+      type: 'info',
+    });
+    try {
+      const url = await uploadAssetToServer(pastedFile);
+      if (isPdf) {
+        setFormData((f) => ({ ...f, certificates: [...(f.certificates || []), url] }));
+        setModalPasteNote({
+          text: 'Pasted PDF uploaded and added to Certificates. Save mission to apply.',
+          type: 'success',
+        });
+      } else {
+        setFormData((f) => ({ ...f, screenshots: [...(f.screenshots || []), url] }));
+        setModalPasteNote({
+          text: 'Pasted snapshot uploaded and added to Screenshots! Save mission to apply.',
+          type: 'success',
+        });
+      }
+    } catch (err) {
+      setModalPasteNote({
+        text: err.message || 'Failed to upload pasted file.',
+        type: 'error',
+      });
+    }
+  };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -133,6 +168,7 @@ export default function MissionsAdmin() {
 
   const openAddModal = () => {
     setEditingMission(null);
+    setModalPasteNote({ text: '', type: '' });
     setFormData({
       title: '',
       slug: '',
@@ -164,6 +200,7 @@ export default function MissionsAdmin() {
 
   const openEditModal = (m) => {
     setEditingMission(m);
+    setModalPasteNote({ text: '', type: '' });
     setFormData({
       events: m.events || [],
       certificates: m.certificates || [],
@@ -490,7 +527,7 @@ export default function MissionsAdmin() {
             if (!saving) setModalOpen(false);
           }}
         >
-          <div className="admin-modal-dialog large">
+          <div className="admin-modal-dialog large" onPaste={handleModalPaste}>
             <div className="admin-modal-header">
               <h2>{editingMission ? `Edit: ${editingMission.title}` : 'Add New Mission'}</h2>
               <button type="button" onClick={() => setModalOpen(false)} className="close-modal-btn">
@@ -499,6 +536,11 @@ export default function MissionsAdmin() {
             </div>
 
             <form onSubmit={handleSave} className="admin-modal-body">
+              {modalPasteNote.text && (
+                <div className={`cms-paste-notice ${modalPasteNote.type}`} role="status">
+                  {modalPasteNote.text}
+                </div>
+              )}
               <div className="form-grid-2">
                 <div className="form-group">
                   <label htmlFor="missionsadmin-mission-title">Mission Title *</label>

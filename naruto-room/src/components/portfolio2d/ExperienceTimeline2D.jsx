@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { missionPreviewMedia } from '../../data/missionRepository';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -117,6 +118,7 @@ export default function ExperienceTimeline2D({
       <div className="p2d-timeline-list">
         {missions.map((mission, idx) => {
           const isEven = idx % 2 === 0;
+          const { imageUrl } = missionPreviewMedia(mission);
           return (
             <div
               key={mission.id}
@@ -138,10 +140,10 @@ export default function ExperienceTimeline2D({
                 </div>
 
                 <div className="p2d-timeline-card-body">
-                  {mission.thumbnail && (
+                  {imageUrl && (
                     <div className="p2d-timeline-thumb-wrap">
                       <img
-                        src={mission.thumbnail}
+                        src={imageUrl}
                         alt={mission.title}
                         className="p2d-timeline-thumb"
                         loading="lazy"

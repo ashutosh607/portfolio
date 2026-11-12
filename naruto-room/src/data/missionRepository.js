@@ -1,5 +1,6 @@
 import { published } from './published';
 import { missions } from './missions';
+export { isDocumentUrl, missionPreviewMedia } from './missionMedia';
 
 export async function listMissions() {
   if (published) return published.missions.map(m => {

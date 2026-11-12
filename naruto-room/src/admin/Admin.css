@@ -1611,6 +1611,10 @@ dialog.cms-dialog {inset:0;width:100vw;height:100dvh;max-width:none;max-height:n
 .cms-evidence-item input{flex:1 1 180px;min-width:0;font-size:12px;padding:5px 8px}
 .cms-evidence-item button,.cms-evidence-item a{font-size:12px;white-space:nowrap}
 .cms-pdf-pill{display:inline-flex;align-items:center;justify-content:center;padding:4px 8px;border-radius:4px;background:#2a1912;border:1px solid #e58a32;color:#f5b06c;font-size:11px;font-weight:600;letter-spacing:.04em}
+.cms-paste-notice{font-size:12px;padding:8px 10px;border-radius:6px;margin-bottom:12px;border:1px solid #2b2e35;background:#12141a;color:#cfd4dc}
+.cms-paste-notice.success{border-color:#264b33;background:#112317;color:#93e3af}
+.cms-paste-notice.error{border-color:#5b2323;background:#261212;color:#f19d9d}
+.cms-paste-notice.info{border-color:#2b3d59;background:#111926;color:#9cc2f5}
 .admin-login-wrapper .admin-crest-badge{border-radius:8px}
 
 .admin-shell .admin-details strong,.admin-shell .admin-details small{display:block;line-height:1.4}.admin-shell .admin-details{flex:1;min-width:0;font-size:12px}.admin-shell .admin-sidebar-footer{justify-content:flex-start}.admin-shell .admin-sidebar-footer .logout-btn{flex:none}.admin-shell .admin-primary-btn{text-decoration:none}

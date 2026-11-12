@@ -1,14 +1,5 @@
-import { certificatesFor } from '../../data/missionRepository';
+import { certificatesFor, isDocumentUrl, missionPreviewMedia } from '../../data/missionRepository';
 import React, { useRef, useState } from 'react';
-
-function isDocumentUrl(url = '') {
-  return (
-    /\.pdf(?:$|[?#])/i.test(url) ||
-    /\/upload\/documents\//i.test(url) ||
-    /\/raw\/upload\//i.test(url) ||
-    /drive\.google\.com\/file\//i.test(url)
-  );
-}
 
 export function ProjectLink({ mission }) {
   return <a href={mission.liveUrl} target="_blank" rel="noopener noreferrer">View Project ↗</a>;
@@ -16,9 +7,24 @@ export function ProjectLink({ mission }) {
 
 export function MissionCard({ mission, onDetail, onContact }) {
   const { title, organization, category, description, status, technologies, availableFrom } = mission;
+  const { imageUrl, documentUrl } = missionPreviewMedia(mission);
+  const hasPlate = Boolean(imageUrl || documentUrl);
+  const hasDetail = Boolean(
+    mission.caseStudy || mission.type === 'hackathon' || certificatesFor(mission).length > 0,
+  );
+  const plateContent = imageUrl ? (
+    <img src={imageUrl} alt={(organization || title) + ' preview'} loading="lazy" />
+  ) : documentUrl ? (
+    <span className="ms-plate-pdf">
+      <strong>PDF</strong>
+      <span>Certificate attached</span>
+      <small>Click to view ↗</small>
+    </span>
+  ) : null;
+
   return <article className="ms-card">
     <div className="ms-cardline"><small>{category}</small><span className="ms-status">{status}</span></div>
-    <div className={mission.thumbnail ? 'ms-illustrated' : undefined}>
+    <div className={hasPlate ? 'ms-illustrated' : undefined}>
       <div>
         <h2>{title}{organization && <span> — {organization}</span>}</h2>
         {availableFrom && <strong className="ms-date">Available from {new Intl.DateTimeFormat('en-GB', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(availableFrom))}.</strong>}
@@ -32,8 +38,19 @@ export function MissionCard({ mission, onDetail, onContact }) {
           {availableFrom && <button onClick={onContact}>Get in Touch →</button>}
         </div>
       </div>
-      {mission.thumbnail && <a className="ms-plate" href={mission.liveUrl} target="_blank" rel="noopener noreferrer">
-        <img src={mission.thumbnail} alt={organization + ' website preview'}/></a>}
+      {hasPlate && (mission.liveUrl ? (
+        <a className="ms-plate" href={mission.liveUrl} target="_blank" rel="noopener noreferrer">
+          {plateContent}
+        </a>
+      ) : hasDetail ? (
+        <button type="button" className="ms-plate ms-plate-btn" onClick={onDetail} aria-label={`Inspect ${title}`}>
+          {plateContent}
+        </button>
+      ) : (
+        <a className="ms-plate" href={documentUrl || imageUrl} target="_blank" rel="noopener noreferrer">
+          {plateContent}
+        </a>
+      ))}
     </div>
   </article>;
 }

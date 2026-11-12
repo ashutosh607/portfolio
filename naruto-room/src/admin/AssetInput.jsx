@@ -1,26 +1,10 @@
-import React, { useState } from 'react';
-import { apiRequest } from './api';
-
-const IMAGE_MIME = new Set([
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/avif',
-]);
-
-function isPdfFile(file) {
-  return (
-    file.type === 'application/pdf' ||
-    file.type === 'application/x-pdf' ||
-    file.name?.toLowerCase().endsWith('.pdf')
-  );
-}
-
-function isImageFile(file) {
-  return IMAGE_MIME.has(file.type) || /\.(jpe?g|png|webp|gif|avif)$/i.test(file.name || '');
-}
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  extractClipboardFile,
+  isImageAssetFile,
+  isPdfAssetFile,
+  uploadAssetToServer,
+} from './assetUploadHelpers';
 
 function isValidUrlInput(raw) {
   return /^https?:\/\/[^\s$.?#].[^\s]*$/i.test(raw) || raw.startsWith('/');
@@ -28,18 +12,28 @@ function isValidUrlInput(raw) {
 
 /**
  * Unified media/document asset uploader supporting file picker, clipboard Ctrl+V (files & URLs),
- * drag-and-drop, and direct URL pasting without bubbling file-dialog cancel events.
+ * one-click clipboard read, drag-and-drop, and direct URL pasting.
  */
 export default function AssetInput({ label, document = false, acceptBoth = false, onUpload }) {
   const [status, setStatus] = useState('');
   const [isError, setIsError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [urlInput, setUrlInput] = useState('');
+  const fileInputRef = useRef(null);
+  const pasteInputRef = useRef(null);
+
+  useEffect(() => {
+    const input = fileInputRef.current;
+    if (!input) return undefined;
+    const stopCancel = (e) => e.stopPropagation();
+    input.addEventListener('cancel', stopCancel);
+    return () => input.removeEventListener('cancel', stopCancel);
+  }, []);
 
   async function uploadFile(file, sourceLabel = 'Uploaded') {
     if (!file || busy) return;
-    const pdf = isPdfFile(file);
-    const img = isImageFile(file);
+    const pdf = isPdfAssetFile(file);
+    const img = isImageAssetFile(file);
 
     if (acceptBoth && !pdf && !img) {
       setIsError(true);
@@ -60,15 +54,9 @@ export default function AssetInput({ label, document = false, acceptBoth = false
     setBusy(true);
     setIsError(false);
     setStatus('Uploading…');
-    const data = new FormData();
-    data.append('file', file, file.name || (pdf ? 'pasted-document.pdf' : 'pasted-screenshot.png'));
-
     try {
-      const res = await apiRequest('/upload/' + (pdf ? 'document' : 'image'), {
-        method: 'POST',
-        body: data,
-      });
-      onUpload(res.data.url);
+      const url = await uploadAssetToServer(file);
+      onUpload(url);
       setIsError(false);
       setStatus(`${sourceLabel}. Save to apply.`);
     } catch (err) {
@@ -103,12 +91,7 @@ export default function AssetInput({ label, document = false, acceptBoth = false
 
   function handlePaste(e) {
     if (busy) return;
-    const files = Array.from(e.clipboardData?.files || []);
-    const itemFiles = Array.from(e.clipboardData?.items || [])
-      .filter((item) => item.kind === 'file')
-      .map((item) => item.getAsFile())
-      .filter(Boolean);
-    const pastedFile = files[0] || itemFiles[0];
+    const pastedFile = extractClipboardFile(e.clipboardData);
 
     if (pastedFile) {
       e.preventDefault();
@@ -122,6 +105,39 @@ export default function AssetInput({ label, document = false, acceptBoth = false
       e.preventDefault();
       e.stopPropagation();
       applyUrl(pastedText, 'URL pasted');
+    }
+  }
+
+  async function handleClipboardButton() {
+    if (busy) return;
+    try {
+      if (navigator.clipboard?.read) {
+        const items = await navigator.clipboard.read();
+        for (const item of items) {
+          const mediaType = item.types.find((t) => IMAGE_MIME.has(t) || t === 'application/pdf');
+          if (mediaType) {
+            const blob = await item.getType(mediaType);
+            const ext = mediaType === 'application/pdf' ? 'pdf' : mediaType.split('/')[1] || 'png';
+            const file = new File([blob], `clipboard-${Date.now()}.${ext}`, { type: mediaType });
+            await uploadFile(file, 'Clipboard pasted & uploaded');
+            return;
+          }
+        }
+      }
+      if (navigator.clipboard?.readText) {
+        const text = (await navigator.clipboard.readText())?.trim();
+        if (text && isValidUrlInput(text)) {
+          applyUrl(text, 'Clipboard URL pasted');
+          return;
+        }
+      }
+      setIsError(false);
+      setStatus('Click the box below and press Ctrl+V to paste a snapshot or URL.');
+      pasteInputRef.current?.focus();
+    } catch {
+      setIsError(false);
+      setStatus('Click the box below and press Ctrl+V to paste a snapshot or URL.');
+      pasteInputRef.current?.focus();
     }
   }
 
@@ -161,6 +177,7 @@ export default function AssetInput({ label, document = false, acceptBoth = false
       <label className="cms-file">
         <span>{label}</span>
         <input
+          ref={fileInputRef}
           type="file"
           disabled={busy}
           accept={acceptAttr}
@@ -170,6 +187,7 @@ export default function AssetInput({ label, document = false, acceptBoth = false
       </label>
       <div className="cms-asset-paste-row">
         <input
+          ref={pasteInputRef}
           type="text"
           disabled={busy}
           value={urlInput}
@@ -184,6 +202,14 @@ export default function AssetInput({ label, document = false, acceptBoth = false
             }
           }}
         />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={handleClipboardButton}
+          title="Paste screenshot, PDF, or URL from clipboard"
+        >
+          Paste Clipboard
+        </button>
         <button
           type="button"
           disabled={busy || !urlInput.trim()}

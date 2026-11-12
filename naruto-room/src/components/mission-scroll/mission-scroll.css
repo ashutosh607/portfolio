@@ -80,7 +80,12 @@
 
 
 .ms-illustrated {display:grid;grid-template-columns:minmax(0,1.9fr) minmax(0,1fr);gap:clamp(15px,3vw,45px);align-items:center}
-.ms-plate {display:block;padding:5px;border:1px solid #af9670;background:#f8ecd2;box-shadow:2px 4px 6px #54341428}
-.ms-plate img {display:block;width:100%;height:auto}
+.ms-plate {display:block;padding:5px;border:1px solid #af9670;background:#f8ecd2;box-shadow:2px 4px 6px #54341428;text-decoration:none}
+.ms-plate-btn {width:100%;text-align:inherit}
+.ms-plate-pdf {display:grid;place-items:center;gap:4px;min-height:140px;padding:18px 12px;border:1px dashed #b79b78;background:linear-gradient(135deg,#f3e2be,#ead2a4);text-align:center}
+.ms-plate-pdf strong {font:700 18px/1 var(--serif);letter-spacing:.12em;color:var(--wine)}
+.ms-plate-pdf span {font-size:13px;font-weight:600;color:var(--ink)}
+.ms-plate-pdf small {font-size:10px;color:#6f3931}
+.ms-plate img {display:block;width:100%;height:auto;max-height:220px;object-fit:cover}
 .ms-detail img {margin-top:16px}
 @media(max-width:700px){.ms-illustrated {display:flex;flex-direction:column;align-items:stretch}.ms-plate {width:100%}}
