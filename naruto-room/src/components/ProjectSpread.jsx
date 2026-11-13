@@ -6,6 +6,30 @@ function Media({ source, title }) {
     <span className="dish-monogram" aria-hidden="true">{title.slice(0, 1)}</span>;
 }
 
+export function ProjectDetails({ project, onVillage }) {
+  const reader = React.useRef(null);
+  React.useLayoutEffect(() => {
+    if (reader.current) reader.current.scrollTop = 0;
+  }, [project.id]);
+
+  return (
+    <div ref={reader} className="menu-page-body project-detail" tabIndex={0}
+      role="region" aria-label={`Details for ${project.title}`}>
+        <h2>{project.title}</h2><em>{project.dishName}</em>
+        <p>{project.description}</p>
+        {project.problemSolved && <p>{project.problemSolved}</p>}
+        {!!project.technologies.length && <><h3>Technology stack</h3><div className="book-tech">{project.technologies.map(t => <span key={t}>{t}</span>)}</div></>}
+        {!!project.features.length && <><h3>Key features</h3><ul>{project.features.map((f, index) => <li key={index}>{f}</li>)}</ul></>}
+        {project.screenshots.map((image, i) => <figure key={i}><Media source={image} title={project.title + ' project screenshot'}/></figure>)}
+        <div className="book-links">
+          {project.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
+          {project.liveUrl && !project.liveUrl.startsWith('#') && <a href={project.liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}
+          {project.githubUrl && <a href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
+        </div>
+    </div>
+  );
+}
+
 export function PageNavigation({ number, total, onTurn, busy }) {
   return <footer className="page-footer-nav">
     <button disabled={busy || number === 1} onClick={() => onTurn(-1)}>← Previous<span className="desktop-nav-label"> Page</span></button>
@@ -34,19 +58,7 @@ export function ProjectSpread({ projects, selected, onSelect, onBack, onVillage,
     <section className="book-page page-right" aria-label="Selected project details">
       <button className="mobile-back-action-btn" onClick={onBack}>← Project menu</button>
       <small className="menu-kicker">Project details</small>
-      {selected && <div className="menu-page-body project-detail">
-        <h2>{selected.title}</h2><em>{selected.dishName}</em>
-        {selected.screenshots.map((image, i) => <figure key={i}><Media source={image} title={selected.title + ' project screenshot'}/></figure>)}
-        <p>{selected.description}</p>
-        {selected.problemSolved && <p>{selected.problemSolved}</p>}
-        {!!selected.technologies.length && <><h3>Technology stack</h3><div className="book-tech">{selected.technologies.map(t => <span key={t}>{t}</span>)}</div></>}
-        {!!selected.features.length && <><h3>Key features</h3><ul>{selected.features.map(f => <li key={f}>{f}</li>)}</ul></>}
-        <div className="book-links">
-          {selected.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
-          {selected.liveUrl && !selected.liveUrl.startsWith('#') && <a href={selected.liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}
-          {selected.githubUrl && <a href={selected.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
-        </div>
-      </div>}
+      {selected && <ProjectDetails project={selected} onVillage={onVillage} />}
       <div className="mobile-reading-nav">{navigation}</div>
     </section>
   </>;

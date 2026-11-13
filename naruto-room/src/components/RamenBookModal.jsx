@@ -463,6 +463,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
         if (isTransitioningRef.current) return;
         handleCloseBook();
       } else if (bookState === 'open' && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        if (event.target.closest?.('.project-detail') && ['ArrowUp', 'ArrowDown'].includes(event.key)) return;
         event.preventDefault();
         const first = (currentSpread - 1) * perPage;
         const count = Math.min(perPage, projects.length - first);

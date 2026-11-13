@@ -1,3 +1,4 @@
+import { ProjectDetails } from '../../components/ProjectSpread';
 import {resolveArtwork} from '../../data/projectMenu';
 import EditorDialog from '../EditorDialog';
 import AssetInput from '../AssetInput';
@@ -476,9 +477,20 @@ export default function ProjectsAdmin() {
               <label>Screenshot URLs, one per line<textarea value={(formData.screenshots || []).join('\n')} onChange={e=>setFormData({...formData,screenshots:e.target.value.split('\n')})}/></label></fieldset>
               <label>Publishing status<select value={formData.status || 'draft'} onChange={e=>setFormData({...formData,status:e.target.value})}>{['draft','published','archived'].map(v=><option key={v}>{v}</option>)}</select></label>
               {formData.liveUrl && formData.liveUrl===formData.githubUrl && <p className="field-hint">The live and repository URLs match. Enter the deployed website URL for this project.</p>}
-              <details className="cms-preview"><summary>Preview menu entry</summary>
-                <article>{formData.frontPagePhoto && <img className="cms-thumb" alt="" src={resolveArtwork(formData.frontPagePhoto)}/>}
-                <strong>{formData.title}</strong><em>{formData.dishName}</em><small>{formData.category}</small><p>{formData.shortDesc}</p></article></details>
+              <details className="cms-preview">
+                <summary>Preview project details</summary>
+                <div className="cms-book-preview">
+                  <ProjectDetails project={{
+                    ...formData,
+                    id: formData.slug,
+                    title: formData.title || 'Untitled project',
+                    description: formData.shortDesc,
+                    screenshots: [...new Set([formData.projectPhoto, ...formData.screenshots].map(url => url.trim()).filter(Boolean).map(resolveArtwork))],
+                    technologies: formData.techStackText.split(',').map(t => t.trim()).filter(Boolean),
+                    features: formData.featuresText.split('\n').map(f => f.trim()).filter(Boolean),
+                  }} />
+                </div>
+              </details>
               {message.type==='error' && <p role="alert">{message.text}</p>}
               <div className="admin-modal-footer">
                 <button

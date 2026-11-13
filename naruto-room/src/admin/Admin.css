@@ -1620,3 +1620,25 @@ dialog.cms-dialog {inset:0;width:100vw;height:100dvh;max-width:none;max-height:n
 .admin-login-wrapper .admin-crest-badge{border-radius:8px}
 
 .admin-shell .admin-details strong,.admin-shell .admin-details small{display:block;line-height:1.4}.admin-shell .admin-details{flex:1;min-width:0;font-size:12px}.admin-shell .admin-sidebar-footer{justify-content:flex-start}.admin-shell .admin-sidebar-footer .logout-btn{flex:none}.admin-shell .admin-primary-btn{text-decoration:none}
+
+.cms-book-preview {
+  margin-block: 10px;
+  padding: 16px;
+  background: #f3e6cd;
+  color: #39291e;
+  border: 1px solid #bda480;
+  border-radius: 5px;
+}
+.cms-book-preview .project-detail {
+  max-height: min(48dvh, 440px);
+  overflow: auto;
+  overflow-wrap: anywhere;
+  scrollbar-gutter: stable;
+  padding-inline-end: 12px;
+  font: 16px/1.5 Georgia, serif;
+}
+.cms-book-preview figure { margin: 12px 0; }
+.cms-book-preview img { max-width: 100%; max-height: 200px; object-fit: contain; }
+.cms-book-preview .book-tech, .cms-book-preview .book-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.cms-book-preview .book-tech span { padding: 2px 8px; border: 1px solid #bda480; }
+.cms-book-preview a { color: #743323; }
