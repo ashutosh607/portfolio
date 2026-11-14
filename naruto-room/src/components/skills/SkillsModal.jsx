@@ -16,7 +16,6 @@ export default function SkillsModal({
   embedded = false,
   onClose,
   onInspectProject,
-  onFastTravel,
 }) {
   const [categories] = useState(() => getSkillCategories());
   const [activeCategoryId, setActiveCategoryId] = useState('frontend');

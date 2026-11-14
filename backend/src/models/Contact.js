@@ -25,7 +25,7 @@ const contactSchema = new mongoose.Schema(
     },
     linkedinUrl: {
       type: String,
-      default: 'https://www.linkedin.com/in/Ashutosh-kadam',
+      default: 'https://www.linkedin.com/in/ashutosh-kadam-107777382/',
     },
     location: {
       type: String,

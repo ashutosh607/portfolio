@@ -2,7 +2,7 @@ import { profileAnime } from '../../config/favoriteAnime';
 import AssetInput from '../AssetInput';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
-import { UserCheck, Sparkles, Check, AlertCircle, Save } from 'lucide-react';
+import { UserCheck, Sparkles, Check, AlertCircle } from 'lucide-react';
 
 export default function ProfileAdmin() {
   const [profile, setProfile] = useState(null);

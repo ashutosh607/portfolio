@@ -87,8 +87,8 @@ async function testBook() {
       }
     };
     await call('Runtime.enable'); await size(1440,900);
-    await call('Page.navigate',{url:base});await check("document.querySelector('[title*=\"2D Classic\"]') || document.querySelector('.p2d-root')");
-    await run("document.querySelector('[title*=\"2D Classic\"]')?.click()");
+    await call('Page.navigate',{url:base});await check("document.querySelector('.shinobi-nav-visibility') || document.querySelector('[title*=\"2D Classic\"]') || document.querySelector('.p2d-root')");
+    await run("if(document.getElementById('village-top-nav')?.hidden) document.querySelector('.shinobi-nav-visibility')?.click(); document.querySelector('[title*=\"2D Classic\"]')?.click()");
     await check("document.querySelector('.ramen-inline')");
     await call('Emulation.setTouchEmulationEnabled',{enabled:true});
     await run("(async()=>{const url=performance.getEntriesByType('resource').find(e=>/\\/gsap\\.js/.test(e.name)).name;window.testGsap=(await import(url)).gsap})()");

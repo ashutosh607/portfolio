@@ -184,7 +184,7 @@ naruto-room/
 *Full-Stack Developer & AI/ML Engineer*  
 - **Email**: [ashutoshkadam607@gmail.com](mailto:ashutoshkadam607@gmail.com)  
 - **GitHub**: [@ashutosh607](https://github.com/ashutosh607)  
-- **LinkedIn**: [linkedin.com/in/Ashutosh-kadam](https://www.linkedin.com/in/Ashutosh-kadam)  
+- **LinkedIn**: [linkedin.com/in/ashutosh-kadam-107777382](https://www.linkedin.com/in/ashutosh-kadam-107777382/)  
 - **Education**: B.Tech in Artificial Intelligence & Machine Learning, *Dwarkadas J. Sanghvi College of Engineering (DJSCE)*, Mumbai, India.
 
 ---

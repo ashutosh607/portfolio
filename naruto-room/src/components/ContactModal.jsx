@@ -1,13 +1,18 @@
 import { ArrowUpRight, ArrowRight, Send, Copy, MapPin, X, FileText, Code2, BriefcaseBusiness } from 'lucide-react';
-import { published, apiBase } from '../data/published';
+import { published, apiBase, subscribePublished } from '../data/published';
 import { sectionEntrance } from '../utils/sectionEntrance';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import gsap from 'gsap';
 import './ContactModal.css';
 
+const DEFAULT_LINKEDIN_URL = 'https://www.linkedin.com/in/ashutosh-kadam-107777382/';
+const LEGACY_LINKEDIN_RE = /^https?:\/\/(?:www\.)?linkedin\.com\/in\/ashutosh-kadam\/?$/i;
 
-
-
+function resolveLinkedinUrl(rawUrl) {
+  const trimmed = typeof rawUrl === 'string' ? rawUrl.trim() : '';
+  if (!trimmed || LEGACY_LINKEDIN_RE.test(trimmed)) return DEFAULT_LINKEDIN_URL;
+  return trimmed;
+}
 
 export default function ContactModal({
   isOpen,
@@ -18,6 +23,11 @@ export default function ContactModal({
 }) {
   const [delivery, setDelivery] = useState('');
   const [sending, setSending] = useState(false);
+  const [, setPublishedTick] = useState(0);
+
+  useEffect(() => {
+    return subscribePublished(() => setPublishedTick((t) => t + 1));
+  }, []);
 
   async function sendMessage(event) {
     event.preventDefault();
@@ -52,7 +62,7 @@ export default function ContactModal({
   const info = published?.contact;
   const CONTACT_EMAIL = info?.email ?? 'ashutoshkadam607@gmail.com';
   const GITHUB_URL = info?.githubUrl ?? 'https://github.com/ashutosh607';
-  const LINKEDIN_URL = info?.linkedinUrl ?? 'https://www.linkedin.com/in/Ashutosh-kadam';
+  const LINKEDIN_URL = resolveLinkedinUrl(info?.linkedinUrl);
   const overlayRef = useRef(null);
   const closeBtnRef = useRef(null);
   const eyebrowRef = useRef(null);

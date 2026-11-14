@@ -13,10 +13,9 @@ export function ProjectDetails({ project, onVillage }) {
   }, [project.id]);
 
   const photo = project.thumbnail || project.projectPhoto;
-  const targetUrl =
-    (project.liveUrl && !project.liveUrl.startsWith('#') ? project.liveUrl : '') ||
-    project.githubUrl ||
-    '';
+  const liveUrl = project.liveUrl && !project.liveUrl.startsWith('#') ? project.liveUrl : '';
+  const targetUrl = liveUrl || project.githubUrl;
+  const linkLabel = liveUrl ? 'Open website' : 'Open GitHub';
 
   return (
     <div ref={reader} className="menu-page-body project-detail" tabIndex={0}
@@ -30,9 +29,10 @@ export function ProjectDetails({ project, onVillage }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="project-photo-link"
-                title={`Open ${project.title} website`}
+                aria-label={`${linkLabel} for ${project.title} (opens in a new tab)`}
               >
                 <Media source={photo} title={project.title + ' project screenshot'} />
+                <span className="project-photo-action" aria-hidden="true">{linkLabel} ↗</span>
               </a>
             ) : project.villageEntry && onVillage ? (
               <button
@@ -54,7 +54,7 @@ export function ProjectDetails({ project, onVillage }) {
         {!!project.features.length && <><h3>Key features</h3><ul>{project.features.map((f, index) => <li key={index}>{f}</li>)}</ul></>}
         <div className="book-links">
           {project.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
-          {project.liveUrl && !project.liveUrl.startsWith('#') && <a href={project.liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}
+          {liveUrl && <a href={liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}
           {project.githubUrl && <a href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
         </div>
     </div>

@@ -12,7 +12,6 @@ import RecordFields from '../RecordFields';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
 import {
-  Briefcase,
   Plus,
   Pencil,
   Trash2,
@@ -22,9 +21,6 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
-  Trophy,
-  Calendar,
-  Layers,
 } from 'lucide-react';
 
 function EvidenceList({ items = [], kind = 'asset', onUpdateItem, onRemove }) {

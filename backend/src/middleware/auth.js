@@ -81,7 +81,7 @@ export const checkAdminOptional = async (req, res, next) => {
     if (user && user.role === 'admin' && user.sessionVersion === decoded.version) {
       req.user = user;
     }
-  } catch (err) {
+  } catch {
     // Silently continue for public requests
   }
 

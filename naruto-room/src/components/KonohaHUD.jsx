@@ -17,9 +17,6 @@ const KonohaHUD = React.memo(function KonohaHUD({
   activeKeys = {},
   currentPosition = [-16.31, -0.07, -6.8],
   onResetPosition,
-  nearbyCharacterInfo = null,
-  nearbyLocation = null,
-  onStartDialogue,
   onOpenModal,
   activeModal = null,
   onFastTravel,
@@ -34,23 +31,12 @@ const KonohaHUD = React.memo(function KonohaHUD({
   const [isDestinationsOpen, setIsDestinationsOpen] = useState(false);
   const [isControlsOpen, setIsControlsOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isNavVisible, setIsNavVisible] = useState(() => {
-    try {
-      return localStorage.getItem('konoha-3d-navbar') !== 'hidden';
-    } catch {
-      return true;
-    }
-  });
+  const [isNavVisible, setIsNavVisible] = useState(false);
 
   function toggleNav() {
     const visible = !isNavVisible;
     setIsNavVisible(visible);
     setIsMenuOpen(false);
-    try {
-      localStorage.setItem('konoha-3d-navbar', visible ? 'visible' : 'hidden');
-    } catch {
-      // The toggle still works when browser storage is unavailable.
-    }
   }
 
   const [visitedIds, setVisitedIds] = useState(() => new Set(['main-street']));

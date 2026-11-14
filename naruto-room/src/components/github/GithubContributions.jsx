@@ -56,7 +56,7 @@ export default function GithubContributions({
   const cardRef = useRef(null);
 
   // 1. Fetch live contributions via backend proxy with 4-hr cache and fallback
-  const fetchContributions = useCallback(async (isRetry = false) => {
+  const fetchContributions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -121,7 +121,7 @@ export default function GithubContributions({
     const labels = [];
     let lastLabeledCol = -4;
 
-    days.forEach((day, index) => {
+    days.forEach((day) => {
       const [y, m, d] = day.date.split('-').map(Number);
       const dateObj = new Date(y, m - 1, d);
       const dayOfWeek = dateObj.getDay(); // 0 is Sunday, 6 is Saturday

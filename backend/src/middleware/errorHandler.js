@@ -4,7 +4,7 @@ export const notFound = (req, res, next) => {
   next(error);
 };
 
-export const errorHandler = (err, req, res, next) => {
+export const errorHandler = (err, req, res, _next) => {
   const status = err.code === 11000 ? 409 : err.code === 'LIMIT_FILE_SIZE' ? 413 :
     ['ValidationError','CastError','MulterError'].includes(err.name) ? 400 :
     err.status || err.http_code || (res.statusCode >= 400 ? res.statusCode : 500);

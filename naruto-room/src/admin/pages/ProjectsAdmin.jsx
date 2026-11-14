@@ -9,7 +9,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  ExternalLink,
   Check,
   X,
   Eye,

@@ -5,10 +5,8 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Project from '../models/Project.js';
 import Skill from '../models/Skill.js';
-import Mission from '../models/Mission.js';
 import Profile from '../models/Profile.js';
 import Contact from '../models/Contact.js';
-import Dialogue from '../models/Dialogue.js';
 
 const INITIAL_PROJECTS = [
   {

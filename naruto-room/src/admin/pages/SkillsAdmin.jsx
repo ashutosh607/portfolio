@@ -1,7 +1,7 @@
 import {useSearchParams} from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
-import { Scroll, Pencil, Check, X, AlertCircle } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 
 export default function SkillsAdmin() {
   const [params]=useSearchParams();

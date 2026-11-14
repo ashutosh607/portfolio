@@ -30,7 +30,10 @@ export default function ContactAdmin() {
         description: data.description || '',
         email: data.email || '',
         githubUrl: data.githubUrl || '',
-        linkedinUrl: data.linkedinUrl || '',
+        linkedinUrl:
+          !data.linkedinUrl || /^https?:\/\/(?:www\.)?linkedin\.com\/in\/ashutosh-kadam\/?$/i.test(data.linkedinUrl.trim())
+            ? 'https://www.linkedin.com/in/ashutosh-kadam-107777382/'
+            : data.linkedinUrl,
         location: data.location || '',
         availabilityText: data.availabilityText || 'Available for Opportunities',
         isAvailable: data.isAvailable ?? true,

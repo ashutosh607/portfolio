@@ -241,10 +241,6 @@ function AppContent() {
   }, []);
 
   // Dialogue & Modal callbacks
-  const handleStartDialogue = useCallback((char) => {
-    setActiveDialogueCharacter(char);
-  }, []);
-
   const handleCloseDialogue = useCallback(() => {
     setActiveDialogueCharacter(null);
   }, []);
@@ -469,7 +465,6 @@ function AppContent() {
         characterState={characterState}
         currentPosition={narutoPos}
         onResetPosition={handleResetPosition}
-        onStartDialogue={handleStartDialogue}
         onOpenModal={handleOpenModal}
         activeModal={activeModal}
         onFastTravel={handleFastTravel}
