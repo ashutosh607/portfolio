@@ -216,8 +216,8 @@ naruto-room/src/
 - `isWallBlocking(collider, ox, oy, oz, dirX, dirZ, maxDist)` performs continuous closest-point-on-segment-vs-circle intersection checks along `(stepX, stepZ)` in addition to Möller–Trumbore ray-triangle wall checks so sprinting characters cannot tunnel through thin lamp posts.
 
 ### 3.4 Gapless Web Audio Loop Engine (`villageMusic.js`)
-- `prepareLoop()` analyzes `/audio/konoha-Connection.mp3`, detects leading/trailing silence, and applies a complementary raised-cosine crossfade (`1.5s`) blending the tail of the track into the loop start in an in-memory `AudioBuffer`.
-- Playback is strictly opt-in (`OFF` by default, `10%` initial volume, `2.0s` fade-in, `1.5s` fade-out) and persists across 3D/2D mode switches because `<VillageMusicProvider>` is mounted at the top level in `src/main.jsx`.
+- `prepareLoop()` analyzes `/audio/konoha-ambience.ogg` (with `/audio/konoha-ambience.mp3` fallback) and applies a complementary raised-cosine crossfade (`0.08s` seam) blending the tail of the track into the loop start in an in-memory `AudioBuffer`.
+- Playback starts `ON` by default (`10%` initial volume, `2.0s` fade-in, `1.5s` fade-out, automatic gesture-unlock fallback if the browser delays autoplay) and persists across 3D/2D mode switches because `<VillageMusicProvider>` is mounted at the top level in `src/main.jsx`.
 
 ---
 

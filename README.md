@@ -1,247 +1,82 @@
-# Ashutosh Kadam — Interactive 3D & 2D Shinobi Portfolio
+# Ashutosh Kadam | Shinobi Portfolio
 
-An interactive 3D and 2D developer portfolio inspired by the Hidden Leaf Village (*Konoha*), paired with a full-stack Content Management System (CMS) and Admin Dashboard. Visitors can explore a real-time 3D village built with React Three Fiber or switch seamlessly to a responsive 2D editorial portfolio, while all projects, experience dossiers, skills, character dialogues, profile metadata, and media assets are managed dynamically through a secure Node.js + Express + MongoDB backend.
+A developer portfolio presented as a playable Hidden Leaf Village. Visitors can walk through Konoha as Naruto, talk to characters, and open portfolio sections at six landmarks. A scrollable 2D edition presents the same work, and a private CMS lets Ashutosh update published content.
 
----
+[Explore the live portfolio](https://portfolio-zeta-amber-3cr4nj8fai.vercel.app/) · [Local setup](#local-development) · [Deployment](#deployment) · [Architecture](docs/architecture.md)
 
-## Table of Contents
+## Explore the village
 
-1. [Project Overview](#1-project-overview)
-2. [Tech Stack](#2-tech-stack)
-3. [Repository Structure](#3-repository-structure)
-4. [Frontend Architecture (`naruto-room/`)](#4-frontend-architecture-naruto-room)
-5. [Backend Architecture (`backend/`)](#5-backend-architecture-backend)
-6. [CMS Data Flow](#6-cms-data-flow)
-7. [Local Development Setup](#7-local-development-setup)
-8. [Environment Variables](#8-environment-variables)
-9. [Testing & Verification](#9-testing--verification)
-10. [Build & Deployment](#10-build--deployment)
-11. [Developer Guide: Extending the Portfolio](#11-developer-guide-extending-the-portfolio)
+| Destination | Portfolio section |
+| --- | --- |
+| Konoha Main Street | Introduction and directory with fast travel |
+| Ichiraku Ramen | Interactive project book with previews, technology stacks, and live links |
+| Hokage’s Office Gate | Biography, interests, and résumé |
+| Training Grounds | Skills grouped by discipline, related projects, and GitHub activity |
+| Mission Gate | Experience, hackathons, case studies, and supporting documents |
+| Hokage Monument | Contact form and social links |
 
----
+Use **WASD** or the **arrow keys** to move, **Shift** to sprint, and **Space** to jump. Touch controls are available on mobile. The village HUD includes fast travel, lighting controls, and the switch to the 2D portfolio. Background music starts muted and can continue across both modes after a visitor enables it.
 
-## 1. Project Overview
+## Local development
 
-- **Interactive 3D Village (`features/village/`)**: Third-person character controller (`Naruto.jsx`), spatial terrain and obstacle collision system (`terrainCollider.js`), proximity-based NPC & landmark interaction engine (`interactionSystem.js`), dynamic day/night atmosphere (`Atmosphere.jsx`), and HUD navigation (`KonohaHUD.jsx`, `InteractionHUD.jsx`).
-- **2D Editorial Portfolio (`features/portfolio-2d/`)**: Automatic and manual fallback experience (`FallbackPortfolio2D.jsx`) with sticky navigation (`StickyNavbar2D.jsx`) and direct section access for low-power devices or visitors who prefer a classic layout.
-- **Interactive Feature Modals**:
-  - **Entry Gate (`features/entry/`)**: Pre-rendered instant word boot (`IMAGINE. -> BUILD. -> ENTER KONOHA`), cinematic welcome intro, and quick destination cards.
-  - **Projects Ramen Book (`features/projects/`)**: 3D/2D interactive Ichiraku Ramen Menu book (`RamenBookModal.jsx`, `ProjectSpread.jsx`, `PageTurnSurface.js`) with custom curl physics and synced project photography.
-  - **Experience & Mission Scroll (`features/experience/`)**: Categorized mission board (`MissionScroll.jsx`, `Dossier.jsx`) with case studies, architecture breakdowns, screenshots, and PDF certificate previews.
-  - **Skills & Arsenal (`features/skills/`)**: Domain-grouped technical skills (`SkillsModal.jsx`) linked to real portfolio projects and GitHub activity (`features/github/`).
-  - **Character Dialogue System (`features/dialogue/`)**: Typewriter dialogue engine (`CinematicDialogue.jsx`) with character portraits, clan insignias, and contextual action triggers.
-  - **Peaceful Konoha Audio (`features/audio/`)**: Opt-in background music controller (`VillageMusicPlayer.jsx`, `villageMusic.js`) with Web Audio API raised-cosine loop crossfading, 2.0s fade-in, and 1.5s fade-out.
-  - **Admin CMS (`features/admin/`)**: Lazy-loaded administrative application (`/admin/*`) for managing profile, projects, missions, skills, dialogues, contact messages, and uploaded media/documents.
+Use **Node.js 22.12 or newer**, npm, and a checkout of this repository. Run the commands below from the repository root. The frontend and backend have separate lockfiles.
 
-For deep architectural diagrams, module boundaries, and design decisions, see [`docs/architecture.md`](./docs/architecture.md).
+### Preview the portfolio
 
----
-
-## 2. Tech Stack
-
-### Frontend (`naruto-room/`)
-- **Framework**: React 19, React DOM 19, React Router DOM 7
-- **3D Rendering**: Three.js (`0.183`), `@react-three/fiber`, `@react-three/drei`, `three-stdlib`
-- **Animation**: GSAP (`3.14`)
-- **Icons**: Lucide React
-- **Build & Tooling**: Vite 8, Oxlint, Node.js native test runner (`node --test`)
-
-### Backend (`backend/`)
-- **Runtime & Server**: Node.js, Express 5
-- **Database & ODM**: MongoDB Atlas, Mongoose 9
-- **Authentication & Security**: JWT (`jsonwebtoken`) in `HttpOnly` cookies, `bcryptjs`, `helmet`, `cors`, `express-rate-limit`
-- **Validation & Uploads**: Zod 4, Multer (MongoDB-backed binary image & PDF document storage)
-
----
-
-## 3. Repository Structure
-
-```text
-portfolio/
-├── README.md                          # Project overview, setup, and developer guide
-├── package.json                       # Workspace root scripts (dev, build, preview, test)
-├── vercel.json                        # Root Vercel configuration & SPA/asset headers
-├── render.yaml                        # Render Blueprint for backend API service
-├── docs/
-│   └── architecture.md                # Detailed frontend, backend, and CMS architecture
-├── naruto-room/                       # Frontend Vite + React application
-│   ├── index.html                     # HTML entry with instant word-boot overlay
-│   ├── package.json                   # Frontend dependencies and scripts
-│   ├── vite.config.js                 # Vite build & React plugin configuration
-│   ├── vercel.json                    # Frontend directory Vercel config
-│   ├── public/                        # Static 3D GLB models, audio, resume, and media
-│   ├── tests/                         # Frontend unit tests (node --test)
-│   └── src/
-│       ├── main.jsx                   # Route-aware entry point (public vs /admin)
-│       ├── app/                       # Application shell, global CSS, modal orchestrator
-│       ├── features/                  # Feature-sliced domain modules
-│       │   ├── about/                 # About modal & favorite anime config
-│       │   ├── admin/                 # Lazy-loaded Admin CMS (auth, layouts, pages, services)
-│       │   ├── audio/                 # Global Web Audio loop engine & bottom-right player
-│       │   ├── contact/               # Contact form modal & social links
-│       │   ├── dialogue/              # NPC typewriter dialogue UI & character data
-│       │   ├── entry/                 # Loading screen, cinematic intro, Entry Gate modal
-│       │   ├── experience/            # Mission Scroll, Dossier viewer, mission media helpers
-│       │   ├── github/                # Live GitHub contribution graph component
-│       │   ├── portfolio-2d/          # 2D fallback portfolio view, sticky navbar, motion hooks
-│       │   ├── projects/              # Ichiraku Ramen project book, spread, page-turn geometry
-│       │   ├── resume/                # Interactive PDF resume modal
-│       │   ├── skills/                # Skills modal, category navigation, tech badges
-│       │   └── village/               # 3D Konoha scene, Naruto controller, HUD, collisions
-│       └── shared/                    # Cross-feature utilities, icons, and CMS store
-│           ├── cms/                   # Singleton published CMS cache (published.js)
-│           ├── components/            # Shared SVG location icons
-│           └── utils/                 # Shared GSAP section entrance helper
-└── backend/                           # Node.js + Express + MongoDB CMS API
-    ├── server.js                      # Express app bootstrap, CORS, security, route mounting
-    ├── package.json                   # Backend dependencies and scripts
-    ├── tests/                         # Backend unit, integration, and audit suites
-    └── src/
-        ├── config/                    # Environment & MongoDB connection setup
-        ├── controllers/               # Route handlers for auth, CRUD, uploads, public API
-        ├── data/                      # Seed scripts & village data importers
-        ├── middleware/                # JWT auth, rate limiters, Multer upload, Zod validation
-        ├── models/                    # Mongoose schemas (Project, Mission, Skill, etc.)
-        ├── routes/                    # Express routers
-        ├── utils/                     # AppError, asyncHandler, auditLogger
-        └── validation/                # Zod request payload schemas
+```sh
+npm ci --prefix naruto-room
+npm run dev
 ```
 
----
+Open [localhost:5173](http://localhost:5173), or the address printed by Vite. The public portfolio can display bundled content when the API is unavailable. To edit content, test form submissions, or work with uploaded media, start the API as well.
 
-## 4. Frontend Architecture (`naruto-room/`)
+### Run the API and CMS
 
-The frontend follows a **Feature-Based Architecture**:
+1. Install the server dependencies with `npm ci --prefix backend`.
+2. Copy [backend/.env.example](backend/.env.example) to `backend/.env`. The template uses production settings. For local development set `NODE_ENV=development`, `PORT=5000`, and `CLIENT_URL=http://localhost:5173`.
+3. Set `MONGO_URI` to a local or Atlas development database. Set `JWT_SECRET` to a random secret of at least 32 bytes. You can generate one with `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`.
+4. Set `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` for the initial administrator. Use a password of at least 15 characters. For image uploads, also set the three `CLOUDINARY_*` values in the template.
+5. Initialize the development database, then start the server in a second terminal.
 
-- **`src/main.jsx`**: Inspects `window.location.pathname` at boot. If the route starts with `/admin`, it dynamically imports `src/features/admin/AdminApp.jsx` inside `<BrowserRouter>` and hides `#initial-word-boot`. Otherwise, it mounts the public portfolio (`src/app/App.jsx` wrapped in `<VillageMusicProvider>` from `src/features/audio/VillageMusicPlayer.jsx`) immediately and triggers `loadPublished()` asynchronously in the background.
-- **`src/app/`**: Owns top-level state transitions (loading boot -> 3D village or 2D fallback -> active modal/dialogue) and composes feature modals via `PortfolioModals.jsx`.
-- **`src/features/<domain>/`**: Each feature encapsulates its own React components, styles, hooks, configuration, and fallback seed data.
-- **`src/shared/`**: Houses strictly cross-cutting modules shared by three or more features (`shared/cms/published.js`, `shared/components/locationIcons.jsx`, `shared/utils/sectionEntrance.js`).
-
----
-
-## 5. Backend Architecture (`backend/`)
-
-The backend follows a layered controller-service-model architecture:
-
-- **Public Endpoints**:
-  - `GET /api/health` — Service health & uptime check.
-  - `GET /api/portfolio` — Aggregates published profile, projects, missions, skills, and NPC dialogues in a single payload.
-  - `GET /api/github/contributions/:username` — Proxies and normalizes GitHub contribution calendar data with in-memory caching.
-  - `POST /api/contact` — Validates and stores visitor messages (rate-limited).
-  - `GET /api/upload/files/:filename` & `GET /api/upload/documents/:filename` — Streams binary images and PDF documents stored in MongoDB with immutable cache headers.
-- **Admin Endpoints (`/api/auth`, `/api/profile`, `/api/projects`, `/api/missions`, `/api/skills`, `/api/dialogues`, `/api/contact`, `/api/media`, `/api/upload`)**:
-  - Protected by `requireAuth` (`JWT` via `HttpOnly` cookie or `Authorization: Bearer` header) and validated by Zod schemas (`src/validation/schemas.js`).
-
----
-
-## 6. CMS Data Flow
-
-1. **Instant Boot with Seed Fallbacks**: Feature data modules (`projectMenu.js`, `missionRepository.js`, `skillsData.js`, `dialogueData.js`) ship with complete local fallback datasets so the portfolio renders immediately with zero blank states even before the network responds.
-2. **Non-Blocking Hydration**: `loadPublished()` in `src/shared/cms/published.js` fetches `GET /api/portfolio` (with a 6-second abort timeout).
-3. **Reactive Subscription**: When the payload arrives, `published.js` updates its singleton `published` cache and notifies subscribed components via `subscribePublished()`, seamlessly replacing seed data with live CMS records.
-
----
-
-## 7. Local Development Setup
-
-### Prerequisites
-- **Node.js** `>= 20.x`
-- **npm** `>= 10.x`
-- **MongoDB** instance (local or MongoDB Atlas connection URI for backend API features)
-
-### Installation
-
-```bash
-# Install frontend dependencies
-npm install --prefix naruto-room
-
-# Install backend dependencies
-npm install --prefix backend
+```sh
+npm --prefix backend run seed
+npm --prefix backend run import:village
+npm run backend:dev
 ```
 
-### Running Locally
+The seed creates the administrator if that email is new. Running it again leaves the existing password in place. The village import adds missing mission and dialogue records. Confirm the API responds at [localhost:5000/api/health](http://localhost:5000/api/health), then sign in at [localhost:5173/admin/login](http://localhost:5173/admin/login).
 
-1. **Start the Frontend Dev Server** (runs on `http://localhost:5173`):
-   ```bash
-   npm run dev
-   ```
-2. **Start the Backend API Server** (runs on `http://localhost:5000`):
-   ```bash
-   npm run dev --prefix backend
-   ```
-3. *(Optional)* **Seed Initial Database Content**:
-   ```bash
-   npm run seed --prefix backend
-   ```
+The frontend defaults to `http://localhost:5000/api` in development. To use another API, copy [naruto-room/.env.example](naruto-room/.env.example) to `naruto-room/.env`, set `VITE_API_URL`, and restart Vite. Values prefixed with `VITE_` are public build settings. Keep database credentials, signing secrets, and Cloudinary credentials in the backend environment.
 
----
+## Content and architecture
 
-## 8. Environment Variables
+The frontend uses **React, Vite, Three.js, React Three Fiber, and GSAP**. The API uses **Express, Mongoose, and MongoDB**. The public app reads published content from `GET /api/portfolio`. The CMS uses a server-issued HTTP-only session cookie for authenticated edits. For content types with drafts, publish the changes before checking the visitor view.
 
-### Frontend (`naruto-room/.env`)
+| Location | Responsibility |
+| --- | --- |
+| [naruto-room/src/app](naruto-room/src/app) | Application shell and coordination between the village and portfolio sections |
+| [naruto-room/src/features](naruto-room/src/features) | Village, project book, mission scroll, skills, dialogue, contact, audio, and admin interface |
+| [naruto-room/src/shared](naruto-room/src/shared) | Shared frontend code, including the published-content loader |
+| [naruto-room/public](naruto-room/public) | Models, textures, images, résumé, and optional background music assets |
+| [backend/src](backend/src) | API routes, controllers, validation, authentication, and database models |
+| [backend/src/data](backend/src/data) | Initial CMS records and village import scripts |
 
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `VITE_API_URL` | Base URL for backend API requests (e.g. `http://localhost:5000/api`) | Auto-detects `localhost:5000/api` in dev or Render production URL |
+Images uploaded through the CMS use Cloudinary. PDF uploads support Cloudinary delivery and a MongoDB GridFS fallback. For background music, replace the loop files in [public/audio](naruto-room/public/audio) and adjust the playback settings in the [audio feature](naruto-room/src/features/audio).
 
-### Backend (`backend/.env`)
+## Verification
 
-| Variable | Required | Description |
-| :--- | :---: | :--- |
-| `NODE_ENV` | Yes | `development` or `production` |
-| `PORT` | No | Port for Express server (default: `5000`) |
-| `MONGODB_URI` | Yes | MongoDB connection string |
-| `JWT_SECRET` | Yes | Secret key (minimum 32 characters) for signing admin JWT tokens |
-| `JWT_EXPIRES_IN` | No | Token expiration window (default: `7d`) |
-| `ADMIN_EMAIL` | Yes | Initial admin account email for seeding |
-| `ADMIN_PASSWORD` | Yes | Initial admin account password for seeding |
-| `FRONTEND_URL` | Yes | Allowed CORS origin(s), comma-separated |
+| Command from the repository root | Purpose |
+| --- | --- |
+| `npm test` | Run the frontend unit tests for book geometry, mission previews, the contribution calendar, and music playback logic |
+| `npm --prefix naruto-room run lint` | Run the frontend linter |
+| `npm run build` | Build the frontend into `naruto-room/dist` |
+| `npm --prefix naruto-room run preview` | Serve the production build locally |
+| `npm --prefix backend run test:audit` | Exercise the CMS API using a temporary database and test fixtures |
 
----
+The backend audit needs a MongoDB account that can create and drop its temporary database and Cloudinary credentials for upload checks. Run it with development services. After changing a shared portfolio section, check it both through its 3D landmark and in the 2D page.
 
-## 9. Testing & Verification
+## Deployment
 
-```bash
-# Run frontend unit tests (page-turn geometry, GitHub calendar, mission media, collisions, audio loop)
-npm test
-
-# Run backend validation & upload unit tests
-node --test backend/tests/upload-mission.test.mjs
-
-# Run frontend static analysis / linter
-npm run lint --prefix naruto-room
-
-# Check for unused variables across frontend and backend
-npx --prefix naruto-room oxlint -A all -D no-unused-vars naruto-room/src backend/src
-```
-
----
-
-## 10. Build & Deployment
-
-### Production Build
-
-```bash
-npm run build
-```
-Outputs the production bundle to `naruto-room/dist`.
-
-### Deployment Architecture
-- **Frontend (Vercel)**: Configured via root `vercel.json` and `naruto-room/vercel.json`. Serves static assets with long-lived cache headers for `/assets/*` and `/models/*.glb`, and rewrites SPA routes to `/index.html`.
-- **Backend (Render)**: Configured via `render.yaml` (`rootDir: backend`, `buildCommand: npm install`, `startCommand: npm start`, `healthCheckPath: /api/health`).
-
----
-
-## 11. Developer Guide: Extending the Portfolio
-
-- **Adding or Editing Projects, Missions, Skills, or Dialogues (No Code Required)**:
-  Sign in at `/admin/login` and use the **Projects**, **Missions**, **Skills**, or **Dialogues** tabs to create, reorder, or publish records and upload images/PDFs.
-- **Adding a New Static Fallback Project**:
-  Update `PORTFOLIO_PROJECTS` in `naruto-room/src/features/village/config/locations.js` and artwork mappings in `naruto-room/src/features/projects/data/projectMenu.js`.
-- **Adding a New Static Fallback Mission**:
-  Update `missions` in `naruto-room/src/features/experience/data/missions.js`.
-- **Adding a New 3D Village Landmark or NPC**:
-  1. Register coordinates and camera offsets in `naruto-room/src/features/village/config/locations.js`.
-  2. Add dialogue profiles in `naruto-room/src/features/dialogue/config/dialogueData.js`.
-  3. Add the 3D character or trigger volume in `naruto-room/src/features/village/components/VillageCharacters.jsx` and `naruto-room/src/features/village/systems/interactionSystem.js`.
+- **Frontend on Vercel.** The [root Vercel configuration](vercel.json) installs and builds the client from `naruto-room`, serves `naruto-room/dist`, and handles SPA routes such as `/admin/login`. Set `VITE_API_URL` to the deployed API URL ending in `/api` before building.
+- **API on Render.** The [Render blueprint](render.yaml) runs the service from `backend` and checks `/api/health`. Configure MongoDB, the session secret, Cloudinary, and the exact deployed frontend origin in `CLIENT_URL`. Seed a new database once to provision its first admin.
+- **Changing hosts.** The current Vercel configuration forwards `/cms-api/*` to the project’s Render API for same-origin admin requests. If you change the API host, review both the rewrite destination and the [admin API resolver](naruto-room/src/features/admin/services/api.js). After deployment, verify a public project, an admin sign-in, and a published edit from the deployed frontend.

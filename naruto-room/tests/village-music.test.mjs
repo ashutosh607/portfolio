@@ -34,11 +34,11 @@ test('prepareLoop blends loop tail into opening using complementary raised-cosin
   assert.ok(Math.abs(ch0[1999] - 1.0) < 1e-5);
 });
 
-test('VillageMusic starts off by default at 10% volume and clamps volume changes', () => {
+test('VillageMusic starts enabled by default at 10% volume and clamps volume changes', () => {
   const music = new VillageMusic();
   assert.equal(music.snapshot().status, 'off');
   assert.equal(music.snapshot().volume, 0.1);
-  assert.equal(music.enabled, false);
+  assert.equal(music.enabled, true);
 
   music.setVolume(0.35);
   assert.equal(music.snapshot().volume, 0.35);

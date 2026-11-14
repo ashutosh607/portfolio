@@ -72,19 +72,19 @@ function AdaptiveQualityMonitor({ isLiteMode, paused, onAutoDowngrade }) {
   return null;
 }
 
-// 10Hz Smart Target Detector inside Canvas: detects all nearby NPCs & locations with hysteresis and zero idle re-renders
+// The canvas clock can restart when a modal switches rendering modes.
 function SmartInteractionTracker({ playerPosRef, onNearbyTargetsChange }) {
-  const lastCheckRef = useRef(0);
-  const prevSigRef = useRef('');
+  const lastSample = useRef({});
+  const prevSigRef = useRef(null);
   const prevSetRef = useRef(new Set());
 
-  useFrame((state) => {
-    const now = state.clock.getElapsedTime();
-    if (now - lastCheckRef.current < 0.1) return;
-    lastCheckRef.current = now;
-
-    const p = playerPosRef?.current;
-    if (!p) return;
+  useFrame(() => {
+    const p = playerPosRef.current;
+    const sample = lastSample.current;
+    if (sample.x === p[0] && sample.z === p[2] && sample.registry === INTERACTABLE_REGISTRY) return;
+    sample.x = p[0];
+    sample.z = p[2];
+    sample.registry = INTERACTABLE_REGISTRY;
 
     const detected = detectNearbyTargets(INTERACTABLE_REGISTRY, p, prevSetRef.current);
     const nextSig = detected.map((item) => item.uid).join('|');

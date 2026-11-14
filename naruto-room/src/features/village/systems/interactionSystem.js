@@ -38,8 +38,8 @@ export function buildInteractableRegistry() {
       shortLabel: shortName,
       singlePrompt: `Talk to ${shortName}`,
       position: char.position,
-      enterRadius: Math.max(char.interactionDistance || 3.8, 4.35),
-      exitRadius: Math.max(char.interactionDistance || 3.8, 4.35) + 0.65,
+      enterRadius: (char.interactionDistance || 3.8),
+      exitRadius: (char.interactionDistance || 3.8) + 0.35,
       priority: 10,
       sortOrder: idx + 1,
       data: char,
@@ -62,9 +62,8 @@ export function buildInteractableRegistry() {
       shortLabel: shortName,
       singlePrompt: `Open ${shortName}`,
       position: shrinePos,
-      spawnPosition: loc.position,
       enterRadius: loc.id === 'mission-board' ? 4.9 : 4.6,
-      exitRadius: (loc.id === 'mission-board' ? 4.9 : 4.6) + 0.65,
+      exitRadius: (loc.id === 'mission-board' ? 4.9 : 4.6) + 0.35,
       priority: 9,
       sortOrder: 10 + idx,
       data: loc,
@@ -98,13 +97,7 @@ export function detectNearbyTargets(registry, playerPos, previouslyNearbySet) {
 
     const dx = item.position[0] - px;
     const dz = item.position[2] - pz;
-    let dist = Math.hypot(dx, dz);
-
-    // For locations, also check proximity to the arrival/counter position if closer
-    if (item.type === 'location' && item.spawnPosition) {
-      const distSpawn = Math.hypot(item.spawnPosition[0] - px, item.spawnPosition[2] - pz);
-      dist = Math.min(dist, distSpawn * 0.92);
-    }
+    const dist = Math.hypot(dx, dz);
 
     if (dist <= radius) {
       // Facing alignment in [-1, 1]

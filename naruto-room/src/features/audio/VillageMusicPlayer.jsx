@@ -9,6 +9,8 @@ const MusicContext = createContext(defaultMusic);
 export function VillageMusicProvider({ children }) {
   const [music] = useState(() => defaultMusic);
   useEffect(() => {
+    music.enabled = true;
+    music.play();
     document.addEventListener('visibilitychange', music.visibility);
     return () => {
       document.removeEventListener('visibilitychange', music.visibility);

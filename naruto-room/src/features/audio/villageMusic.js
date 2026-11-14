@@ -41,7 +41,7 @@ export class VillageMusic {
     this.state = { volume, status: 'off' };
     this.listeners = new Set();
     this.version = 0;
-    this.enabled = false;
+    this.enabled = true;
     this.offset = null;
   }
 
@@ -56,6 +56,10 @@ export class VillageMusic {
   }
 
   toggle = () => {
+    if (this.enabled && this.ctx && this.ctx.state !== 'running') {
+      this.ctx.resume().catch(() => {});
+      return;
+    }
     this.enabled = !this.enabled;
     if (this.enabled) this.play();
     else this.pause();
@@ -102,6 +106,30 @@ export class VillageMusic {
       const ctx = this.ctx;
       // Invoke resume synchronously inside the tap, before fetching or decoding.
       const resumed = ctx.resume();
+      if (ctx.state !== 'running' && typeof window !== 'undefined' && !this.removeUnlock) {
+        const unlock = () => {
+          if (!this.enabled || this.ctx !== ctx) {
+            this.removeUnlock?.();
+            return;
+          }
+          ctx.resume().then(() => {
+            if (ctx.state === 'running') {
+              this.removeUnlock?.();
+              if (this.source && this.enabled) this.ramp(this.state.volume, 2);
+            }
+          }).catch(() => {});
+        };
+        const removeUnlock = () => {
+          window.removeEventListener('pointerdown', unlock, true);
+          window.removeEventListener('touchstart', unlock, true);
+          window.removeEventListener('keydown', unlock, true);
+          this.removeUnlock = null;
+        };
+        this.removeUnlock = removeUnlock;
+        window.addEventListener('pointerdown', unlock, { capture: true, passive: true });
+        window.addEventListener('touchstart', unlock, { capture: true, passive: true });
+        window.addEventListener('keydown', unlock, { capture: true, passive: true });
+      }
       if (!this.loading) {
         this.abort = new AbortController();
         const loadAudio = async (targetUrl) => {
@@ -127,14 +155,8 @@ export class VillageMusic {
       const { buffer, loop } = await this.loading;
       await Promise.race([resumed.catch(() => {}), new Promise((r) => setTimeout(r, 250))]);
       if (version !== this.version) return;
-      if (ctx.state !== 'running' && typeof window !== 'undefined') {
-        const unlock = () => {
-          window.removeEventListener('pointerdown', unlock, true);
-          window.removeEventListener('keydown', unlock, true);
-          if (this.enabled && this.ctx === ctx) ctx.resume().catch(() => {});
-        };
-        window.addEventListener('pointerdown', unlock, { once: true, capture: true });
-        window.addEventListener('keydown', unlock, { once: true, capture: true });
+      if (ctx.state === 'running') {
+        this.removeUnlock?.();
       }
       if (!this.source) {
         const source = ctx.createBufferSource();
@@ -160,6 +182,7 @@ export class VillageMusic {
 
   pause() {
     const version = ++this.version;
+    this.removeUnlock?.();
     this.update({ status: this.enabled ? 'paused' : 'off' });
     clearTimeout(this.timer);
     if (!this.source) {
@@ -185,6 +208,7 @@ export class VillageMusic {
   dispose() {
     ++this.version;
     this.enabled = false;
+    this.removeUnlock?.();
     clearTimeout(this.timer);
     this.abort?.abort();
     this.source?.stop();

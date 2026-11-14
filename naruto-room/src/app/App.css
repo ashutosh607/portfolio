@@ -107,7 +107,7 @@
 .shinobi-nav-shell {
   position: relative;
   flex: 0 0 auto;
-  z-index: 35;
+  z-index: 40;
 }
 
 .shinobi-top-nav[hidden] {
@@ -130,6 +130,8 @@
   color: var(--parchment);
   font: 600 12px/1 system-ui, sans-serif;
   cursor: pointer;
+  touch-action: manipulation;
+  z-index: 40;
 }
 
 .shinobi-nav-visibility:focus-visible {
@@ -3169,9 +3171,12 @@
 }
 
 @media (max-width: 768px) {
-  /* Remove unnecessary debugging and clutter on mobile screens */
   .shinobi-nav-visibility {
-    display: none !important;
+    display: inline-flex;
+    min-height: 36px;
+    padding: 0 11px;
+    font-size: 11.5px;
+    left: max(10px, env(safe-area-inset-left));
   }
 
   .shinobi-show-controls-pill {
