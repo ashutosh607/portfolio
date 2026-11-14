@@ -5,9 +5,18 @@ import User from '../models/User.js';
 // Dummy hash used for constant-time comparison to prevent timing attacks
 const DUMMY_HASH = '$2a$12$e8ZbzK1jL/qF1pT.3j0z6eF0T4pA9F9pA9F9pA9F9pA9F9pA9F9pA';
 
+const production = process.env.NODE_ENV === 'production';
+const cookieOptions = {
+  httpOnly: true,
+  secure: production,
+  sameSite: production ? 'none' : 'lax',
+  partitioned: production,
+  path: '/',
+};
+
 const generateToken = (id, version) => {
   return jwt.sign({ id, version }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: process.env.JWT_EXPIRES_IN || '8h',
     algorithm: 'HS256',
   });
 };
@@ -62,20 +71,14 @@ export const login = async (req, res, next) => {
 
     const token = generateToken(user._id, user.sessionVersion);
 
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    // 4. Secure HTTP-only Cookie flag configuration (SameSite=None in production allows cross-origin Vercel<->Render communication)
     res.cookie('adminToken', token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: isProduction ? 'none' : 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      ...cookieOptions,
+      maxAge: Math.max(0, jwt.decode(token).exp * 1000 - Date.now()),
     });
 
     res.json({
       success: true,
       message: 'Authentication verified.',
-      token,
       user: {
         id: user._id,
         email: user.email,
@@ -113,14 +116,8 @@ export const getMe = async (req, res) => {
  * @access Public
  */
 export const logout = async (req, res) => {
-  const isProduction = process.env.NODE_ENV === 'production';
   await User.updateOne({ _id: req.user._id }, { $inc: { sessionVersion: 1 } });
-  res.cookie('adminToken', '', {
-    httpOnly: true,
-    expires: new Date(0),
-    sameSite: isProduction ? 'none' : 'lax',
-    secure: isProduction,
-  });
+  res.clearCookie('adminToken', cookieOptions);
   res.json({
     success: true,
     message: 'Logged out successfully.',
@@ -141,16 +138,17 @@ export const changePassword = async (req, res, next) => {
       !newPassword ||
       typeof currentPassword !== 'string' ||
       typeof newPassword !== 'string' ||
-      newPassword.length < 6 ||
-      newPassword.length > 120
+      currentPassword.length > 120 ||
+      newPassword.length < 15 ||
+      Buffer.byteLength(newPassword, 'utf8') > 72
     ) {
       return res.status(400).json({
         success: false,
-        message: 'Password must be between 6 and 120 characters.',
+        message: 'Use at least 15 characters and at most 72 UTF-8 bytes for the new password.',
       });
     }
 
-    const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id).select('+password');
 
     if (!(await user.comparePassword(currentPassword))) {
       return res.status(400).json({

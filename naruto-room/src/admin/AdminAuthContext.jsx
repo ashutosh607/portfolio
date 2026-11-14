@@ -17,12 +17,10 @@ export function AdminAuthProvider({ children }) {
 
     window.addEventListener('cms-session-ended', end);
 
-    const hasStoredToken =
-      typeof window !== 'undefined' &&
-      Boolean(sessionStorage.getItem('shinobi_admin_token') || localStorage.getItem('shinobi_admin_token'));
-
+    sessionStorage.removeItem('shinobi_admin_token');
+    localStorage.removeItem('shinobi_admin_token');
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), hasStoredToken ? 45000 : 3500);
+    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     apiRequest('/auth/me', { signal: controller.signal })
       .then((res) => {
@@ -55,13 +53,9 @@ export function AdminAuthProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
 
-      if (res.token) {
-        sessionStorage.setItem('shinobi_admin_token', res.token);
-        localStorage.setItem('shinobi_admin_token', res.token);
-      }
-
       if (res.user) {
-        setAdmin(res.user);
+        const session = await apiRequest('/auth/me');
+        setAdmin(session.user);
         return true;
       }
       return false;
@@ -72,11 +66,7 @@ export function AdminAuthProvider({ children }) {
   };
 
   const logout = async () => {
-    try {
-      await apiRequest('/auth/logout', { method: 'POST' });
-    } catch {
-      // Ignore logout errors
-    }
+    await apiRequest('/auth/logout', { method: 'POST' });
     sessionStorage.removeItem('shinobi_admin_token');
     localStorage.removeItem('shinobi_admin_token');
     setAdmin(null);

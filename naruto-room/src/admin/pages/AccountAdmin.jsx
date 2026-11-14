@@ -28,7 +28,7 @@ export default function AccountAdmin() {
       <h1 className="page-title">Account settings</h1>
       <form className="admin-card admin-form" onSubmit={submit}>
         <h2>Change password</h2>
-        <p>Your sessions end after a password change.</p>
+        <p>Use at least 15 characters and at most 72 UTF-8 bytes. Changing your password ends all sessions.</p>
         <label>
           Current password
           <input type="password" autoComplete="current-password" name="currentPassword" required />
@@ -38,8 +38,8 @@ export default function AccountAdmin() {
           <input
             type="password"
             autoComplete="new-password"
-            minLength={12}
-            maxLength={120}
+            minLength={15}
+            maxLength={72}
             name="newPassword"
             required
           />

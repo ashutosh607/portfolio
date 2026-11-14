@@ -31,10 +31,8 @@ import githubRoutes from './src/routes/githubRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-if (process.env.TRUST_PROXY_HOPS) {
-  const hops=Number(process.env.TRUST_PROXY_HOPS);
-  if (!Number.isInteger(hops) || hops<1) throw new Error('TRUST_PROXY_HOPS must be a positive integer.');
-  app.set('trust proxy',hops);
+if (process.env.NODE_ENV === 'production' && Buffer.byteLength(process.env.JWT_SECRET || '') < 32) {
+  throw new Error('Configure a strong JWT_SECRET of at least 32 bytes before starting the API.');
 }
 
 // Connect to MongoDB Atlas
@@ -118,47 +116,34 @@ const globalLimiter = rateLimit({
 });
 app.use('/api', globalLimiter);
 
-// 3. Strict & Dynamic CORS configuration (supports localhost, Vercel deployments, & Render)
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  'http://localhost:4173',
-  ...(process.env.CLIENT_URL ? process.env.CLIENT_URL.split(',').map((url) => url.trim().replace(/\/+$/, '')) : []),
-];
+const allowedOrigins = new Set([
+  'https://portfolio-zeta-amber-3cr4nj8fai.vercel.app',
+  ...(process.env.NODE_ENV === 'production' ? [] : [
+    'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:4173',
+  ]),
+  ...(process.env.CLIENT_URL || '').split(',').map(url => url.trim().replace(/\/+$/, '')).filter(Boolean),
+]);
 
-const checkOrigin = (origin, callback) => {
-  // Allow server-to-server, curl, mobile, or same-origin requests with no origin header
-  if (!origin) return callback(null, true);
-
-  const cleanOrigin = origin.trim().replace(/\/+$/, '');
-
-  // Exact match from allowed list
-  if (allowedOrigins.includes(cleanOrigin)) {
-    return callback(null, true);
+// Reject untrusted browser writes before parsing the body or touching the database.
+app.use('/api', (req, res, next) => {
+  const origin = req.get('Origin');
+  const writes = !['GET', 'HEAD', 'OPTIONS'].includes(req.method);
+  const untrustedBrowser = origin ? !allowedOrigins.has(origin) : req.get('Sec-Fetch-Site') === 'cross-site';
+  if (writes && untrustedBrowser) {
+    return res.status(403).json({ success: false, message: 'Origin not allowed.' });
   }
-
-  // Allow any Vercel deployment (both production and preview URLs)
-  if (/^https:\/\/[a-z0-9-]+(?:\.[a-z0-9-]+)*\.vercel\.app$/i.test(cleanOrigin)) {
-    return callback(null, true);
+  if (req.path.startsWith('/auth/') || req.headers.cookie || req.headers.authorization) {
+    res.set('Cache-Control', 'private, no-store');
   }
-
-  // Allow Render host domains
-  if (/^https:\/\/[a-z0-9-]+\.onrender\.com$/i.test(cleanOrigin)) {
-    return callback(null, true);
-  }
-
-  console.warn(`[CORS] Origin rejected: ${origin}`);
-  return callback(null, false);
-};
+  next();
+});
 
 app.use(
   cors({
-    origin: checkOrigin,
+    origin: (origin, callback) => callback(null, !origin || allowedOrigins.has(origin)),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    exposedHeaders: ['Set-Cookie'],
   })
 );
 

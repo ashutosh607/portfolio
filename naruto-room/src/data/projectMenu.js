@@ -8,13 +8,18 @@ export function resolveArtwork(path) {
   return match && oldArtwork[match[1]] ? '/ichiraku/projects/'+oldArtwork[match[1]]+'.webp' : path;
 }
 
+export function projectDetailPhoto(project) {
+  const savedPhoto = project.projectPhoto?.trim() || project.previewImage || project.screenshot || project.image;
+  const screenshots = project.screenshots ?? projectMedia[project.slug || project.id]?.screenshots ?? [];
+  return resolveArtwork(savedPhoto || screenshots.find(url => url?.trim())?.trim() || '');
+}
+
 // Normalise both the original portfolio records and the future editor's fields.
 export function loadProjectMenu() {
   return (published?.projects ?? getPortfolioProjects()).map((project, index) => {
     const media = projectMedia[project.slug || project.id] || {};
     const placeholder=project.liveUrl===project.githubUrl && project.liveUrl==='https://github.com/ashutosh607';
-    const legacyPhoto = project.projectPhoto || project.previewImage || project.screenshot || project.image;
-    const screenshots = project.screenshots ?? (legacyPhoto ? [legacyPhoto] : media.screenshots || []);
+    const detailPhoto = projectDetailPhoto(project);
     return {
       ...project,
       id: project.slug || project.id,
@@ -23,8 +28,8 @@ export function loadProjectMenu() {
       villageEntry: project.liveUrl === '#main-street',
       order: project.order ?? index + 1,
       featured: project.featured ?? false,
-      thumbnail: resolveArtwork(project.thumbnail || project.frontPagePhoto || project.thumbnailImage || project.image || screenshots[0]),
-      screenshots: [...new Set([legacyPhoto,...screenshots].filter(Boolean).map(resolveArtwork))],
+      thumbnail: resolveArtwork(project.thumbnail || project.frontPagePhoto || project.thumbnailImage || project.image || detailPhoto),
+      projectPhoto: detailPhoto,
       description: project.description ?? project.shortDesc,
       technologies: project.technologies ?? project.techStack ?? [],
       features: project.features ?? [],

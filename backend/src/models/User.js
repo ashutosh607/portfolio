@@ -13,7 +13,9 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6,
+      select: false,
+      minlength: 15,
+      validate: value => Buffer.byteLength(value, 'utf8') <= 72,
     },
     name: {
       type: String,

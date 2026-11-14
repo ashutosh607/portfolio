@@ -20,7 +20,7 @@ export function ProjectDetails({ project, onVillage }) {
         {project.problemSolved && <p>{project.problemSolved}</p>}
         {!!project.technologies.length && <><h3>Technology stack</h3><div className="book-tech">{project.technologies.map(t => <span key={t}>{t}</span>)}</div></>}
         {!!project.features.length && <><h3>Key features</h3><ul>{project.features.map((f, index) => <li key={index}>{f}</li>)}</ul></>}
-        {project.screenshots.map((image, i) => <figure key={i}><Media source={image} title={project.title + ' project screenshot'}/></figure>)}
+        {project.projectPhoto && <figure><Media source={project.projectPhoto} title={project.title + ' project screenshot'}/></figure>}
         <div className="book-links">
           {project.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
           {project.liveUrl && !project.liveUrl.startsWith('#') && <a href={project.liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}

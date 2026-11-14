@@ -6,6 +6,10 @@
   "installCommand": "npm install --prefix naruto-room",
   "rewrites": [
     {
+      "source": "/cms-api/:path*",
+      "destination": "https://portfolio-ml02.onrender.com/api/:path*"
+    },
+    {
       "source": "/admin/:path*",
       "destination": "/index.html"
     },
@@ -19,6 +23,28 @@
     }
   ],
   "headers": [
+    {
+      "source": "/cms-api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/admin/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "script-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+        }
+      ]
+    },
     {
       "source": "/assets/(.*)",
       "headers": [
@@ -47,4 +73,3 @@
     }
   ]
 }
-

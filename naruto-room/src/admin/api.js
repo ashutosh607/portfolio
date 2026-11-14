@@ -3,17 +3,13 @@
  */
 export function getApiBaseUrl() {
   const envUrl = import.meta.env.VITE_API_URL;
+  // Vercel forwards these same-origin requests to the portfolio's Render API.
+  if (import.meta.env.PROD && (!envUrl || /^https:\/\/portfolio-ml02\.onrender\.com(?:\/api)?\/?$/.test(envUrl))) {
+    return '/cms-api';
+  }
   if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
     const clean = envUrl.trim().replace(/\/+$/, '');
     return clean.endsWith('/api') ? clean : `${clean}/api`;
-  }
-
-  if (typeof window !== 'undefined') {
-    const override = sessionStorage.getItem('shinobi_api_url') || localStorage.getItem('shinobi_api_url');
-    if (override && typeof override === 'string' && override.trim()) {
-      const clean = override.trim().replace(/\/+$/, '');
-      return clean.endsWith('/api') ? clean : `${clean}/api`;
-    }
   }
 
   if (import.meta.env.DEV) {
@@ -26,7 +22,7 @@ export function getApiBaseUrl() {
 const API_BASE_URL = getApiBaseUrl();
 
 /**
- * Fetch wrapper for Admin API supporting both HTTP-only cookies and Bearer tokens
+ * Fetch wrapper for Admin API using the server-managed session cookie
  */
 export async function apiRequest(endpoint, options = {}) {
   const baseUrl = getApiBaseUrl();
@@ -41,14 +37,6 @@ export async function apiRequest(endpoint, options = {}) {
 
   if (!(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
-  }
-
-  // Cross-origin authentication: Attach Bearer token if present in client storage
-  if (typeof window !== 'undefined') {
-    const token = sessionStorage.getItem('shinobi_admin_token') || localStorage.getItem('shinobi_admin_token');
-    if (token && !headers['Authorization']) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
   }
 
   let response;

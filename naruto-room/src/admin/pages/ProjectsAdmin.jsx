@@ -1,5 +1,5 @@
 import { ProjectDetails } from '../../components/ProjectSpread';
-import {resolveArtwork} from '../../data/projectMenu';
+import { projectDetailPhoto, resolveArtwork } from '../../data/projectMenu';
 import EditorDialog from '../EditorDialog';
 import AssetInput from '../AssetInput';
 import {useSearchParams} from 'react-router-dom';
@@ -68,7 +68,7 @@ export default function ProjectsAdmin() {
   const openAddModal = () => {
     setEditingProject(null);
     setFormData({
-      status:'draft', screenshots:[],
+      status:'draft',
       title: '',
       slug: '',
       dishName: '',
@@ -91,12 +91,12 @@ export default function ProjectsAdmin() {
   const openEditModal = (proj) => {
     setEditingProject(proj);
     setFormData({
-      status:proj.status, screenshots:proj.screenshots || [],
+      status:proj.status,
       title: proj.title || '',
       slug: proj.slug || '',
       dishName: proj.dishName || '',
       category: proj.category || 'Full-Stack',
-      projectPhoto: proj.projectPhoto || '',
+      projectPhoto: projectDetailPhoto(proj),
       frontPagePhoto: proj.frontPagePhoto || '',
       shortDesc: proj.shortDesc || '',
       problemSolved: proj.problemSolved || '',
@@ -125,7 +125,7 @@ export default function ProjectsAdmin() {
     try {
       const payload = {
         ...formData,
-        screenshots:(formData.screenshots || []).map(url=>url.trim()).filter(Boolean),
+        screenshots: formData.projectPhoto.trim() ? [formData.projectPhoto.trim()] : [],
         features: formData.featuresText
           .split('\n')
           .map((f) => f.trim())
@@ -473,8 +473,11 @@ export default function ProjectsAdmin() {
                 </div>
               </div>
 
-              <fieldset><legend>Media</legend>{[['projectPhoto','Main image'],['frontPagePhoto','Thumbnail'],['screenshots','Add screenshot']].map(([key,label])=><AssetInput key={key} label={label} onUpload={url=>setFormData(f=>({...f,[key]:key==='screenshots'?[...(f.screenshots || []),url]:url}))}/>)}
-              <label>Screenshot URLs, one per line<textarea value={(formData.screenshots || []).join('\n')} onChange={e=>setFormData({...formData,screenshots:e.target.value.split('\n')})}/></label></fieldset>
+              <fieldset>
+                <legend>Project photos</legend>
+                <AssetInput label="Right-page photo" onUpload={url => setFormData(f => ({ ...f, projectPhoto: url }))} />
+                <AssetInput label="Left-page thumbnail" onUpload={url => setFormData(f => ({ ...f, frontPagePhoto: url }))} />
+              </fieldset>
               <label>Publishing status<select value={formData.status || 'draft'} onChange={e=>setFormData({...formData,status:e.target.value})}>{['draft','published','archived'].map(v=><option key={v}>{v}</option>)}</select></label>
               {formData.liveUrl && formData.liveUrl===formData.githubUrl && <p className="field-hint">The live and repository URLs match. Enter the deployed website URL for this project.</p>}
               <details className="cms-preview">
@@ -485,7 +488,7 @@ export default function ProjectsAdmin() {
                     id: formData.slug,
                     title: formData.title || 'Untitled project',
                     description: formData.shortDesc,
-                    screenshots: [...new Set([formData.projectPhoto, ...formData.screenshots].map(url => url.trim()).filter(Boolean).map(resolveArtwork))],
+                    projectPhoto: resolveArtwork(formData.projectPhoto.trim()),
                     technologies: formData.techStackText.split(',').map(t => t.trim()).filter(Boolean),
                     features: formData.featuresText.split('\n').map(f => f.trim()).filter(Boolean),
                   }} />
