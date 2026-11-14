@@ -1,13 +1,13 @@
 import { StrictMode, Suspense, lazy } from 'react';
-import { VillageMusicProvider } from './audio/VillageMusicPlayer';
+import { VillageMusicProvider } from './features/audio/VillageMusicPlayer';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './index.css';
-import App from './App.jsx';
-import { loadPublished } from './data/published';
+import './app/index.css';
+import App from './app/App.jsx';
+import { loadPublished } from './shared/cms/published';
 
 // Lazy load the Admin Panel bundle so standard portfolio visitors never download admin code
-const AdminApp = lazy(() => import('./admin/AdminApp.jsx'));
+const AdminApp = lazy(() => import('./features/admin/AdminApp.jsx'));
 
 if (!/^\/admin(?:\/|$)/.test(location.pathname)) {
   // Fetch CMS data in parallel in the background so the intro words appear at 0ms without waiting on API cold start

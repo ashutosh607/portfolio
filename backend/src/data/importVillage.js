@@ -2,8 +2,8 @@ import 'dotenv/config';
 import mongoose from 'mongoose';
 import Mission from '../models/Mission.js';
 import Dialogue from '../models/Dialogue.js';
-import { missions } from '../../../naruto-room/src/data/missions.js';
-import { CHARACTERS_DATA } from '../../../naruto-room/src/config/dialogueData.js';
+import { missions } from '../../../naruto-room/src/features/experience/data/missions.js';
+import { CHARACTERS_DATA } from '../../../naruto-room/src/features/dialogue/config/dialogueData.js';
 
 // Run once when adopting CMS management in an existing deployment.
 await mongoose.connect(process.env.MONGO_URI);

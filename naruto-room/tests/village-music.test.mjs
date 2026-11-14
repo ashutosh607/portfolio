@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { prepareLoop, VillageMusic, villageTrack } from '../src/audio/villageMusic.js';
+import { prepareLoop, VillageMusic, villageTrack } from '../src/features/audio/villageMusic.js';
 
 function createMockAudioBuffer(sampleRate = 1000, length = 2000) {
   const ch0 = new Float32Array(length);

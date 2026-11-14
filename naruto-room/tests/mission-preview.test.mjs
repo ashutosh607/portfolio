@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { isDocumentUrl, missionPreviewMedia } from '../src/data/missionMedia.js';
-import { projectDetailPhoto } from '../src/data/projectMenu.js';
-import { isWallBlocking } from '../src/utils/terrainCollider.js';
+import { isDocumentUrl, missionPreviewMedia } from '../src/features/experience/utils/missionMedia.js';
+import { projectDetailPhoto } from '../src/features/projects/data/projectMenu.js';
+import { isWallBlocking } from '../src/features/village/systems/terrainCollider.js';
 
 test('isWallBlocking blocks movement through street lamp cylinder obstacles at any speed', () => {
   const collider = {

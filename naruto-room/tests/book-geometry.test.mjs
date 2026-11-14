@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sheetPoint } from '../src/components/PageTurnSurface.js';
+import { sheetPoint } from '../src/features/projects/utils/PageTurnSurface.js';
 
 test('sheet stays attached to its spine and settles flat on either side', () => {
   for (let frame = 0; frame <= 100; frame++) {
