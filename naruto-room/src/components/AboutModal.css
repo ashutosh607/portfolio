@@ -72,6 +72,18 @@
   background-color: #141110;
 }
 
+.about-editorial-scroll-container,
+.portfolio-2d-wrapper:has(.about-editorial-overlay) {
+  scrollbar-width: thin;
+  scrollbar-color: #94745a #191513;
+}
+
+.about-editorial-scroll-container {
+  scrollbar-gutter: stable;
+  overscroll-behavior-y: contain;
+  color-scheme: dark;
+}
+
 .about-editorial-shell {
   width: 100%;
   max-width: 1240px;
@@ -426,50 +438,34 @@
 }
 
 .ab-anime-card {
-  position: relative;
-  background: #1D1917;
-  border: 1px solid #39312D;
-  border-radius: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
   overflow: hidden;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.4);
-  transition: border-color 0.3s ease, transform 0.3s ease;
-}
-
-.ab-anime-card:hover {
-  border-color: #FF5A1F;
-  transform: translateY(-4px);
+  border: 1px solid #39312d;
+  border-radius: 10px;
+  background: #1d1917;
 }
 
 .ab-anime-media {
-  position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9.5;
-  overflow: hidden;
-  background: #141110;
+  aspect-ratio: 0.71;
+  background: #171412;
 }
 
 .ab-anime-media img {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.ab-anime-card:hover .ab-anime-media img {
-  transform: scale(1.04);
+  object-fit: contain;
 }
 
 .ab-anime-caption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 34px 18px 14px;
-  background: linear-gradient(180deg, transparent 0%, rgba(20, 17, 16, 0.85) 45%, #141110 100%);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  display: grid;
+  gap: 8px;
+  padding: clamp(12px, 1.6vw, 24px);
+  overflow-wrap: break-word;
 }
 
 .ab-anime-caption h3,
@@ -483,13 +479,7 @@
   line-height: 1.15;
 }
 
-.ab-anime-title-short {
-  display: none;
-}
 
-.ab-anime-title-full {
-  display: inline;
-}
 
 .ab-anime-caption p,
 .ab-anime-tags {
@@ -497,134 +487,7 @@
   color: #B9ADA5;
   margin: 0;
   letter-spacing: 0.02em;
-}
-
-/* --------------------------------------------------------------------------
-   6. FOOTBALL SECTION
-   -------------------------------------------------------------------------- */
-.ab-football {
-  position: relative;
-  border: 1px solid #39312D;
-  border-radius: 14px;
-  background: #1D1917;
-  overflow: hidden;
-  padding: 24px 32px;
-  display: grid;
-  grid-template-columns: 140px 1fr auto;
-  align-items: center;
-  gap: 28px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-}
-
-.ab-fb-media {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 1px solid #39312D;
-  position: relative;
-  z-index: 2;
-}
-
-.ab-fb-media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.ab-fb-pitch {
-  position: absolute;
-  right: 180px;
-  top: 0;
-  bottom: 0;
-  width: 380px;
-  height: 100%;
-  pointer-events: none;
-  opacity: 0.12;
-  z-index: 1;
-}
-
-.pitch-line {
-  stroke: #B9ADA5;
-  stroke-width: 1.5;
-  fill: none;
-  stroke-dasharray: 1;
-}
-
-.ab-fb-body {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.ab-fb-icon {
-  width: 26px;
-  height: 26px;
-  color: #FF5A1F;
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-.ab-fb-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.ab-fb-title {
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-style: italic;
-  font-weight: 600;
-  font-size: 28px;
-  color: #F3E6D3;
-  margin: 0;
-  line-height: 1.1;
-}
-
-.ab-fb-text {
-  margin: 0;
-  font-size: 13.5px;
   line-height: 1.55;
-  color: #B9ADA5;
-  max-width: 52ch;
-}
-
-.ab-fb-role-wrap {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.ab-fb-role-kicker {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #B9ADA5;
-}
-
-.ab-fb-role {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: rgba(255, 90, 31, 0.1);
-  border: 1px solid #FF5A1F;
-  border-radius: 999px;
-  color: #F3E6D3;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-style: italic;
-  font-size: 16.5px;
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 /* --------------------------------------------------------------------------
@@ -751,19 +614,7 @@
     padding-top: 20px;
   }
 
-  .ab-football {
-    grid-template-columns: 100px 1fr;
-    gap: 20px;
-  }
 
-  .ab-fb-role-wrap {
-    grid-column: 1 / -1;
-    align-items: flex-start;
-  }
-
-  .ab-fb-pitch {
-    display: none;
-  }
 }
 
 @media (max-width: 760px) {
@@ -939,140 +790,16 @@
   }
 
   .ab-anime-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(8px, 2.4vw, 12px);
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .ab-anime-card {
-    border-radius: 8px;
-    background: #1D1917;
-    border: 1px solid #39312D;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .ab-anime-media {
-    aspect-ratio: 1 / 1.16;
-    width: 100%;
+    grid-template-columns: clamp(76px, 22vw, 100px) 1fr;
   }
 
   .ab-anime-caption {
-    position: relative;
-    inset: auto;
-    padding: 8px 4px 6px;
-    background: #1D1917;
-    text-align: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .ab-anime-caption h3,
-  .ab-anime-title-heading {
-    font-size: clamp(12px, 3.4vw, 15px);
-    white-space: nowrap;
-    line-height: 1.15;
-    text-align: center;
-  }
-
-  .ab-anime-title-full {
-    display: none;
-  }
-
-  .ab-anime-title-short {
-    display: inline;
-  }
-
-  .ab-anime-tags {
-    display: none;
-  }
-
-  /* Football Section on Mobile — Banner at bottom, pill in middle, title at top */
-  .ab-football {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    text-align: left;
-    padding: 18px 16px 14px;
-    gap: 14px;
-    background: #1D1917;
-    border: 1px solid #39312D;
-    border-radius: 12px;
-  }
-
-  .ab-fb-pitch {
-    display: none;
-  }
-
-  .ab-fb-body {
-    order: 1;
-    display: flex;
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .ab-fb-icon {
-    width: 22px;
-    height: 22px;
-    margin-top: 2px;
-    color: #FF5A1F;
-    flex-shrink: 0;
-  }
-
-  .ab-fb-copy {
-    gap: 4px;
-  }
-
-  .ab-fb-title {
-    font-size: 24px;
-  }
-
-  .ab-fb-text {
-    font-size: 13px;
-    line-height: 1.5;
-    color: #B9ADA5;
-  }
-
-  .ab-fb-role-wrap {
-    order: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-
-  .ab-fb-role-kicker {
-    font-size: 9.5px;
-    letter-spacing: 0.18em;
-  }
-
-  .ab-fb-role {
-    font-size: 14px;
-    padding: 8px 18px;
-    border-radius: 999px;
-    background: rgba(255, 90, 31, 0.1);
-    border: 1px solid #FF5A1F;
-    color: #F3E6D3;
-  }
-
-  .ab-fb-media {
-    order: 3;
-    width: 100%;
-    height: 120px;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid #39312D;
-    aspect-ratio: auto;
-    margin-top: 2px;
-  }
-
-  .ab-fb-media img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 70%;
+    padding: 14px 18px;
   }
 
   /* Safe-area insets for minimal close button in 3D modal */

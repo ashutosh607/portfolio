@@ -90,14 +90,15 @@ export default function ProjectsAdmin() {
 
   const openEditModal = (proj) => {
     setEditingProject(proj);
+    const sharedPhoto = projectDetailPhoto(proj);
     setFormData({
       status:proj.status,
       title: proj.title || '',
       slug: proj.slug || '',
       dishName: proj.dishName || '',
       category: proj.category || 'Full-Stack',
-      projectPhoto: projectDetailPhoto(proj),
-      frontPagePhoto: proj.frontPagePhoto || '',
+      projectPhoto: sharedPhoto,
+      frontPagePhoto: proj.frontPagePhoto || sharedPhoto,
       shortDesc: proj.shortDesc || '',
       problemSolved: proj.problemSolved || '',
       featuresText: (proj.features || []).join('\n'),
@@ -123,9 +124,13 @@ export default function ProjectsAdmin() {
     setMessage({ text: '', type: '' });
 
     try {
+      const primaryPhoto = formData.frontPagePhoto?.trim() || formData.projectPhoto?.trim() || '';
+      const detailPhoto = formData.projectPhoto?.trim() || primaryPhoto;
       const payload = {
         ...formData,
-        screenshots: formData.projectPhoto.trim() ? [formData.projectPhoto.trim()] : [],
+        frontPagePhoto: primaryPhoto,
+        projectPhoto: detailPhoto,
+        screenshots: detailPhoto ? [detailPhoto] : [],
         features: formData.featuresText
           .split('\n')
           .map((f) => f.trim())
@@ -393,7 +398,14 @@ export default function ProjectsAdmin() {
                   <input id="projectsadmin-front-page-photo-left-menu-page"
                     type="text"
                     value={formData.frontPagePhoto}
-                    onChange={(e) => setFormData({ ...formData, frontPagePhoto: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        frontPagePhoto: val,
+                        projectPhoto: prev.projectPhoto === prev.frontPagePhoto || !prev.projectPhoto ? val : prev.projectPhoto,
+                      }));
+                    }}
                     placeholder="/ichiraku/projects/image.webp or upload below"
                   />
                 </div>
@@ -402,9 +414,16 @@ export default function ProjectsAdmin() {
                   <label htmlFor="projectsadmin-project-photo-right-detail-page">Project Photo (Right Detail Page) *</label>
                   <input id="projectsadmin-project-photo-right-detail-page"
                     type="text"
-                    required
+                    required={!formData.frontPagePhoto?.trim()}
                     value={formData.projectPhoto}
-                    onChange={(e) => setFormData({ ...formData, projectPhoto: e.target.value })}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        projectPhoto: val,
+                        frontPagePhoto: prev.frontPagePhoto === prev.projectPhoto || !prev.frontPagePhoto ? val : prev.frontPagePhoto,
+                      }));
+                    }}
                     placeholder="/ichiraku/projects/image.webp or upload below"
                   />
                 </div>
@@ -475,8 +494,22 @@ export default function ProjectsAdmin() {
 
               <fieldset>
                 <legend>Project photos</legend>
-                <AssetInput label="Right-page photo" onUpload={url => setFormData(f => ({ ...f, projectPhoto: url }))} />
-                <AssetInput label="Left-page thumbnail" onUpload={url => setFormData(f => ({ ...f, frontPagePhoto: url }))} />
+                <AssetInput
+                  label="Project photo (syncs left menu & right detail page)"
+                  onUpload={(url) =>
+                    setFormData((f) => ({ ...f, frontPagePhoto: url, projectPhoto: url }))
+                  }
+                />
+                <AssetInput
+                  label="Left-page thumbnail override"
+                  onUpload={(url) =>
+                    setFormData((f) => ({
+                      ...f,
+                      frontPagePhoto: url,
+                      projectPhoto: f.projectPhoto || url,
+                    }))
+                  }
+                />
               </fieldset>
               <label>Publishing status<select value={formData.status || 'draft'} onChange={e=>setFormData({...formData,status:e.target.value})}>{['draft','published','archived'].map(v=><option key={v}>{v}</option>)}</select></label>
               {formData.liveUrl && formData.liveUrl===formData.githubUrl && <p className="field-hint">The live and repository URLs match. Enter the deployed website URL for this project.</p>}
@@ -488,7 +521,8 @@ export default function ProjectsAdmin() {
                     id: formData.slug,
                     title: formData.title || 'Untitled project',
                     description: formData.shortDesc,
-                    projectPhoto: resolveArtwork(formData.projectPhoto.trim()),
+                    thumbnail: resolveArtwork((formData.frontPagePhoto || formData.projectPhoto).trim()),
+                    projectPhoto: resolveArtwork((formData.projectPhoto || formData.frontPagePhoto).trim()),
                     technologies: formData.techStackText.split(',').map(t => t.trim()).filter(Boolean),
                     features: formData.featuresText.split('\n').map(f => f.trim()).filter(Boolean),
                   }} />

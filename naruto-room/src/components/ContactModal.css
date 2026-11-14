@@ -8,18 +8,16 @@
   color: #f4eadb;
   font-family: 'Outfit', system-ui, sans-serif;
 }
-.contact-background {
-  position: absolute;
-  inset: -12px;
-  background: linear-gradient(#141110ee, #141110f9), url('/contact/hokage-monument-bg.jpg') center/cover;
-  pointer-events: none;
-}
 .contact-scroll-container {
   position: relative;
   box-sizing: border-box;
   height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #94745a #191513;
+  scrollbar-gutter: stable;
+  color-scheme: dark;
   padding: clamp(56px, 7vh, 90px) max(5vw, calc((100vw - 1180px) / 2));
 }
 .contact-editorial-shell { margin: auto; max-width: 1180px; }
@@ -41,17 +39,8 @@
 .contact-landscape {
   position: relative;
   isolation: isolate;
-  padding-block: clamp(38px, 7vw, 88px);
+  padding-block: clamp(20px, 3vw, 44px) clamp(26px, 4vw, 56px);
   border-bottom: 1px solid #574237;
-}
-.contact-landscape::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(90deg, #141110 1%, #141110eb 27%, transparent 85%),
-    linear-gradient(0deg, #141110, transparent 38%),
-    url('/contact/hokage-monument-bg.jpg') center 32% / cover;
 }
 .contact-landscape-copy { max-width: 36rem; }
 .contact-overline, .contact-availability, .contact-copy, .contact-foot span, .contact-foot button, .contact-send {
@@ -130,11 +119,7 @@
 .contact-foot { border-top: 1px solid #473931; justify-content: space-between; padding-top: 14px; color: #c7b3a1; font-size: 13px; }
 @media (max-width: 760px) {
   .contact-scroll-container { padding: 54px 20px 28px; }
-  .contact-landscape { padding: 84px 0 24px; }
-  .contact-landscape::before {
-    background: linear-gradient(0deg, #141110 8%, #141110e8 52%, #14111038 90%),
-      url('/contact/hokage-monument-bg.jpg') 74% 20% / cover;
-  }
+  .contact-landscape { padding: 14px 0 24px; }
   .contact-desk { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 480px) {

@@ -52,7 +52,7 @@ const profileSchema = new mongoose.Schema(
         default: [
           "I'm an Artificial Intelligence & Data Engineering student who turns raw curiosity into performant digital experiences. My focus spans modern full-stack web applications, machine learning systems, and interactive 3D computing on the web.",
           "I approach software engineering with precision and persistent dedication — whether I'm architecting scalable React & Node platforms, training neural networks, or sculpting 60FPS Three.js worlds.",
-          "When I'm off the keyboard, you'll find me on the football pitch, studying anime narratives, or brainstorming product architectures for upcoming hackathons.",
+          "When I'm off the keyboard, you'll find me studying anime narratives, or brainstorming product architectures for upcoming hackathons.",
         ],
       },
       snapshotItems: [

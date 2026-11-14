@@ -1,3 +1,4 @@
+import { MusicButton } from '../audio/VillageMusicPlayer';
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { KONOHA_LOCATIONS } from '../config/locations';
 
@@ -897,6 +898,7 @@ const KonohaHUD = React.memo(function KonohaHUD({
 
         {/* Bottom-Right: Desktop Shortcuts OR Mobile Right-Hand Action Pad */}
         <div className="shinobi-bottom-right">
+          {!isControlsOpen && !isDestinationsOpen && !isMenuOpen && !isDialogueActive && <MusicButton />}
           {/* Mobile Right Action Pad: Sprint & Jump */}
           <div className="shinobi-mobile-actionpad">
             <div className="mobile-action-buttons-row">

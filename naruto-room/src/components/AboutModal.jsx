@@ -1,3 +1,4 @@
+import { favoriteAnime, profileAnime } from '../config/favoriteAnime';
 import { published } from '../data/published';
 import React, { useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
@@ -43,19 +44,6 @@ const FALLBACK_BIO = [
   'I love turning ideas into working products — blending clean engineering, modern web technologies, and a curiosity for AI/ML and 3D on the web.',
 ];
 
-const FALLBACK_ANIME = [
-  { title: 'Naruto', tags: 'Perseverance • Growth • Never Give Up', imageUrl: '/about/anime-naruto.jpg' },
-  { title: 'One Piece', tags: 'Freedom • Friendship • Big Dreams', imageUrl: '/about/anime-onepiece.jpg' },
-  { title: 'Attack on Titan', tags: 'Sacrifice • Perspective • Humanity', imageUrl: '/about/anime-aot.jpg' },
-];
-
-const FALLBACK_FOOTBALL = {
-  title: 'Football',
-  description: 'More than a sport — it’s where I learn discipline, teamwork, and quick decision-making.',
-  position: 'Centre Midfielder',
-  imageUrl: '/about/football.jpg',
-};
-
 function LeafMark({ className }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -75,8 +63,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
 
   const facts = about?.snapshotItems?.length ? about.snapshotItems : FALLBACK_FACTS;
   const bio = about?.bioParagraphs?.length ? about.bioParagraphs : FALLBACK_BIO;
-  const anime = (about?.animeList?.filter((a) => a?.title)?.length ? about.animeList.filter((a) => a?.title) : FALLBACK_ANIME).slice(0, 3);
-  const football = { ...FALLBACK_FOOTBALL, ...Object.fromEntries(Object.entries(about?.football || {}).filter(([, v]) => v)) };
+  const anime = profileAnime(about?.animeList).slice(0, 3);
   const headline = about?.headline || 'The shinobi behind the code.';
   const badge = about?.badge ? `02 — ${about.badge.split('•').pop().trim()}` : '02 — Personal Dossier';
 
@@ -118,7 +105,7 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
   /* --------------------------------------------------------------------------
      Cinematic choreography
      One hero timeline (ABOUT rises → portrait descends → brush → copy → facts),
-     light scrubbed parallax afterwards, and once-only reveals for Anime/Football.
+     light scrubbed parallax afterwards, and once-only reveals for Anime.
      -------------------------------------------------------------------------- */
   useLayoutEffect(() => {
     if (!isOpen) return undefined;
@@ -235,7 +222,6 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
         gsap.set(q('.ab-anime-rule'), { scaleX: 0 });
         gsap.set(q('.ab-anime-kicker'), { autoAlpha: 0, y: 10 });
         gsap.set(cards, { clipPath: 'inset(100% 0% 0% 0%)' });
-        gsap.set(q('.ab-anime-media'), { scale: 1.08 });
         gsap.set(q('.ab-anime-caption > *'), { autoAlpha: 0, yPercent: 60 });
 
         const head = gsap.timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(animeSection, 'top 80%') });
@@ -246,7 +232,6 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
 
         const revealCard = (card, tl, at) => {
           tl.to(card, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.85 }, at)
-            .to(card.querySelector('.ab-anime-media'), { scale: 1, duration: 1.1 }, '<')
             .to(card.querySelectorAll('.ab-anime-caption > *'), { autoAlpha: 1, yPercent: 0, duration: 0.6, stagger: 0.08 }, '<0.35');
         };
         if (desktop) {
@@ -258,24 +243,6 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
           const row = gsap.timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(root.querySelector('.ab-anime-grid'), 'top 85%') });
           cards.forEach((card, i) => revealCard(card, row, i * 0.12));
         }
-
-        // ---- Football -----------------------------------------------------------
-        const fb = root.querySelector('.ab-football');
-        gsap.set(q('.ab-fb-media'), { clipPath: 'inset(0% 100% 0% 0%)' });
-        gsap.set(q('.ab-fb-media img'), { scale: 1.12 });
-        gsap.set(q('.ab-fb-title'), { yPercent: 110 });
-        gsap.set(q('.ab-fb-pitch .pitch-line'), { strokeDashoffset: 1 });
-        gsap.set(q('.ab-fb-role'), { autoAlpha: 0, scale: 0.92 });
-        gsap.set(q('.ab-fb-text, .ab-fb-icon'), { autoAlpha: 0, y: 18 });
-        gsap
-          .timeline({ defaults: { ease: 'power3.out' }, scrollTrigger: st(fb, desktop ? 'top 80%' : 'top 86%') })
-          .to(q('.ab-fb-media'), { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.05, ease: 'power3.inOut' }, 0)
-          .to(q('.ab-fb-media img'), { scale: 1, duration: 1.4 }, 0)
-          .to(q('.ab-fb-icon'), { autoAlpha: 1, y: 0, duration: 0.5 }, 0.2)
-          .to(q('.ab-fb-title'), { yPercent: 0, duration: 0.9 }, 0.25)
-          .to(q('.ab-fb-pitch .pitch-line'), { strokeDashoffset: 0, duration: 1.3, stagger: 0.12, ease: 'power2.inOut' }, 0.35)
-          .to(q('.ab-fb-role'), { autoAlpha: 1, scale: 1, duration: 0.65 }, 0.75)
-          .to(q('.ab-fb-text'), { autoAlpha: 1, y: 0, duration: 0.6, stagger: 0.1, ease: 'power2.out' }, 0.9);
 
         // ---- Closing actions ---------------------------------------------------------
         gsap.from(q('.about-bottom-bar'), { autoAlpha: 0, y: 16, duration: 0.6, ease: 'power2.out', scrollTrigger: st(q('.about-bottom-bar')[0], 'top 92%') });
@@ -455,14 +422,11 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
               {anime.map((a, i) => (
                 <article key={a._id || i} className="ab-anime-card">
                   <div className="ab-anime-media">
-                    <img src={a.imageUrl || FALLBACK_ANIME[i]?.imageUrl} alt={`${a.title} poster`} loading="lazy" decoding="async" />
+                    <img src={a.imageUrl || favoriteAnime.find(item => item.title === a.title)?.imageUrl} alt="" loading="lazy" decoding="async" />
                   </div>
                   <div className="ab-anime-caption">
                     <h3 className="ab-anime-title-heading">
-                      <span className="ab-anime-title-full">{a.title}</span>
-                      <span className="ab-anime-title-short">
-                        {a.title === 'Attack on Titan' ? 'AOT' : a.title}
-                      </span>
+                      {a.title}
                     </h3>
                     {a.tags && <p className="ab-anime-tags">{a.tags}</p>}
                   </div>
@@ -471,54 +435,12 @@ export default function AboutModal({ embedded = false, isOpen, onClose, onOpenRe
             </div>
           </section>
 
-          {/* ================= FOOTBALL ================= */}
-          <section className="ab-football" aria-labelledby="ab-football-heading">
-            <div className="ab-fb-media">
-              <img src={football.imageUrl} alt="Football resting on a floodlit pitch" loading="lazy" decoding="async" />
-            </div>
-            <svg className="ab-fb-pitch" viewBox="0 0 600 160" preserveAspectRatio="none" aria-hidden="true">
-              <path className="pitch-line" pathLength="1" d="M300 0V160" />
-              <circle className="pitch-line" pathLength="1" cx="300" cy="80" r="46" />
-              <path className="pitch-line" pathLength="1" d="M600 30H520V130H600" />
-              <path className="pitch-line" pathLength="1" d="M0 30H80V130H0" />
-            </svg>
-            <div className="ab-fb-body">
-              <svg className="ab-fb-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="9" />
-                <polygon points="12 7.5 15.2 9.8 14 13.6 10 13.6 8.8 9.8" />
-                <line x1="12" y1="3" x2="12" y2="7.5" />
-                <line x1="15.2" y1="9.8" x2="20.4" y2="8.8" />
-                <line x1="14" y1="13.6" x2="17.5" y2="18.8" />
-                <line x1="10" y1="13.6" x2="6.5" y2="18.8" />
-                <line x1="8.8" y1="9.8" x2="3.6" y2="8.8" />
-              </svg>
-              <div className="ab-fb-copy">
-                <span className="ab-mask">
-                  <h2 id="ab-football-heading" className="ab-fb-title">{football.title}</h2>
-                </span>
-                <p className="ab-fb-text">{football.description}</p>
-              </div>
-            </div>
-            <div className="ab-fb-role-wrap">
-              <span className="ab-fb-text ab-fb-role-kicker">Playing role</span>
-              <p className="ab-fb-role">
-                <svg viewBox="0 0 24 16" width="22" height="15" fill="none" stroke="currentColor" strokeWidth="1.3" aria-hidden="true">
-                  <rect x="1" y="1" width="22" height="14" rx="1" />
-                  <line x1="12" y1="1" x2="12" y2="15" />
-                  <circle cx="12" cy="8" r="2.6" />
-                  <path d="M1 5h3v6H1M23 5h-3v6h3" />
-                </svg>
-                <span>{football.position}</span>
-              </p>
-            </div>
-          </section>
-
           {/* ================= CLOSING ACTIONS ================= */}
           <footer className="about-bottom-bar">
             <blockquote className="about-pull-quote">
               <span className="quote-mark" aria-hidden="true">&ldquo;</span>
               <p>
-                Beyond code, you&rsquo;ll probably find me watching anime, playing football, trying new food spots,
+                Beyond code, you&rsquo;ll probably find me watching anime, trying new food spots,
                 or planning my next creative project.&rdquo;
               </p>
             </blockquote>

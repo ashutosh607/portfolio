@@ -54,7 +54,6 @@ export default function ContactModal({
   const GITHUB_URL = info?.githubUrl ?? 'https://github.com/ashutosh607';
   const LINKEDIN_URL = info?.linkedinUrl ?? 'https://www.linkedin.com/in/Ashutosh-kadam';
   const overlayRef = useRef(null);
-  const bgRef = useRef(null);
   const closeBtnRef = useRef(null);
   const eyebrowRef = useRef(null);
   const headingRef = useRef(null);
@@ -143,7 +142,7 @@ export default function ContactModal({
     [onClose]
   );
 
-  // Opening GSAP timeline (~1.15s total) + subtle pointer parallax on background
+  // Opening GSAP timeline (~1.15s total)
   useEffect(() => {
     if (!isOpen) return;
     isClosingRef.current = false;
@@ -159,12 +158,10 @@ export default function ContactModal({
 
       if (reduced) {
         gsap.set(overlayRef.current, { opacity: 1 });
-        gsap.set(bgRef.current, { opacity: 1, scale: 1 });
         return;
       }
 
       gsap.set(overlayRef.current, { opacity: 0 });
-      gsap.set(bgRef.current, { opacity: 0, scale: 1.03, x: 0, y: 0 });
       gsap.set([eyebrowRef.current, headingRef.current], { opacity: 0, y: 18 });
       gsap.set([subtitleRef.current, descRef.current].filter(Boolean), { opacity: 0, y: 14 });
       gsap.set(cards, { opacity: 0, y: 16 });
@@ -173,9 +170,8 @@ export default function ContactModal({
       const tl = sectionEntrance(overlayRef.current, embedded);
       timelineRef.current = tl;
 
-      // 1. Dark overlay & background artwork reveal gently
+      // 1. Reveal the contact page
       tl.to(overlayRef.current, { opacity: 1, duration: 0.32, ease: 'power2.out' }, 0)
-        .to(bgRef.current, { opacity: 1, scale: 1.015, duration: 0.88, ease: 'power2.out' }, 0.04)
         // 2. Eyebrow & Main Heading slide upward and fade in
         .to(
           [eyebrowRef.current, headingRef.current],
@@ -221,29 +217,12 @@ export default function ContactModal({
         );
     }, overlayRef);
 
-    // Subtle pointer parallax on the background artwork (desktop only, respects reduced motion)
-    let handlePointerMove = null;
-    if (!embedded && !reduced && bgRef.current) {
-      const xTo = gsap.quickTo(bgRef.current, 'x', { duration: 0.7, ease: 'power2.out' });
-      const yTo = gsap.quickTo(bgRef.current, 'y', { duration: 0.7, ease: 'power2.out' });
-      handlePointerMove = (e) => {
-        const nx = (e.clientX / window.innerWidth - 0.5) * -10;
-        const ny = (e.clientY / window.innerHeight - 0.5) * -7;
-        xTo(nx);
-        yTo(ny);
-      };
-      window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    }
-
     const focusTimer = requestAnimationFrame(() => {
       if (!embedded) closeBtnRef.current?.focus({ preventScroll: true });
     });
 
     return () => {
       cancelAnimationFrame(focusTimer);
-      if (handlePointerMove) {
-        window.removeEventListener('pointermove', handlePointerMove);
-      }
       timelineRef.current?.kill();
       ctx.revert();
       if (!embedded) {
@@ -294,7 +273,6 @@ export default function ContactModal({
       aria-modal={embedded ? undefined : true}
       aria-labelledby="contact-main-heading"
     >
-      <div ref={bgRef} className="contact-background" aria-hidden="true" />
       {!embedded && (
         <button ref={closeBtnRef} className="contact-minimal-close-btn" onClick={() => triggerClose()} aria-label="Close contact">
           <X size={20} />

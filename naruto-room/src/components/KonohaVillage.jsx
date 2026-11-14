@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { useFBX, useTexture } from '@react-three/drei';
+import { useGLTF, useTexture } from '@react-three/drei';
 import { KONOHA_OFFSET } from '../utils/constants';
 import { KONOHA_LOCATIONS } from '../config/locations';
 import { buildTerrainCollider, sampleGroundY } from '../utils/terrainCollider';
 
 // Preload Konoha assets
-useFBX.preload('/models/konoha/source/untitled.fbx');
-useTexture.preload('/models/konoha/textures/Picsart_26-05-30_22-38-46-674.png');
+const villageUrl = '/models/konoha/village.glb';
+const atlasUrl = '/models/konoha/textures/village-atlas.webp';
+useGLTF.preload(villageUrl);
+useTexture.preload(atlasUrl);
 
 // Shared geometries and materials for clean, proper straight-standing destination boards
 const postGeom = new THREE.CylinderGeometry(0.08, 0.09, 2.25, 12);
@@ -196,9 +198,9 @@ const KonohaVillage = React.memo(function KonohaVillage({
   const markerRefs = useRef({});
   const streetLanternRefs = useRef([]);
 
-  // Load actual Konoha FBX model & texture atlas
-  const fbx = useFBX('/models/konoha/source/untitled.fbx');
-  const texture = useTexture('/models/konoha/textures/Picsart_26-05-30_22-38-46-674.png');
+  // Load actual Konoha model & texture atlas
+  const { scene: village } = useGLTF(villageUrl);
+  const texture = useTexture(atlasUrl);
 
   // Single shared Lambert material for the entire village mesh hierarchy
   const villageMaterial = useMemo(() => {
@@ -242,7 +244,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
   }, [isNightMode, signboardMaterials]);
 
   useEffect(() => {
-    if (!fbx || !offsetGroupRef.current) return;
+    if (!village || !offsetGroupRef.current) return;
 
     offsetGroupRef.current.position.set(
       KONOHA_OFFSET[0],
@@ -251,7 +253,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
     );
     offsetGroupRef.current.updateMatrixWorld(true);
 
-    fbx.traverse((child) => {
+    village.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = false;
         child.receiveShadow = enableShadows;
@@ -271,22 +273,32 @@ const KonohaVillage = React.memo(function KonohaVillage({
       colliderBuiltRef.current = true;
       const spatialCollider = buildTerrainCollider(offsetGroupRef.current, 2.5);
 
-      // Solid collision for Mission Gate, Team 7, Main Street Board, Hokage Office Gate, and Jiraiya Training Grounds
+      // Solid collision for all 6 destination signboards, Team 7 / Sannin NPCs, and all 14 Japanese street lanterns
       spatialCollider.obstacles = [
-        { x: -2.84, z: -7.92, radiusSq: 0.06, minY: 0.0, maxY: 3.0 }, // Mission Gate Left Post
-        { x: -1.68, z: -7.92, radiusSq: 0.06, minY: 0.0, maxY: 3.0 }, // Mission Gate Right Post
-        { x: -3.66, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sasuke
-        { x: -0.86, z: -7.85, radiusSq: 0.16, minY: 0.0, maxY: 2.2 }, // Sakura
-        { x: -23.37, z: 7.10, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Left Post
-        { x: -22.21, z: 7.10, radiusSq: 0.05, minY: 0.0, maxY: 3.0 }, // Main Street Board Right Post
-        { x: 31.49, z: -35.27, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Left Post
-        { x: 32.65, z: -35.27, radiusSq: 0.05, minY: 2.0, maxY: 6.0 }, // Hokage Office Gate Right Post
-        { x: 33.45, z: -35.27, radiusSq: 0.16, minY: 2.0, maxY: 5.5 }, // Lady Tsunade
-        { x: -0.58, z: -61.00, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Hokage Monument Board Left Post
-        { x: 0.58, z: -61.00, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Hokage Monument Board Right Post
-        { x: 42.82, z: 46.89, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Training Grounds Board Left Post
-        { x: 43.98, z: 46.89, radiusSq: 0.05, minY: -1.0, maxY: 3.0 }, // Training Grounds Board Right Post
-        { x: 44.84, z: 46.89, radiusSq: 0.20, minY: -1.0, maxY: 3.0 }, // Master Jiraiya
+        { x: -2.84, z: -7.92, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Mission Gate Left Post
+        { x: -1.68, z: -7.92, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Mission Gate Right Post
+        { x: -3.66, z: -7.85, radiusSq: 0.30, minY: -1.5, maxY: 2.8 }, // Sasuke
+        { x: -0.86, z: -7.85, radiusSq: 0.30, minY: -1.5, maxY: 2.8 }, // Sakura
+        { x: -23.37, z: 7.10, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Main Street Board Left Post
+        { x: -22.21, z: 7.10, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Main Street Board Right Post
+        { x: -28.00, z: -12.62, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Ichiraku Ramen Board Left Post
+        { x: -28.00, z: -13.78, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Ichiraku Ramen Board Right Post
+        { x: 31.49, z: -35.27, radiusSq: 0.20, minY: -1.5, maxY: 6.5 }, // Hokage Office Gate Left Post
+        { x: 32.65, z: -35.27, radiusSq: 0.20, minY: -1.5, maxY: 6.5 }, // Hokage Office Gate Right Post
+        { x: 33.45, z: -35.27, radiusSq: 0.30, minY: -1.5, maxY: 6.0 }, // Lady Tsunade
+        { x: -0.58, z: -61.00, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Hokage Monument Board Left Post
+        { x: 0.58, z: -61.00, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Hokage Monument Board Right Post
+        { x: 42.82, z: 46.89, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Training Grounds Board Left Post
+        { x: 43.98, z: 46.89, radiusSq: 0.20, minY: -1.5, maxY: 3.5 }, // Training Grounds Board Right Post
+        { x: 44.84, z: 46.89, radiusSq: 0.32, minY: -1.5, maxY: 3.5 }, // Master Jiraiya
+        { x: -36.00, z: -54.00, radiusSq: 0.32, minY: -1.5, maxY: 3.5 }, // Orochimaru
+        ...STREET_LANTERN_POSITIONS.map(([lx, , lz]) => ({
+          x: lx,
+          z: lz,
+          radiusSq: 0.34, // ~0.58m collision radius around 0.34m lantern base + player body radius
+          minY: -1.5,
+          maxY: 3.5,
+        })),
       ];
 
       colliderRef.current = spatialCollider;
@@ -315,7 +327,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
         }
       });
     }
-  }, [fbx, villageMaterial, onTerrainReady, enableShadows]);
+  }, [village, villageMaterial, onTerrainReady, enableShadows]);
 
   const activeChochinMat = isNightMode ? chochinNightMat : chochinDayMat;
   const activeShojiMat = isNightMode ? shojiNightMat : shojiDayMat;
@@ -373,9 +385,9 @@ const KonohaVillage = React.memo(function KonohaVillage({
         </>
       )}
 
-      {/* ================= ACTUAL KONOHA FBX MODEL ================= */}
+      {/* ================= ACTUAL KONOHA MODEL ================= */}
       <group ref={offsetGroupRef} position={KONOHA_OFFSET}>
-        <primitive object={fbx} />
+        <primitive object={village} />
       </group>
 
       {/* ================= 6 INTERACTIVE DESTINATION SHRINES & HANGING CHŌCHIN LANTERNS ================= */}

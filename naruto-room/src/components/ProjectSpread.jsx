@@ -12,15 +12,46 @@ export function ProjectDetails({ project, onVillage }) {
     if (reader.current) reader.current.scrollTop = 0;
   }, [project.id]);
 
+  const photo = project.thumbnail || project.projectPhoto;
+  const targetUrl =
+    (project.liveUrl && !project.liveUrl.startsWith('#') ? project.liveUrl : '') ||
+    project.githubUrl ||
+    '';
+
   return (
     <div ref={reader} className="menu-page-body project-detail" tabIndex={0}
       role="region" aria-label={`Details for ${project.title}`}>
         <h2>{project.title}</h2><em>{project.dishName}</em>
+        {photo && (
+          <figure className="project-detail-figure">
+            {targetUrl ? (
+              <a
+                href={targetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="project-photo-link"
+                title={`Open ${project.title} website`}
+              >
+                <Media source={photo} title={project.title + ' project screenshot'} />
+              </a>
+            ) : project.villageEntry && onVillage ? (
+              <button
+                type="button"
+                onClick={onVillage}
+                className="project-photo-link"
+                title={`Explore ${project.title}`}
+              >
+                <Media source={photo} title={project.title + ' project screenshot'} />
+              </button>
+            ) : (
+              <Media source={photo} title={project.title + ' project screenshot'} />
+            )}
+          </figure>
+        )}
         <p>{project.description}</p>
         {project.problemSolved && <p>{project.problemSolved}</p>}
         {!!project.technologies.length && <><h3>Technology stack</h3><div className="book-tech">{project.technologies.map(t => <span key={t}>{t}</span>)}</div></>}
         {!!project.features.length && <><h3>Key features</h3><ul>{project.features.map((f, index) => <li key={index}>{f}</li>)}</ul></>}
-        {project.projectPhoto && <figure><Media source={project.projectPhoto} title={project.title + ' project screenshot'}/></figure>}
         <div className="book-links">
           {project.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
           {project.liveUrl && !project.liveUrl.startsWith('#') && <a href={project.liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}

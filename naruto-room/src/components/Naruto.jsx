@@ -415,25 +415,30 @@ const Naruto = React.memo(function Naruto({
     }
 
     // Prospective new position
-    const movedHorizontally = p.speed > 0.02 && isMoving;
-    let newX = p.x + (movedHorizontally ? moveDirX * p.speed * dt : 0);
-    let newZ = p.z + (movedHorizontally ? moveDirZ * p.speed * dt : 0);
+    const movedHorizontally = p.speed > 0.02;
+    const stepDirX = isMoving ? moveDirX : Math.sin(p.rotation);
+    const stepDirZ = isMoving ? moveDirZ : Math.cos(p.rotation);
+    const stepDist = movedHorizontally ? p.speed * dt : 0;
+    let newX = p.x + stepDirX * stepDist;
+    let newZ = p.z + stepDirZ * stepDist;
 
     // ================= O(1) SPATIAL GRID TERRAIN & WALL COLLISION =================
     if (terrainMesh && terrainMesh.isSpatialCollider) {
       if (movedHorizontally) {
+        const probeDist = Math.max(0.55, stepDist + 0.35);
         const blocked = isWallBlocking(
           terrainMesh,
           p.x,
           p.y + 0.75,
           p.z,
-          moveDirX,
-          moveDirZ,
-          0.6
+          stepDirX,
+          stepDirZ,
+          probeDist
         );
         if (blocked) {
           newX = p.x;
           newZ = p.z;
+          p.speed = 0;
         }
       }
 

@@ -1,3 +1,4 @@
+import { MusicButton } from '../audio/VillageMusicPlayer';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -200,6 +201,7 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
           </p>
         </footer>
       </main>
+      {!openOverlay && <div className="p2d-music-dock"><MusicButton /></div>}
 
       {/* ============================================================
           INTERACTIVE FULL-SCREEN MODALS ACCESSIBLE IN 2D MODE

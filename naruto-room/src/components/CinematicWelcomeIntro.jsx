@@ -1,4 +1,4 @@
-import { published } from '../data/published';
+import { published, subscribePublished } from '../data/published';
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import gsap from 'gsap';
 import './CinematicWelcomeIntro.css';
@@ -15,7 +15,12 @@ export default function CinematicWelcomeIntro({
   isVisitorMoving = false,
   onComplete,
 }) {
-  const sentences = published?.profile?.hero?.welcomeSentences;
+  const [sentences, setSentences] = useState(() => published?.profile?.hero?.welcomeSentences);
+  useEffect(() => {
+    return subscribePublished((data) => {
+      setSentences(data?.profile?.hero?.welcomeSentences);
+    });
+  }, []);
   const [isComplete, setIsComplete] = useState(false);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
   const [hasStarted, setHasStarted] = useState(false);
@@ -32,7 +37,7 @@ export default function CinematicWelcomeIntro({
         raw: sentence,
         words: sentence.split(' '),
       })),
-    []
+    [sentences]
   );
 
   // Main cinematic word-by-word animation timeline

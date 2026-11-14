@@ -1,3 +1,4 @@
+import { profileAnime } from '../../config/favoriteAnime';
 import AssetInput from '../AssetInput';
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api';
@@ -44,7 +45,7 @@ export default function ProfileAdmin() {
       setLoading(true);
       const res = await apiRequest('/profile?all=true');
       const data = res.data?.draft || res.data || {};
-      setProfile(data);
+      setProfile({ ...data, about: { ...data.about, animeList: profileAnime(data.about?.animeList) } });
 
       const s = data.hero?.welcomeSentences || [];
       setHeroForm({
@@ -330,10 +331,6 @@ export default function ProfileAdmin() {
           })}
           <fieldset><legend>About headline</legend>
             <label>headline<input value={profile?.about?.headline || ''} placeholder="The shinobi behind the code." onChange={e=>setProfile(p=>({...p,about:{...p.about,headline:e.target.value}}))}/></label>
-          </fieldset>
-          <fieldset><legend>Football (About section)</legend>
-            {['title','position','description','imageUrl'].map(k=><label key={k}>{k}<input value={profile?.about?.football?.[k] || ''} onChange={e=>setProfile(p=>({...p,about:{...p.about,football:{...p.about?.football,[k]:e.target.value}}}))}/></label>)}
-            <AssetInput label="Upload football image" onUpload={url=>setProfile(p=>({...p,about:{...p.about,football:{...p.about?.football,imageUrl:url}}}))}/>
           </fieldset>
 
           {/* GitHub Live Contribution Calendar Configuration */}

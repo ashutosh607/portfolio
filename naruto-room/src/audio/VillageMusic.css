@@ -1,0 +1,64 @@
+.village-music {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  color: #eed7b3;
+  border: 1px solid #b79b7059;
+  border-radius: 24px;
+  background: #201a17e8;
+  pointer-events: auto;
+  z-index: 1;
+}
+.village-music button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 8px;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  transition: background-color 220ms, color 220ms;
+}
+.village-music button:hover { background: #70523e66; color: #fff0d9; }
+.village-music :focus-visible { outline: 2px solid #efc592; outline-offset: 2px; }
+.music-volume, .music-feedback:not(:empty), .music-tooltip {
+  position: absolute;
+  bottom: calc(100% + 7px);
+  right: 0;
+  width: max-content;
+  padding: 8px 12px;
+  background: #241e1b;
+  color: #f5e2c7;
+  border: 1px solid #74604b;
+  border-radius: 8px;
+  font: 13px/1.4 system-ui,sans-serif;
+}
+.music-tooltip {
+  padding: 5px 10px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.village-music:hover .music-tooltip,
+.village-music:focus-within .music-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+.music-volume input { display: block; accent-color: #ddb47d; width: 120px; }
+.music-levels { display: flex; gap: 2px; align-items: end; height: 12px; }
+.music-levels i { background: currentColor; width: 2px; height: 10px; transform-origin: bottom; animation: village-music-level 1.3s ease-in-out infinite alternate; }
+.music-levels i:nth-child(2) { animation-delay: -.8s; height: 7px; }
+.music-levels i:nth-child(3) { animation-delay: -.4s; }
+@keyframes village-music-level { from { transform: scaleY(.3); } to { transform: scaleY(.9); } }
+.p2d-music-dock { position: fixed; z-index: 9; right: max(12px,env(safe-area-inset-right)); bottom: max(12px,env(safe-area-inset-bottom)); }
+.p2d-root:has(.p2d-music-dock) .p2d-footer { padding-bottom: 68px; }
+@media (pointer: coarse) { .village-music button { min-width: 44px; min-height: 44px; } }
+@media (prefers-reduced-motion: reduce) { .village-music button, .music-tooltip { transition: none; } .music-levels i { animation: none; } }

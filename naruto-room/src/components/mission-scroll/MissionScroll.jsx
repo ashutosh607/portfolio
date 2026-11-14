@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { listMissions, certificatesFor } from '../../data/missionRepository';
+import { subscribePublished } from '../../data/published';
 import { CertificateViewer, MissionCard, MissionDetail } from './Dossier';
 import './mission-scroll.css';
 
@@ -17,8 +18,10 @@ export default function MissionScroll({ onClose, onContact, embedded = false }) 
   const [records, setRecords] = useState(null);
   useEffect(() => {
     let active = true;
-    listMissions().then(data => { if (active) setRecords(data); });
-    return () => { active = false; };
+    const refresh = () => listMissions().then(data => { if (active) setRecords(data); });
+    refresh();
+    const unsubscribe = subscribePublished(refresh);
+    return () => { active = false; unsubscribe(); };
   }, []);
   return records && <LoadedScroll embedded={embedded} records={records} onClose={onClose} onContact={onContact}/>;
 }
@@ -146,8 +149,11 @@ function LoadedScroll({ records, onClose, onContact, embedded }) {
             <header className="ms-heading"><div className="ms-imprint"><LeafSeal/><small>Location 05 · Konoha Mission Board</small></div>
               <h1>Experience <em>&amp;</em> Mission Dossiers</h1>
               <p>A record of my real-world work, hackathons, and professional experiences.</p></header>
-            <nav className="ms-tabs" aria-label="Mission categories">{tabs.map(([id,label]) => <button key={id} aria-pressed={id === tab}
-              onClick={() => filter(id)}>{label} <span>{id === 'all' ? records.length : records.filter(r => r.type === id).length}</span></button>)}</nav>
+            <nav className="ms-tabs" aria-label="Mission categories">{tabs
+              .map(([id, label]) => [id, label, id === 'all' ? records.length : records.filter(r => r.type === id).length])
+              .filter(([id, , count]) => id === 'all' || count > 0)
+              .map(([id, label, count]) => <button key={id} aria-pressed={id === tab}
+                onClick={() => filter(id)}>{label} <span>{count}</span></button>)}</nav>
             <div className="ms-list" ref={panel}>{visible.map(record => <MissionCard key={record.id} mission={record}
               onDetail={() => navigate({id: record.id, certificate: null})} onContact={() => { if (embedded) onContact(); else { finish.current = onContact; back(); } }}/>)}</div>
           </div>

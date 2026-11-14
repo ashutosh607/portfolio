@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useRef, useState, useCallback, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { AdaptiveDpr } from '@react-three/drei';
+
 import KonohaVillage from './components/KonohaVillage';
 import Naruto from './components/Naruto';
 import VillageCharacters from './components/VillageCharacters';
@@ -11,8 +11,6 @@ import InteractionHUD from './components/InteractionHUD';
 import LoadingScreen from './components/LoadingScreen';
 import CinematicWelcomeIntro from './components/CinematicWelcomeIntro';
 import CinematicDialogue from './components/CinematicDialogue';
-import PortfolioModals from './components/PortfolioModals';
-import FallbackPortfolio2D from './components/FallbackPortfolio2D';
 import './App.css';
 import { INITIAL_SPAWN } from './utils/constants';
 import { KONOHA_LOCATIONS } from './config/locations';
@@ -21,8 +19,15 @@ import {
   detectNearbyTargets,
   pickBestTargetUid,
 } from './utils/interactionSystem';
+import { subscribePublished } from './data/published';
 
-const INTERACTABLE_REGISTRY = buildInteractableRegistry();
+const PortfolioModals = React.lazy(() => import('./components/PortfolioModals'));
+const FallbackPortfolio2D = React.lazy(() => import('./components/FallbackPortfolio2D'));
+
+let INTERACTABLE_REGISTRY = buildInteractableRegistry();
+subscribePublished(() => {
+  INTERACTABLE_REGISTRY = buildInteractableRegistry();
+});
 
 // Detect lower-end / mobile / integrated GPU hardware on startup to default to Lite mode when appropriate
 function detectInitialLiteMode() {
@@ -33,33 +38,37 @@ function detectInitialLiteMode() {
   return isMobile || cores <= 4 || memory <= 4;
 }
 
-// Automatic FPS watchdog inside Canvas: if sustained framerate drops below 38 FPS, auto-enables Lite mode
-function AdaptiveQualityMonitor({ isLiteMode, onAutoDowngrade }) {
-  const statsRef = useRef({ frames: 0, elapsed: 0, checks: 0 });
+// Keep UI at native resolution and scale only the scene's drawing buffer.
+function AdaptiveQualityMonitor({ isLiteMode, paused, onAutoDowngrade }) {
+  const stats = useRef({ frames: 0, elapsed: 0, slow: 0, fast: 0 });
+  useEffect(() => {
+    stats.current = { frames: 0, elapsed: 0, slow: 0, fast: 0 };
+  }, [isLiteMode, paused]);
 
-  useFrame((_, delta) => {
-    if (isLiteMode) return;
-    if (delta > 0.25) return;
-
-    const s = statsRef.current;
-    s.frames += 1;
-    s.elapsed += delta;
-
-    if (s.elapsed >= 2.0) {
-      const fps = s.frames / s.elapsed;
-      s.frames = 0;
-      s.elapsed = 0;
-      if (fps < 38) {
-        s.checks += 1;
-        if (s.checks >= 2) {
-          onAutoDowngrade();
-        }
-      } else {
-        s.checks = 0;
-      }
+  useFrame(({ viewport, setDpr, size }, delta) => {
+    if (paused || document.hidden || delta <= 0 || delta > 1) return;
+    const sample = stats.current;
+    const cap = Math.min(window.devicePixelRatio || 1, isLiteMode ? 1 : 1.5,
+      Math.sqrt((isLiteMode ? 1800000 : 3200000) / Math.max(1, size.width * size.height)));
+    const floor = Math.min(cap, isLiteMode ? 0.65 : 0.85);
+    const current = viewport.dpr;
+    if (current > cap + 0.01) setDpr(cap);
+    sample.frames++;
+    sample.elapsed += delta;
+    if (sample.elapsed < 2) return;
+    const fps = sample.frames / sample.elapsed;
+    sample.frames = sample.elapsed = 0;
+    sample.slow = fps < 38 ? sample.slow + 1 : 0;
+    sample.fast = fps > 54 ? sample.fast + 1 : 0;
+    if (sample.slow >= 2) {
+      if (current > floor + 0.01) setDpr(Math.max(floor, current - 0.2));
+      else if (!isLiteMode) onAutoDowngrade();
+      sample.slow = 0;
+    } else if (sample.fast >= 4 && current < cap - 0.01) {
+      setDpr(Math.min(cap, current + 0.1));
+      sample.fast = 0;
     }
   });
-
   return null;
 }
 
@@ -378,8 +387,8 @@ function AppContent() {
         onCreated={handleCreated}
         className="three-canvas"
       >
-        <AdaptiveDpr pixelated />
         <AdaptiveQualityMonitor
+          paused={Boolean(activeModal)}
           isLiteMode={isLiteMode}
           onAutoDowngrade={handleAutoDowngrade}
         />
@@ -492,12 +501,14 @@ function AppContent() {
       )}
 
       {/* Portfolio Section Modals (01 Intro, 02 Projects, 03 About, 04 Skills, 05 Missions, 06 Contact, Resume) */}
-      <PortfolioModals
-        activeModal={activeModal}
-        onClose={handleCloseModal}
-        onOpenModal={handleOpenModal}
-        onFastTravel={handleFastTravel}
-      />
+      {activeModal && <Suspense fallback={null}>
+        <PortfolioModals
+          activeModal={activeModal}
+          onClose={handleCloseModal}
+          onOpenModal={handleOpenModal}
+          onFastTravel={handleFastTravel}
+        />
+      </Suspense>}
     </div>
   );
 }

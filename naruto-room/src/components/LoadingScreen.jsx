@@ -496,24 +496,13 @@ export default function LoadingScreen({ onComplete }) {
       wordObj.lastErodedBin = targetBin;
     };
 
-    // Initialize after web fonts are ready (with fast 250ms fallback timeout)
-    const initSequence = async () => {
-      try {
-        if (document.fonts && document.fonts.ready) {
-          await Promise.race([
-            document.fonts.ready,
-            new Promise((resolve) => setTimeout(resolve, 250)),
-          ]);
-        }
-      } catch {
-        // Proceed immediately if font API unavailable
-      }
+      // Initialize immediately without waiting on remote Google Fonts so the first word renders at 0ms
+      const initSequence = () => {
+        if (cancelled) return;
 
-      if (cancelled) return;
-
-      const specs = getDeviceSpecs();
-      const pCanvas = particleCanvasRef.current;
-      if (!pCanvas) return;
+        const specs = getDeviceSpecs();
+        const pCanvas = particleCanvasRef.current;
+        if (!pCanvas) return;
 
       pCanvas.width = Math.ceil(specs.vw * specs.dpr);
       pCanvas.height = Math.ceil(specs.vh * specs.dpr);
@@ -687,32 +676,40 @@ export default function LoadingScreen({ onComplete }) {
         const holdDur = isFinal ? 0.65 : 0.44;
         const dissolveDur = isFinal ? 0.92 : 0.76;
 
-        // Initial hidden state: 15px lower, blurred, zero opacity
-        gsap.set(wordObj.canvasEl, {
-          opacity: 0,
-          y: 15,
-          filter: 'blur(9px)',
-        });
-
-        // 1. Word Entrance: emerge from darkness, move upward 15px, resolve from blur to sharp
-        tl.to(
-          wordObj.canvasEl,
-          {
+        // Initial state: first word (IMAGINE.) is immediately visible at 0ms so the screen is never blank
+        if (idx === 0) {
+          gsap.set(wordObj.canvasEl, {
             opacity: 1,
             y: 0,
-            filter: 'blur(0px)',
-            duration: enterDur,
-            ease: 'power2.out',
-            onComplete: () => {
-              if (wordObj.canvasEl) {
-                wordObj.canvasEl.style.filter = 'none';
-              }
-            },
-          },
-          startT
-        );
+            filter: 'none',
+          });
+        } else {
+          gsap.set(wordObj.canvasEl, {
+            opacity: 0,
+            y: 15,
+            filter: 'blur(9px)',
+          });
 
-        const dissolveStartT = startT + enterDur + holdDur;
+          // 1. Word Entrance: emerge from darkness, move upward 15px, resolve from blur to sharp
+          tl.to(
+            wordObj.canvasEl,
+            {
+              opacity: 1,
+              y: 0,
+              filter: 'blur(0px)',
+              duration: enterDur,
+              ease: 'power2.out',
+              onComplete: () => {
+                if (wordObj.canvasEl) {
+                  wordObj.canvasEl.style.filter = 'none';
+                }
+              },
+            },
+            startT
+          );
+        }
+
+        const dissolveStartT = idx === 0 ? holdDur + 0.18 : startT + enterDur + holdDur;
 
         // If this is the final word (SHINOBI.), ensure essential 3D assets are ready before disintegrating
         if (isFinal) {

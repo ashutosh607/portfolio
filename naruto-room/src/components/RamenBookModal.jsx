@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import { flushSync } from 'react-dom';
 import { PageTurnSurface } from './PageTurnSurface';
 import { loadProjectMenu } from '../data/projectMenu';
+import { subscribePublished } from '../data/published';
 import { PageNavigation, ProjectSpread } from './ProjectSpread';
 import { ADMIN_PROJECTS_STORAGE_KEY } from '../config/locations';
 import './RamenBookModal.css';
@@ -36,9 +37,11 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     const handleAdminProjectUpdate = event => {
       if (event.type !== 'storage' || !event.key || event.key === ADMIN_PROJECTS_STORAGE_KEY) setProjects(loadProjectMenu());
     };
+    const unsubscribe = subscribePublished(() => setProjects(loadProjectMenu()));
     window.addEventListener('storage', handleAdminProjectUpdate);
     window.addEventListener('shinobi-projects-updated', handleAdminProjectUpdate);
     return () => {
+      unsubscribe();
       window.removeEventListener('storage', handleAdminProjectUpdate);
       window.removeEventListener('shinobi-projects-updated', handleAdminProjectUpdate);
     };

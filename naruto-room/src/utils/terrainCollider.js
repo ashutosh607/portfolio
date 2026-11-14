@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { VILLAGE_BOUNDS } from './constants';
+import { VILLAGE_BOUNDS } from './constants.js';
 
 /**
  * High-performance 2D Spatial Hash Grid for Konoha Village terrain & wall collision.
@@ -220,16 +220,36 @@ export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = 
 export function isWallBlocking(collider, ox, oy, oz, dirX, dirZ, maxDist = 0.6) {
   if (!collider || !collider.isSpatialCollider) return false;
 
-  // Check registered cylinder obstacles (e.g. gate pillars, trees)
+  // Check registered cylinder obstacles (e.g. gate pillars, street lanterns, NPCs)
   if (collider.obstacles && collider.obstacles.length > 0) {
-    const targetX = ox + dirX * maxDist;
-    const targetZ = oz + dirZ * maxDist;
+    const stepX = dirX * maxDist;
+    const stepZ = dirZ * maxDist;
+    const stepLenSq = stepX * stepX + stepZ * stepZ;
+
     for (let i = 0; i < collider.obstacles.length; i++) {
       const obs = collider.obstacles[i];
       if (oy >= obs.minY && oy <= obs.maxY) {
-        const dx = targetX - obs.x;
-        const dz = targetZ - obs.z;
-        if (dx * dx + dz * dz <= obs.radiusSq) {
+        const relStartX = ox - obs.x;
+        const relStartZ = oz - obs.z;
+        const startDistSq = relStartX * relStartX + relStartZ * relStartZ;
+
+        // Closest point on the movement segment [0, 1] to the obstacle center
+        let t = 0;
+        if (stepLenSq > 1e-8) {
+          t = Math.max(0, Math.min(1, -(relStartX * stepX + relStartZ * stepZ) / stepLenSq));
+        }
+        const closestX = relStartX + stepX * t;
+        const closestZ = relStartZ + stepZ * t;
+        const closestDistSq = closestX * closestX + closestZ * closestZ;
+
+        if (closestDistSq <= obs.radiusSq) {
+          // If already slightly inside the radius, allow moving strictly outward
+          const endX = relStartX + stepX;
+          const endZ = relStartZ + stepZ;
+          const endDistSq = endX * endX + endZ * endZ;
+          if (startDistSq <= obs.radiusSq && endDistSq > startDistSq) {
+            continue;
+          }
           return true;
         }
       }

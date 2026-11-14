@@ -90,7 +90,10 @@
 .page-footer-nav button:disabled {opacity:.45;cursor:default}
 .book-page p,.book-page li {user-select:text;-webkit-user-select:text}
 .project-detail {padding-top:4px}.project-detail p,.spread2-lead,.philosophy-pillar p {margin:10px 0}
-.project-detail figure {margin:12px 0}.project-detail figure img {width:100%;max-height:28dvh;object-fit:contain;object-position:left}
+.project-detail figure {margin:10px 0 12px}.project-detail figure img {width:100%;max-height:22dvh;object-fit:cover;object-position:top center;display:block;border-radius:3px;border:1px solid #ad9069;background:#e6d6b8}
+.project-photo-link {display:block;padding:0;border:0;background:transparent;cursor:pointer;text-decoration:none;border-radius:3px;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
+.project-photo-link:hover {transform:translateY(-1px);box-shadow:0 4px 12px rgba(65,45,30,.22)}
+.project-photo-link:hover img {border-color:#772f28}
 .book-tech {display:flex;gap:5px;flex-wrap:wrap}.book-tech span {border:1px solid #bba181;border-radius:2px;padding:2px 6px;font:12px/1.4 system-ui,sans-serif}
 .project-detail ul,.spread2-specs-card ul {padding-left:1.3em}.project-detail li,.spread2-specs-card li {margin-bottom:4px}
 .book-links,.spread2-fast-travel-btn {margin:14px 0}
