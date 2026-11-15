@@ -137,6 +137,7 @@ export default function MissionsAdmin() {
     role: '',
     status: 'Completed',
     liveUrl: '',
+    githubUrl: '',
     thumbnail: '',
     startDate: '',
     endDate: '',
@@ -184,6 +185,7 @@ export default function MissionsAdmin() {
       role: '',
       status: 'Completed',
       liveUrl: '',
+      githubUrl: '',
       thumbnail: '',
       startDate: '',
       endDate: '',
@@ -224,6 +226,7 @@ export default function MissionsAdmin() {
       role: m.role || '',
       status: m.status || 'Completed',
       liveUrl: m.liveUrl || '',
+      githubUrl: m.githubUrl || '',
       thumbnail: m.thumbnail || '',
       description: m.description || '',
       techText: (m.technologies || []).join(', '),
@@ -264,6 +267,7 @@ export default function MissionsAdmin() {
         role: formData.role,
         status: formData.status,
         liveUrl: formData.liveUrl,
+        githubUrl: formData.githubUrl,
         thumbnail: formData.thumbnail,
         description: formData.description,
         technologies: formData.techText
@@ -502,6 +506,19 @@ export default function MissionsAdmin() {
                             <ExternalLink size={15} />
                           </a>
                         )}
+                        {m.githubUrl && (
+                          <a
+                            href={m.githubUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="icon-btn edit"
+                            title="Open GitHub Repository"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+                            </svg>
+                          </a>
+                        )}
                         <button
                           onClick={() => openEditModal(m)}
                           className="icon-btn edit"
@@ -645,7 +662,7 @@ export default function MissionsAdmin() {
               <div className="form-grid-2">
                 <div className="form-group">
                   <label htmlFor="missionsadmin-live-url-client-site-or-repository">
-                    Live URL (Client site or repository)
+                    Live URL (Deployed project or client site)
                   </label>
                   <input
                     id="missionsadmin-live-url-client-site-or-repository"
@@ -656,6 +673,21 @@ export default function MissionsAdmin() {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label htmlFor="missionsadmin-github-url">
+                    GitHub Repository URL
+                  </label>
+                  <input
+                    id="missionsadmin-github-url"
+                    type="url"
+                    value={formData.githubUrl}
+                    onChange={(e) => setFormData({ ...formData, githubUrl: e.target.value })}
+                    placeholder="https://github.com/..."
+                  />
+                </div>
+              </div>
+
+              <div className="form-grid-2">
                 <div className="form-group">
                   <label htmlFor="missionsadmin-thumbnail-path-or-cloudinary-url">
                     Thumbnail Path or Cloudinary URL

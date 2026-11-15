@@ -1,6 +1,6 @@
 const defaults = {
   organization: '', startDate: null, endDate: null, thumbnail: null,
-  technologies: [], certificates: [], events: [], caseStudy: null, liveUrl: null, visible: true,
+  technologies: [], certificates: [], events: [], caseStudy: null, liveUrl: null, githubUrl: null, visible: true,
 };
 
 export const missions = [

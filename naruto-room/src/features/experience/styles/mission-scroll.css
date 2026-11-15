@@ -33,6 +33,8 @@
 .ms-tabs {margin: clamp(10px,2.5vh,25px) 0 0; gap:6px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:10px 0}
 .ms-tabs button,.ms-actions button,.ms-actions a,.ms-detailwrap>button {border:1px solid #b79b78; border-radius:3px; padding:7px 12px; background:#fff6df40; text-decoration:none; font-size:13px; font-weight:600}
 .ms-tabs button[aria-pressed=true],.ms-actions a {background:var(--wine); color:#fff0d8; border-color:var(--wine)}
+.ms-actions a.ms-github-link {display:inline-flex; align-items:center; gap:6px; background:#24292f; color:#fff6df; border-color:#24292f}
+.ms-actions a.ms-github-link:hover {background:#32383f; border-color:#32383f}
 .ms-tabs span {margin-left:4px; font-size:11px; opacity:.8}
 .ms-list,.ms-detailwrap,.ms-image {overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#a18860 transparent}
 .ms-list {flex:1; min-height:0; padding-right:8px}

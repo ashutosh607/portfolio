@@ -94,6 +94,7 @@ export const missionSchema = z.object({
   role: z.string().trim().max(150).default(''),
   status: z.string().trim().max(100).default('Completed'),
   liveUrl: safeUrlSchema.default(''),
+  githubUrl: safeUrlSchema.default(''),
   thumbnail: safeUrlSchema.default(''),
   startDate: z.string().trim().max(50).optional().nullable(),
   endDate: z.string().trim().max(50).optional().nullable(),

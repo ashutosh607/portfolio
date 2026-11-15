@@ -60,6 +60,10 @@ const missionSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    githubUrl: {
+      type: String,
+      default: '',
+    },
     startDate: String,
     endDate: String,
     availableFrom: {
