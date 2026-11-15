@@ -177,7 +177,7 @@ const Naruto = React.memo(function Naruto({
   useEffect(() => {
     if (terrainMesh?.isSpatialCollider) {
       const p = physics.current;
-      const gy = sampleGroundY(terrainMesh, p.x, p.z, 2.2, -1.5);
+      const gy = sampleGroundY(terrainMesh, p.x, p.z, 2.2, -6.0);
       if (gy !== null) {
         p.y = gy;
         p.groundY = gy;
@@ -195,7 +195,7 @@ const Naruto = React.memo(function Naruto({
       const tz = fastTravelTarget[2];
       const detectedY =
         terrainMesh?.isSpatialCollider
-          ? sampleGroundY(terrainMesh, tx, tz, 2.2, -1.5)
+          ? sampleGroundY(terrainMesh, tx, tz, 2.2, -6.0)
           : null;
       const ty = detectedY !== null ? detectedY : fastTravelTarget[1] || 0;
 
@@ -521,7 +521,7 @@ const Naruto = React.memo(function Naruto({
           newX,
           newZ,
           p.y + MAX_STEP_HEIGHT + 0.2,
-          -2.5
+          -6.0
         );
 
         if (detectedGroundY !== null) {
@@ -576,7 +576,7 @@ const Naruto = React.memo(function Naruto({
     group.current.position.set(p.x, p.y, p.z);
     if (contactShadow.current) {
       const shadow = contactShadow.current;
-      const floor = sampleGroundY(terrainMesh, p.x, p.z, p.groundY + 0.08, -2.5, shadowNormal);
+      const floor = sampleGroundY(terrainMesh, p.x, p.z, p.groundY + 0.08, -6.0, shadowNormal);
       shadow.visible = floor !== null;
       if (shadow.visible) {
         const clearance = Math.max(0, p.y - floor);

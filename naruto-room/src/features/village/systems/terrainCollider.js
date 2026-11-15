@@ -35,7 +35,7 @@ export function buildTerrainCollider(rootObject, cellSize = 2.5) {
     // Quick Y bounds rejection (ignore high roofs or deep underground artifacts)
     const triMinY = Math.min(a.y, b.y, c.y);
     const triMaxY = Math.max(a.y, b.y, c.y);
-    if (triMaxY < -3.0 || triMinY > 14.0) return;
+    if (triMaxY < -6.0 || triMinY > 14.0) return;
 
     // Quick XZ bounds rejection
     const triMinX = Math.min(a.x, b.x, c.x);
@@ -165,7 +165,7 @@ export function buildTerrainCollider(rootObject, cellSize = 2.5) {
  * O(1) ground elevation lookup at (x, z) using 2D barycentric interpolation.
  * Returns the highest valid walkable surface Y below maxAllowedY, or null if no hit.
  */
-export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = -2.5, surfaceNormal = null) {
+export function sampleGroundY(collider, x, z, maxAllowedY = 10.0, minAllowedY = -6.0, surfaceNormal = null) {
   if (!collider || !collider.isSpatialCollider) return null;
 
   const col = Math.floor((x - collider.minX) / collider.cellSize);
