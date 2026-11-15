@@ -55,7 +55,7 @@ function AdaptiveQualityMonitor({ isLiteMode, paused, onAutoDowngrade }) {
     if (current > cap + 0.01) setDpr(cap);
     sample.frames++;
     sample.elapsed += delta;
-    if (sample.elapsed < 2) return;
+    if (sample.elapsed < 1.2) return;
     const fps = sample.frames / sample.elapsed;
     sample.frames = sample.elapsed = 0;
     sample.slow = fps < 38 ? sample.slow + 1 : 0;
@@ -152,6 +152,15 @@ function AppContent() {
   });
   const [is2DMode, setIs2DMode] = useState(false);
   const [sceneLoaded, setSceneLoaded] = useState(false);
+  const [isTabHidden, setIsTabHidden] = useState(() =>
+    typeof document !== 'undefined' ? document.hidden : false
+  );
+
+  useEffect(() => {
+    const onVisibility = () => setIsTabHidden(document.hidden);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
 
   // Safety fallback: ensure sceneLoaded triggers even if assets load instantaneously
   useEffect(() => {
@@ -361,6 +370,7 @@ function AppContent() {
       {/* 3D Scene Canvas */}
       <Canvas
         frameloop={
+          isTabHidden ||
           activeModal === 'intro' ||
           activeModal === 'projects' ||
           activeModal === 'about' ||
@@ -371,8 +381,8 @@ function AppContent() {
             ? 'demand'
             : 'always'
         }
-        shadows={enableShadows}
-        dpr={isLiteMode ? [0.8, 1.0] : [1, 1.35]}
+        shadows={enableShadows ? 'percentage' : false}
+        dpr={isLiteMode ? [0.75, 1.0] : [1, 1.35]}
         camera={{ position: [0, 3.2, 5.5], fov: 46, near: 0.3, far: 250 }}
         gl={{
           antialias: !isLiteMode,

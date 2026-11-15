@@ -189,8 +189,13 @@ const KonohaVillage = React.memo(function KonohaVillage({
       return;
     }
     const [x, y, z] = playerPosRef.current;
-    shadowTarget.position.set(x, y, z);
-    keyLight.current.position.set(x + lightOffset[0], y + lightOffset[1], z + lightOffset[2]);
+    // Snap shadow camera target to texel grid (20m frustum / 1024px) to eliminate shadow shimmer
+    const texel = 20 / 1024;
+    const sx = Math.round(x / texel) * texel;
+    const sy = Math.round(y / texel) * texel;
+    const sz = Math.round(z / texel) * texel;
+    shadowTarget.position.set(sx, sy, sz);
+    keyLight.current.position.set(sx + lightOffset[0], sy + lightOffset[1], sz + lightOffset[2]);
   });
   const offsetGroupRef = useRef();
   const colliderBuiltRef = useRef(false);
@@ -208,6 +213,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.wrapS = THREE.ClampToEdgeWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.anisotropy = 4;
     texture.generateMipmaps = true;
     texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.needsUpdate = true;
@@ -350,7 +356,7 @@ const KonohaVillage = React.memo(function KonohaVillage({
         color={isNightMode ? '#a8c7f7' : '#fff5e4'}
         intensity={isNightMode ? 1.38 : 2.0}
         castShadow={enableShadows}
-        shadow-mapSize={[512, 512]}
+        shadow-mapSize={[1024, 1024]}
         shadow-camera-near={15}
         shadow-camera-far={180}
         shadow-camera-left={-10}
