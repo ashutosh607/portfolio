@@ -13,6 +13,15 @@ import {
 } from '../config/constants';
 import { KONOHA_LOCATIONS } from '../config/locations';
 import { sampleGroundY, isWallBlocking } from '../systems/terrainCollider';
+import {
+  JUMP_TAKEOFF_DURATION,
+  JUMP_LANDING_DURATION,
+  JUMP_COYOTE_TIME,
+  JUMP_BUFFER_TIME,
+  computeGravityScale,
+  evaluateJumpKinematics,
+  computeJumpBoneAngle,
+} from '../systems/jumpMechanics';
 
 // Preload the Naruto model
 useGLTF.preload('/models/naruto/source/untitled.glb');
@@ -39,6 +48,18 @@ const _axisZ = new THREE.Vector3(0, 0, 1);
 const _tmpQuat = new THREE.Quaternion();
 const _tmpQuat2 = new THREE.Quaternion();
 const _walkQuat = new THREE.Quaternion();
+
+const _jumpQuat = new THREE.Quaternion();
+const _jumpKinematics = {
+  poseWeight: 0,
+  airBlend: 0,
+  ascentWeight: 0,
+  apexWeight: 0,
+  descentWeight: 0,
+  compression: 0,
+  bodyPitch: 0,
+  hipDip: 0,
+};
 
 // One stride, sampled at contact, loading, mid-stance, toe-off and swing.
 const thighAngles = [0.48, 0.33, 0.03, -0.29, -0.38, -0.04, 0.39, 0.54];
@@ -86,6 +107,10 @@ const Naruto = React.memo(function Naruto({
     z: INITIAL_SPAWN.position[2],
     groundY: INITIAL_SPAWN.position[1],
     velocityY: 0,
+    jumpHeld: false,
+    windup: 0, strideAtLaunch: 0, impact: 0,
+    airX: 0, airZ: 0, landingTime: 0,
+    coyoteTime: 0, jumpBuffer: 0,
     isGrounded: true,
     rotation: INITIAL_SPAWN.facing, // face the visitor on initial arrival
     speed: 0, // for smooth acceleration
@@ -128,6 +153,8 @@ const Naruto = React.memo(function Naruto({
       physics.current.z = INITIAL_SPAWN.position[2];
       physics.current.groundY = INITIAL_SPAWN.position[1];
       physics.current.velocityY = 0;
+      physics.current.landingTime = 0;
+      physics.current.windup = 0;
       physics.current.isGrounded = true;
       physics.current.rotation = INITIAL_SPAWN.facing;
       physics.current.speed = 0;
@@ -190,6 +217,8 @@ const Naruto = React.memo(function Naruto({
       physics.current.z = tz;
       physics.current.groundY = ty;
       physics.current.velocityY = 0;
+      physics.current.landingTime = 0;
+      physics.current.windup = 0;
       physics.current.isGrounded = true;
       physics.current.speed = 0;
       physics.current.rotation = nextRot;
@@ -408,17 +437,55 @@ const Naruto = React.memo(function Naruto({
     const targetSpeed = isMoving ? (isSprinting ? SPRINT_SPEED : WALK_SPEED) : 0;
     p.speed += (targetSpeed - p.speed) * Math.min(1, dt * 14);
 
-    // Jumping physics
-    if ((k.jump || tInput?.jump) && p.isGrounded && !isMovementPaused) {
-      p.velocityY = JUMP_VELOCITY;
-      p.isGrounded = false;
+    const jumpPressed = Boolean(k.jump || tInput?.jump);
+    const jumpJustPressed = jumpPressed && !p.jumpHeld;
+    if (isMovementPaused) {
+      p.windup = 0;
+      p.jumpBuffer = 0;
+    } else if (jumpJustPressed) {
+      p.jumpBuffer = JUMP_BUFFER_TIME;
+    } else {
+      p.jumpBuffer = Math.max(0, p.jumpBuffer - dt);
     }
 
-    // Prospective new position
-    const movedHorizontally = p.speed > 0.02;
-    const stepDirX = isMoving ? moveDirX : Math.sin(p.rotation);
-    const stepDirZ = isMoving ? moveDirZ : Math.cos(p.rotation);
-    const stepDist = movedHorizontally ? p.speed * dt : 0;
+    p.coyoteTime = p.isGrounded ? JUMP_COYOTE_TIME : Math.max(0, p.coyoteTime - dt);
+
+    if (p.jumpBuffer > 0 && p.coyoteTime > 0 && !p.windup && !isMovementPaused) {
+      p.windup = JUMP_TAKEOFF_DURATION;
+      p.jumpBuffer = 0;
+      p.coyoteTime = 0;
+    }
+    const preparing = p.windup > 0;
+    p.windup = Math.max(0, p.windup - dt);
+    const takeoff = preparing && p.windup === 0;
+    p.jumpHeld = jumpPressed;
+    p.landingTime = Math.max(0, p.landingTime - dt);
+
+    let stepDirX = isMoving ? moveDirX : Math.sin(p.rotation);
+    let stepDirZ = isMoving ? moveDirZ : Math.cos(p.rotation);
+    if (takeoff) {
+      p.strideAtLaunch = Math.cos(walkPhaseRef.current * Math.PI * 2)
+        * Math.min(1, p.speed / WALK_SPEED);
+      p.velocityY = JUMP_VELOCITY;
+      p.isGrounded = false;
+      p.landingTime = 0;
+      p.airX = stepDirX * p.speed;
+      p.airZ = stepDirZ * p.speed;
+    }
+    let stepSpeed = preparing ? p.speed * 0.88 : p.speed;
+    if (!p.isGrounded) {
+      // Keep takeoff momentum when input is released. Steering takes time in the air.
+      const steer = isMoving ? 1 - Math.exp(-2 * dt) : 0;
+      p.airX += (moveDirX * targetSpeed - p.airX) * steer;
+      p.airZ += (moveDirZ * targetSpeed - p.airZ) * steer;
+      stepSpeed = Math.hypot(p.airX, p.airZ);
+      if (stepSpeed > 0) {
+        stepDirX = p.airX / stepSpeed;
+        stepDirZ = p.airZ / stepSpeed;
+      }
+    }
+    const movedHorizontally = stepSpeed > 0.02;
+    const stepDist = movedHorizontally ? stepSpeed * dt : 0;
     let newX = p.x + stepDirX * stepDist;
     let newZ = p.z + stepDirZ * stepDist;
 
@@ -439,6 +506,7 @@ const Naruto = React.memo(function Naruto({
           newX = p.x;
           newZ = p.z;
           p.speed = 0;
+          p.airX = p.airZ = 0;
         }
       }
 
@@ -462,14 +530,19 @@ const Naruto = React.memo(function Naruto({
       }
     }
 
-    // Vertical physics & ground snapping
+    // Vertical physics & ground snapping with asymmetric athletic gravity
     if (!p.isGrounded) {
-      p.velocityY += GRAVITY * dt;
-      p.y += p.velocityY * dt;
+      const effectiveGravity = GRAVITY * computeGravityScale(p.velocityY, p.jumpHeld);
+      p.y += p.velocityY * dt + 0.5 * effectiveGravity * dt * dt;
+      p.velocityY += effectiveGravity * dt;
       if (p.y <= p.groundY) {
         p.y = p.groundY;
+        p.impact = THREE.MathUtils.clamp(-p.velocityY / JUMP_VELOCITY, 0.25, 1.35);
         p.velocityY = 0;
         p.isGrounded = true;
+        p.coyoteTime = JUMP_COYOTE_TIME;
+        p.landingTime = JUMP_LANDING_DURATION;
+        p.speed = Math.hypot(p.airX, p.airZ);
       }
     } else if (Math.abs(p.groundY - p.y) > 0.0005) {
       p.y += (p.groundY - p.y) * Math.min(1, dt * 20);
@@ -528,7 +601,7 @@ const Naruto = React.memo(function Naruto({
     const moveBlend = animBlendRef.current;
 
     // 2. Sprint posture blend: 0 = upright normal walk, 1 = leaning ninja sprint clip
-    const wantsSprintPose = (wantsMove && isSprinting) || !p.isGrounded;
+    const wantsSprintPose = p.isGrounded && wantsMove && isSprinting;
     const targetSprintBlend = wantsSprintPose ? 1.0 : 0.0;
     sprintBlendRef.current += (targetSprintBlend - sprintBlendRef.current) * Math.min(1, dt * 9);
     const sprintBlend = sprintBlendRef.current;
@@ -654,14 +727,39 @@ const Naruto = React.memo(function Naruto({
       }
     }
 
-    // Subtle vertical cadence bob during normal walking & gentle breathing when idle
+    // 4-phase continuous jump kinematics: crouch -> ascent -> apex -> descent -> landing absorption
+    const kin = evaluateJumpKinematics(
+      {
+        isGrounded: p.isGrounded,
+        windup: p.windup,
+        velocityY: p.velocityY,
+        jumpVelocity: JUMP_VELOCITY,
+        landingTime: p.landingTime,
+        impact: p.impact,
+      },
+      _jumpKinematics
+    );
+    if (kin.poseWeight > 0.001 && bones.length > 0) {
+      idleLockedRef.current = false;
+      for (let i = 0, len = bones.length; i < len; i++) {
+        const b = bones[i];
+        const angle = computeJumpBoneAngle(b.shortName, kin, p.strideAtLaunch);
+        if (angle === null) continue;
+        const axis = b.shortName.endsWith('Arm') ? _axisZ : _axisX;
+        _jumpQuat.copy(b.idleQuat).multiply(_tmpQuat.setFromAxisAngle(axis, angle));
+        b.bone.quaternion.slerp(_jumpQuat, kin.poseWeight);
+      }
+    }
+
+    // Subtle vertical cadence bob during normal walking, gentle breathing when idle, and jump pitch/dip
     if (innerModel.current) {
       const gaitWeight = p.isGrounded ? moveBlend * (1 - sprintBlend) : 0;
       const phaseAngle = walkPhaseRef.current * 2 * Math.PI;
       innerModel.current.position.x = 0.018 * Math.sin(phaseAngle) * gaitWeight;
       const breath = Math.sin(state.clock.elapsedTime * 2.5) * 0.008;
       innerModel.current.position.y = (p.isGrounded ? breath * (1 - moveBlend) : 0)
-        - 0.022 * Math.cos(2 * phaseAngle) * gaitWeight;
+        - 0.022 * Math.cos(2 * phaseAngle) * gaitWeight + kin.hipDip;
+      innerModel.current.rotation.x += (kin.bodyPitch - innerModel.current.rotation.x) * Math.min(1, dt * 16);
     }
 
     // Update direct reference for 60fps smooth camera & proximity tracking without React re-renders
