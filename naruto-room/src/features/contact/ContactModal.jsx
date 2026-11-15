@@ -22,6 +22,7 @@ export default function ContactModal({
   onTeleportToMonument,
 }) {
   const [delivery, setDelivery] = useState('');
+  const submitting = useRef(false);
   const [sending, setSending] = useState(false);
   const [, setPublishedTick] = useState(0);
 
@@ -31,7 +32,7 @@ export default function ContactModal({
 
   async function sendMessage(event) {
     event.preventDefault();
-    if (sending) return;
+    if (submitting.current) return;
     const form = event.currentTarget;
     const fields = Object.fromEntries(new FormData(form));
     if (!info) {
@@ -41,6 +42,7 @@ export default function ContactModal({
       setDelivery('Finish sending in your email app, or use the address alongside this form.');
       return;
     }
+    submitting.current = true;
     setSending(true);
     setDelivery('');
     try {
@@ -56,6 +58,7 @@ export default function ContactModal({
     } catch {
       setDelivery('Your message could not be sent. Try again or email me directly.');
     } finally {
+      submitting.current = false;
       setSending(false);
     }
   }

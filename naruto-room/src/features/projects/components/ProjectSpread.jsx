@@ -20,7 +20,8 @@ export function ProjectDetails({ project, onVillage }) {
   return (
     <div ref={reader} className="menu-page-body project-detail" tabIndex={0}
       role="region" aria-label={`Details for ${project.title}`}>
-        <h2>{project.title}</h2><em>{project.dishName}</em>
+        <h2>{project.title}</h2>
+        {project.description && <p>{project.shortDesc || project.description}</p>}
         {photo && (
           <figure className="project-detail-figure">
             {targetUrl ? (
@@ -48,15 +49,16 @@ export function ProjectDetails({ project, onVillage }) {
             )}
           </figure>
         )}
-        <p>{project.description}</p>
+        <div className="book-links">
+          {project.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
+          {liveUrl && <a href={liveUrl} target="_blank" rel="noreferrer">Visit Website ↗</a>}
+          {project.githubUrl && <a className="book-source-link" href={project.githubUrl} target="_blank" rel="noreferrer">Source Code ↗</a>}
+        </div>
+        {project.shortDesc && project.shortDesc !== project.description && <p>{project.description}</p>}
         {project.problemSolved && <p>{project.problemSolved}</p>}
         {!!project.technologies.length && <><h3>Technology stack</h3><div className="book-tech">{project.technologies.map(t => <span key={t}>{t}</span>)}</div></>}
         {!!project.features.length && <><h3>Key features</h3><ul>{project.features.map((f, index) => <li key={index}>{f}</li>)}</ul></>}
-        <div className="book-links">
-          {project.villageEntry && onVillage && <button onClick={onVillage}>Explore the village →</button>}
-          {liveUrl && <a href={liveUrl} target="_blank" rel="noreferrer">Live website ↗</a>}
-          {project.githubUrl && <a href={project.githubUrl} target="_blank" rel="noreferrer">GitHub ↗</a>}
-        </div>
+
     </div>
   );
 }
@@ -79,7 +81,7 @@ export function ProjectSpread({ projects, selected, onSelect, onBack, onVillage,
           onClick={() => onSelect(project)}>
           <span className="dish-thumbnail-box"><Media source={project.thumbnail} title={project.title}/></span>
           <span className="dish-copy"><strong>{project.title}</strong><em>{project.dishName}</em>
-            <span className="mobile-dish-summary">{project.description}</span><span className="mobile-dish-stack">{project.technologies.slice(0,3).join(' · ')}</span>
+            <span className="mobile-dish-stack">{project.technologies.slice(0,3).join(' · ')}</span>
             <span className="dish-category">{project.category?.split('•')[0].trim()}</span><b>View Details →</b></span>
         </button>)}
         {!projects.length && <p>No projects are currently listed.</p>}

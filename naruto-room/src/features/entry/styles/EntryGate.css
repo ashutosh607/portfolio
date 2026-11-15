@@ -81,3 +81,9 @@
  .entry-gate button:hover,.gate-card:hover .gate-card-art {transform:none}
  .gate-card:hover,.gate-actions button:hover span {translate:none}
 }
+
+.entry-gate .gate-main-actions .gate-contact-link {background:transparent;border-color:transparent;text-decoration:underline;text-underline-offset:4px}
+@media (max-width:400px) {
+  .entry-gate .gate-main-actions {display:flex;flex-wrap:wrap}
+  .entry-gate .gate-main-actions .gate-red {flex:1 0 100%}
+}

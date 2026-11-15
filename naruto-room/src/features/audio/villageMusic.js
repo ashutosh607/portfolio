@@ -105,7 +105,7 @@ export class VillageMusic {
       }
       const ctx = this.ctx;
       // Invoke resume synchronously inside the tap, before fetching or decoding.
-      const resumed = ctx.resume();
+      const resumed = ctx.resume().catch(() => {});
       if (ctx.state !== 'running' && typeof window !== 'undefined' && !this.removeUnlock) {
         const unlock = () => {
           if (!this.enabled || this.ctx !== ctx) {
@@ -132,8 +132,9 @@ export class VillageMusic {
       }
       if (!this.loading) {
         this.abort = new AbortController();
+        const { signal } = this.abort;
         const loadAudio = async (targetUrl) => {
-          const response = await fetch(targetUrl, { signal: this.abort.signal });
+          const response = await fetch(targetUrl, { signal });
           if (!response.ok || response.headers.get('content-type')?.includes('text/html')) {
             throw Error('Missing track');
           }
@@ -143,7 +144,7 @@ export class VillageMusic {
         };
         this.loading = loadAudio(villageTrack.url).catch((err) => {
           if (
-            this.abort.signal.aborted ||
+            signal.aborted ||
             !villageTrack.fallbackUrl ||
             villageTrack.fallbackUrl === villageTrack.url
           ) {
@@ -153,7 +154,7 @@ export class VillageMusic {
         });
       }
       const { buffer, loop } = await this.loading;
-      await Promise.race([resumed.catch(() => {}), new Promise((r) => setTimeout(r, 250))]);
+      await Promise.race([resumed, new Promise((r) => setTimeout(r, 250))]);
       if (version !== this.version) return;
       if (ctx.state === 'running') {
         this.removeUnlock?.();

@@ -58,11 +58,15 @@ export function MissionCard({ mission, onDetail, onContact }) {
 export function MissionDetail({ mission, onPreview }) {
   const study = mission.caseStudy;
   const certificates = certificatesFor(mission);
-  const sections = study && [
+  const sections = [
+    ['Role', mission.role], ['Contribution', study?.responsibilities],
+    ['Outcome', (mission.events || []).filter(e => e.achievement).map(e => [e.title, e.achievement].filter(Boolean).join(' — '))],
+    ...(study ? [
     ['Project overview', mission.description], ['Client requirements', study.requirements],
-    ['My responsibilities', study.responsibilities], ['Technology stack', mission.technologies],
+    ['Technology stack', mission.technologies],
     ['Features developed', study.features], ['Challenges and solutions', study.challenges],
     ['Deployment and SEO', study.deployment],
+    ] : []),
   ];
   return <section className="ms-detail"><small>{study ? 'Case study' : 'Certificate gallery'}</small>
     <h2>{mission.organization || mission.title}</h2>
@@ -73,7 +77,7 @@ export function MissionDetail({ mission, onPreview }) {
     {<>{!study && <p>{mission.description}</p>}{(mission.events || []).map(event => <section key={event.id}>
       <h3>{event.title || 'Hackathon record'}</h3><dl>{Object.entries({
         Organiser: event.organiser, Date: event.date, Duration: event.duration, Team: event.team,
-        Project: event.project, Technologies: event.technologies.join(', '), Achievement: event.achievement,
+        Project: event.project, Technologies: event.technologies.join(', '),
       }).filter(([,v]) => v).map(([k,v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
     </section>)}
     {certificates.length ? certificates.map((item,i) => <button className="ms-thumb" key={item.url} onClick={() => onPreview(i)}>

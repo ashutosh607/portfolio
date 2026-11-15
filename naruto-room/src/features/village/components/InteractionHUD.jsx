@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import gsap from 'gsap';
 import '../styles/InteractionHUD.css';
 
@@ -14,6 +14,25 @@ const InteractionHUD = React.memo(function InteractionHUD({
 
   // If blocked (e.g. dialogue or modal active) or no targets nearby, immediately render nothing!
   const activeTargets = isBlocked ? [] : nearbyTargets;
+
+  const [expandedGroup, setExpandedGroup] = useState('');
+  const triggerRef = useRef(null);
+  const group = activeTargets.map(target => target.uid).join('|');
+  const expanded = Boolean(group && expandedGroup === group);
+  useEffect(() => {
+    setExpandedGroup('');
+  }, [group]);
+  useEffect(() => {
+    if (!expanded) return;
+    const close = event => {
+      if (event.key === 'Escape') {
+        setExpandedGroup('');
+        triggerRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [expanded]);
 
   // Resolve currently selected index
   const selectedIndex = useMemo(() => {
@@ -49,11 +68,12 @@ const InteractionHUD = React.memo(function InteractionHUD({
         overwrite: 'auto',
       });
     }
-  }, [selectedIndex, activeTargets.length]);
+  }, [selectedIndex, group, expanded]);
 
   const handleTrigger = useCallback(
     (target) => {
       if (!target || isBlocked) return;
+      setExpandedGroup('');
       onSelectTarget?.(target.uid);
       onActivateTarget?.(target);
     },
@@ -156,9 +176,10 @@ const InteractionHUD = React.memo(function InteractionHUD({
 
       {activeTargets.length > 1 && (
         <aside
-          className="rpg-nearby-dock"
+          className="rpg-nearby-dock" data-expanded={expanded}
           aria-label="Nearby Interactions"
         >
+          <button type="button" ref={triggerRef} className="rpg-nearby-toggle" aria-expanded={expanded} aria-controls="nearby-choices" onClick={() => setExpandedGroup(expanded ? '' : group)}>Nearby · {activeTargets.length} <span aria-hidden="true">{expanded ? '▾' : '▴'}</span></button>
           <div className="rpg-dock-header">
             <span className="rpg-dock-title">NEARBY</span>
             <span className="rpg-dock-hint">
@@ -166,7 +187,7 @@ const InteractionHUD = React.memo(function InteractionHUD({
             </span>
           </div>
 
-          <div ref={listRef} className="rpg-dock-list" role="listbox">
+          <div id="nearby-choices" ref={listRef} className="rpg-dock-list" role="group" aria-label="Nearby actions">
             <div ref={highlightRef} className="rpg-dock-highlight" aria-hidden="true" />
 
             {activeTargets.map((item, idx) => {
@@ -175,8 +196,7 @@ const InteractionHUD = React.memo(function InteractionHUD({
                 <button
                   key={item.uid}
                   type="button"
-                  role="option"
-                  aria-selected={isSelected}
+                  aria-label={item.singlePrompt}
                   className={`rpg-dock-row ${isSelected ? 'is-selected' : ''}`}
                   onMouseEnter={() => onSelectTarget?.(item.uid)}
                   onClick={() => handleTrigger(item)}

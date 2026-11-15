@@ -54,8 +54,8 @@ export default function EntryGate({ onClose, onOpenModal, onTeleport, embedded =
         .from('.gate-dimmer', {opacity:0,duration:.3}, 0)
         .from(surface.current, {opacity:0,duration:.34}, 0)
         .from('.gate-titles,.gate-roles', {opacity:0,y:8,stagger:.07,duration:.4}, .18)
-        .from('.gate-copy,.gate-main-actions', {opacity:0,y:5,stagger:.06,duration:.32}, .46)
-        .from(embedded ? '.gate-route-stop' : '.gate-card', {opacity:0,y:8,stagger:.045,duration:.28,clearProps:'transform,opacity'}, .68);
+        .from('.gate-copy', {opacity:0,y:5,stagger:.06,duration:.32}, .18)
+        .from(embedded ? '.gate-route-stop' : '.gate-card', {opacity:0,y:8,stagger:.045,duration:.28,clearProps:'transform,opacity'}, .28);
     }, root);
     return () => { motion.current?.kill(); context.revert(); if (!embedded) root.close(); };
   }, [embedded]);
@@ -92,11 +92,12 @@ export default function EntryGate({ onClose, onOpenModal, onTeleport, embedded =
           <h1 id="entry-heading" ref={heading} tabIndex={-1}>{hero?.greeting || <>Hello, I’m <span>Ashutosh</span>.</>}</h1></div>
         <div className="gate-roles">{(hero?.roleBadges?.map((label,i)=>[['laptop','layers','target'][i%3],label]) ?? [['laptop','AI/ML Developer'],['layers','Full-Stack Developer'],['target','Problem Solver']]).map(([icon,label]) => <span key={icon}><Icon name={icon}/>{label}</span>)}</div>
         <div className="gate-copy"><blockquote>“{hero?.quote || 'A shinobi of code, building things worth discovering.'}”</blockquote>
-          <p>{hero?.introBio || (embedded ? <>Scroll through the <strong>six village destinations</strong> to explore my projects, skills, and experience. Open the menu at Ichiraku Ramen or unroll a mission dossier along the way.</> : <>Welcome to my interactive 3D Hidden Leaf Village portfolio. Walk down the streets of Konoha, interact with familiar shinobi, or travel directly to one of the <strong>six village destinations</strong> to explore my projects, development skills, AI/ML work, and experience.</>)}</p></div>
+          <p>{hero?.introBio || 'Explore my engineering projects, AI/ML work, and experience across six village destinations.'}</p></div>
         <div className="gate-actions gate-main-actions">
-          {onClose && <button className="gate-red" onClick={embedded ? onClose : () => leave(onClose)}>{LOCATION_SVGS['main-street']} {embedded ? 'Enter 3D Village' : 'Explore My World'} <span aria-hidden="true">→</span></button>}
-          <button onClick={() => open('projects')}><Icon name="layers"/> View My Projects</button>
-          <button onClick={() => open('contact')}><Icon name="mail"/> Contact Me</button>
+          {!embedded && onClose && <button className="gate-red" onClick={() => leave(onClose)}>{LOCATION_SVGS['main-street']} Walk Through the Village →</button>}
+          <button className={embedded ? 'gate-red' : undefined} onClick={() => open('projects')}><Icon name="layers"/> View Projects</button>
+          {embedded && onClose && <button onClick={onClose}>{LOCATION_SVGS['main-street']} Enter 3D Village</button>}
+          <button className="gate-contact-link" onClick={() => open('contact')}>Contact</button>
         </div>
       </header>
       <section className="gate-directory" aria-labelledby="gate-directory-title"><h2 id="gate-directory-title"><Icon name="torii"/>Six village destinations — click to visit or explore</h2>

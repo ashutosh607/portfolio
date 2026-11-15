@@ -22,8 +22,8 @@ export default function SkillDetails({
       return;
     }
 
-    if (panelRef.current) {
-      gsap.fromTo(
+    if (panelRef.current && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      const tween = gsap.fromTo(
         panelRef.current.children,
         { opacity: 0, y: 10 },
         {
@@ -34,10 +34,11 @@ export default function SkillDetails({
           ease: 'power2.out',
         }
       );
+      return () => tween.revert();
     }
   }, [category.id]);
 
-  const relatedProjects = (category.relatedProjectIds || [])
+  const relatedProjects = [...new Set(category.relatedProjectIds || [])]
     .map((id) => getProjectById(id))
     .filter(Boolean);
 
@@ -64,24 +65,6 @@ export default function SkillDetails({
         {/* Short Summary Description */}
         <p className="details-description-text">{category.description}</p>
 
-        {/* Section 1: Technologies & Tools */}
-        <div className="details-section-block">
-          <div className="details-section-header">
-            <svg viewBox="0 0 24 24" className="section-header-svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <polygon points="12 2 2 7 12 12 22 7 12 2" />
-              <polyline points="2 17 12 22 22 17" />
-              <polyline points="2 12 12 17 22 12" />
-            </svg>
-            <span className="section-header-label">TECHNOLOGIES &amp; TOOLS</span>
-          </div>
-
-          <div className="tech-badges-grid">
-            {category.technologies.map((tech) => (
-              <TechnologyBadge key={tech.id} technology={tech} />
-            ))}
-          </div>
-        </div>
-
         {/* Section 2: Related Projects */}
         {relatedProjects.length > 0 && <div className="details-section-block related-projects-block">
           <div className="details-section-header">
@@ -103,6 +86,25 @@ export default function SkillDetails({
             ))}
           </div>
         </div>}
+        {/* Section 1: Technologies & Tools */}
+        <div className="details-section-block">
+          <div className="details-section-header">
+            <svg viewBox="0 0 24 24" className="section-header-svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+            <span className="section-header-label">TECHNOLOGIES &amp; TOOLS</span>
+          </div>
+
+          <div className="tech-badges-grid">
+            {category.technologies.map((tech) => (
+              <TechnologyBadge key={tech.id} technology={tech} />
+            ))}
+          </div>
+        </div>
+
+
       </div>
     </div>
   );

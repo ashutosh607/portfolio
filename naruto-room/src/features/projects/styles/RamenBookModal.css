@@ -90,7 +90,7 @@
 .page-footer-nav button:disabled {opacity:.45;cursor:default}
 .book-page p,.book-page li {user-select:text;-webkit-user-select:text}
 .project-detail {padding-top:4px}.project-detail p,.spread2-lead,.philosophy-pillar p {margin:10px 0}
-.project-detail figure {margin:10px 0 12px}.project-detail figure img {width:100%;max-height:22dvh;object-fit:cover;object-position:top center;display:block;border-radius:3px;border:1px solid #ad9069;background:#e6d6b8}
+.project-detail figure {margin:10px 0 12px}.project-detail figure img {width:100%;height:auto;max-height:26dvh;object-fit:contain;object-position:top center;display:block;border-radius:3px;border:1px solid #ad9069;background:#e6d6b8}
 .project-photo-link {display:block;padding:0;border:0;background:transparent;cursor:pointer;text-decoration:none;border-radius:3px;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
 .project-photo-link {position:relative}
 .project-photo-link:focus-visible {outline:3px solid #772f28;outline-offset:3px}
@@ -196,3 +196,5 @@
   outline: 2px solid #916437;
   outline-offset: -2px;
 }
+
+.book-links .book-source-link {background:transparent;color:#623227;border-color:#a78b67}

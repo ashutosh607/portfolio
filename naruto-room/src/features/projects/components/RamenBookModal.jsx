@@ -362,7 +362,8 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
       flushSync(() => { commit(); setBookState('open'); unlock(); });
       surfaceRef.current?.dispose();
       turningLeafRef.current.style.visibility = 'hidden';
-      const control = detail ? target.querySelector('.mobile-back-action-btn') : target;
+      const control = detail ? target.querySelector('.mobile-back-action-btn')
+        : target.querySelector('.menu-dish-item[aria-pressed="true"]') || target;
       control?.focus({preventScroll:true});
     };
     if (reducedMotion()) { finish(); return; }

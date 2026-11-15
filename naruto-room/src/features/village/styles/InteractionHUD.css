@@ -326,3 +326,12 @@
 @media (prefers-reduced-motion: reduce) {
   .rpg-nearby-dock, .rpg-single-pill {animation: none}
 }
+
+.rpg-nearby-toggle {display:none}
+@media (hover:none), (pointer:coarse) {
+  .rpg-nearby-toggle {display:block;width:100%;min-height:44px;border:0;background:transparent;color:inherit;font:600 14px system-ui;cursor:pointer}
+  .rpg-nearby-dock[data-expanded="false"] {width:max-content;padding:0 12px}
+  .rpg-nearby-dock[data-expanded="false"] .rpg-dock-list,
+  .rpg-nearby-dock .rpg-dock-header,.rpg-single-pill .rpg-key-badge {display:none}
+  .rpg-row-action-tag {opacity:1}
+}
