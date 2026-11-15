@@ -1,5 +1,12 @@
 function resolveApiBase() {
   const envUrl = import.meta.env?.VITE_API_URL;
+  // Vercel forwards these same-origin requests to the portfolio's Render API.
+  if (
+    import.meta.env?.PROD &&
+    (!envUrl || /^https:\/\/portfolio-ml02\.onrender\.com(?:\/api)?\/?$/.test(envUrl))
+  ) {
+    return '/cms-api';
+  }
   if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
     const clean = envUrl.trim().replace(/\/+$/, '');
     return clean.endsWith('/api') ? clean : `${clean}/api`;
@@ -17,7 +24,7 @@ function resolveApiBase() {
     return 'http://localhost:5000/api';
   }
 
-  return '/api';
+  return '/cms-api';
 }
 
 export const apiBase = resolveApiBase();
@@ -32,25 +39,41 @@ export function subscribePublished(listener) {
 
 let loadPromise = null;
 
+async function fetchPortfolioOnce() {
+  const response = await fetch(apiBase + '/portfolio', {
+    cache: 'no-store',
+    signal: AbortSignal.timeout(35000),
+  });
+  if (!response.ok) throw new Error('Portfolio API unavailable');
+  const { data } = await response.json();
+  if (['projects', 'skills', 'missions', 'dialogues'].every((key) => Array.isArray(data?.[key]))) {
+    published = data;
+    publishedListeners.forEach((fn) => {
+      try {
+        fn(published);
+      } catch {
+        // ignore listener error
+      }
+    });
+  }
+}
+
 export function loadPublished() {
+  if (published) return Promise.resolve(published);
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
     try {
-      const response = await fetch(apiBase + '/portfolio', { signal: AbortSignal.timeout(6000) });
-      if (!response.ok) throw new Error('Portfolio API unavailable');
-      const { data } = await response.json();
-      if (['projects', 'skills', 'missions', 'dialogues'].every((key) => Array.isArray(data?.[key]))) {
-        published = data;
-        publishedListeners.forEach((fn) => {
-          try {
-            fn(published);
-          } catch {
-            // ignore listener error
-          }
-        });
-      }
+      await fetchPortfolioOnce();
     } catch {
-      console.warn('Portfolio API unavailable. Showing the bundled village.');
+      // Retry once in case Render cold-started or had a transient network hiccup
+      try {
+        await new Promise((r) => setTimeout(r, 2000));
+        await fetchPortfolioOnce();
+      } catch {
+        console.warn('Portfolio API unavailable. Showing the bundled village.');
+      }
+    } finally {
+      if (!published) loadPromise = null;
     }
     return published;
   })();

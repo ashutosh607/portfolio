@@ -6,6 +6,7 @@ import MissionScroll from '../features/experience/components/MissionScroll';
 import ContactModal from '../features/contact/ContactModal';
 import ResumeViewerModal from '../features/resume/ResumeViewerModal';
 import SkillsModal from '../features/skills/components/SkillsModal';
+import { subscribePublished } from '../shared/cms/published';
 import {
   KONOHA_LOCATIONS,
   PORTFOLIO_PROJECTS,
@@ -21,6 +22,9 @@ const PortfolioModals = React.memo(function PortfolioModals({
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeScrollId, setActiveScrollId] = useState('frontend');
   const [resumeOrigin, setResumeOrigin] = useState('about');
+  const [, setPublishedVersion] = useState(0);
+
+  useEffect(() => subscribePublished(() => setPublishedVersion((v) => v + 1)), []);
 
   // Reset sub-selection when modal changes
   useEffect(() => {
