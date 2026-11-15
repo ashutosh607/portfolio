@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   JUMP_TAKEOFF_DURATION,
+  JUMP_SPRINT_TAKEOFF_DURATION,
   JUMP_LANDING_DURATION,
+  getTakeoffDuration,
   computeGravityScale,
   evaluateJumpKinematics,
   computeJumpBoneAngle,
@@ -83,4 +85,27 @@ test('evaluateJumpKinematics computes crouch preload and landing absorption hip 
 
   const kneeAngle = computeJumpBoneAngle('LeftLeg', out, 0);
   assert.ok(kneeAngle < -0.9, 'knees should flex during crouch and landing absorption');
+});
+
+test('running jumps use snappier takeoff, forward lean, and athletic split-leg stride', () => {
+  assert.equal(getTakeoffDuration(0), JUMP_TAKEOFF_DURATION);
+  assert.equal(getTakeoffDuration(1), JUMP_SPRINT_TAKEOFF_DURATION);
+  assert.ok(getTakeoffDuration(1) < getTakeoffDuration(0));
+
+  const standingKin = {};
+  const sprintKin = {};
+  evaluateJumpKinematics(
+    { isGrounded: false, windup: 0, velocityY: 5.5, jumpVelocity: 7.8, landingTime: 0, impact: 0, speedRatio: 0 },
+    standingKin
+  );
+  evaluateJumpKinematics(
+    { isGrounded: false, windup: 0, velocityY: 5.5, jumpVelocity: 7.8, landingTime: 0, impact: 0, speedRatio: 1 },
+    sprintKin
+  );
+
+  assert.ok(sprintKin.bodyPitch > standingKin.bodyPitch, 'running jump should lean forward into momentum');
+
+  const leadHip = computeJumpBoneAngle('LeftUpLeg', sprintKin, 0.8);
+  const trailHip = computeJumpBoneAngle('RightUpLeg', sprintKin, 0.8);
+  assert.ok(leadHip > trailHip + 0.5, 'running jump should split lead and trailing hips cleanly');
 });

@@ -18,6 +18,7 @@ import {
   JUMP_LANDING_DURATION,
   JUMP_COYOTE_TIME,
   JUMP_BUFFER_TIME,
+  getTakeoffDuration,
   computeGravityScale,
   evaluateJumpKinematics,
   computeJumpBoneAngle,
@@ -57,6 +58,7 @@ const _jumpKinematics = {
   apexWeight: 0,
   descentWeight: 0,
   compression: 0,
+  speedRatio: 0,
   bodyPitch: 0,
   hipDip: 0,
 };
@@ -108,7 +110,7 @@ const Naruto = React.memo(function Naruto({
     groundY: INITIAL_SPAWN.position[1],
     velocityY: 0,
     jumpHeld: false,
-    windup: 0, strideAtLaunch: 0, impact: 0,
+    windup: 0, takeoffDuration: JUMP_TAKEOFF_DURATION, strideAtLaunch: 0, impact: 0,
     airX: 0, airZ: 0, landingTime: 0,
     coyoteTime: 0, jumpBuffer: 0,
     isGrounded: true,
@@ -450,8 +452,10 @@ const Naruto = React.memo(function Naruto({
 
     p.coyoteTime = p.isGrounded ? JUMP_COYOTE_TIME : Math.max(0, p.coyoteTime - dt);
 
+    const launchSpeedRatio = Math.min(1, p.speed / SPRINT_SPEED);
     if (p.jumpBuffer > 0 && p.coyoteTime > 0 && !p.windup && !isMovementPaused) {
-      p.windup = JUMP_TAKEOFF_DURATION;
+      p.takeoffDuration = getTakeoffDuration(launchSpeedRatio);
+      p.windup = p.takeoffDuration;
       p.jumpBuffer = 0;
       p.coyoteTime = 0;
     }
@@ -464,15 +468,16 @@ const Naruto = React.memo(function Naruto({
     let stepDirX = isMoving ? moveDirX : Math.sin(p.rotation);
     let stepDirZ = isMoving ? moveDirZ : Math.cos(p.rotation);
     if (takeoff) {
-      p.strideAtLaunch = Math.cos(walkPhaseRef.current * Math.PI * 2)
-        * Math.min(1, p.speed / WALK_SPEED);
+      const rawStride = Math.cos(walkPhaseRef.current * Math.PI * 2);
+      const runBias = p.speed > 0.5 ? (rawStride >= 0 ? Math.max(0.65, rawStride) : Math.min(-0.65, rawStride)) : 0;
+      p.strideAtLaunch = p.speed > 0.5 ? runBias : rawStride * Math.min(1, p.speed / WALK_SPEED);
       p.velocityY = JUMP_VELOCITY;
       p.isGrounded = false;
       p.landingTime = 0;
       p.airX = stepDirX * p.speed;
       p.airZ = stepDirZ * p.speed;
     }
-    let stepSpeed = preparing ? p.speed * 0.88 : p.speed;
+    let stepSpeed = preparing ? p.speed * (0.9 + 0.1 * launchSpeedRatio) : p.speed;
     if (!p.isGrounded) {
       // Keep takeoff momentum when input is released. Steering takes time in the air.
       const steer = isMoving ? 1 - Math.exp(-2 * dt) : 0;
@@ -603,7 +608,8 @@ const Naruto = React.memo(function Naruto({
     // 2. Sprint posture blend: 0 = upright normal walk, 1 = leaning ninja sprint clip
     const wantsSprintPose = p.isGrounded && wantsMove && isSprinting;
     const targetSprintBlend = wantsSprintPose ? 1.0 : 0.0;
-    sprintBlendRef.current += (targetSprintBlend - sprintBlendRef.current) * Math.min(1, dt * 9);
+    const sprintLerpRate = p.isGrounded ? 10 : 18;
+    sprintBlendRef.current += (targetSprintBlend - sprintBlendRef.current) * Math.min(1, dt * sprintLerpRate);
     const sprintBlend = sprintBlendRef.current;
 
     const bones = boneDataRef.current;
@@ -732,10 +738,12 @@ const Naruto = React.memo(function Naruto({
       {
         isGrounded: p.isGrounded,
         windup: p.windup,
+        takeoffDuration: p.takeoffDuration,
         velocityY: p.velocityY,
         jumpVelocity: JUMP_VELOCITY,
         landingTime: p.landingTime,
         impact: p.impact,
+        speedRatio: Math.min(1, stepSpeed / SPRINT_SPEED),
       },
       _jumpKinematics
     );
