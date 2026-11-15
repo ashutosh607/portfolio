@@ -52,7 +52,8 @@
 .entry-gate .gate-route-stop:hover {color: #F3E6D3; background: none; border-color: #FF5A1F}
 .gate-route-number {color: #FF5A1F; font: 600 11px/1 system-ui,sans-serif; letter-spacing: .08em; margin-right: 8px}
 .gate-route-arrow {margin-left: auto; color: #B9ADA5; font-family: system-ui,sans-serif; font-size: 15px}
-.p2d-root :is(.gate-route-stop,.about-col-photo,.about-col-right,.contact-directory-item) {translate: var(--village-slide,0px) 0}
+.p2d-root .gate-route-stop {translate: var(--village-slide,0px) 0}
+.p2d-root .contact-links a {translate: 0 var(--village-slide,0px)}
 .p2d-root .p2d-navbar {box-shadow: none}
 .p2d-root .p2d-navbar::after {
   content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px;
@@ -124,4 +125,24 @@
 @media(max-width:860px) {
   .p2d-root .ramen-inline.ramen-book-overlay {overflow:clip}
   .portfolio-2d-wrapper:has(.ramen-inline) {overflow-anchor:none}
+}
+
+.p2d-root .p2d-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.portfolio-footer-music {margin-inline-start: auto}
+@media (prefers-reduced-motion: no-preference) {
+  .p2d-mobile-drawer-inner {animation: village-drawer-enter .22s ease-out both}
+  @keyframes village-drawer-enter {
+    from {opacity: 0; transform: translateY(-6px)}
+    to {opacity: 1; transform: translateY(0)}
+  }
+}
+@media (max-width: 600px) {
+  .p2d-root .p2d-footer {flex-direction: column; justify-content: center}
+  .portfolio-footer-music {margin-inline-start: 0}
 }

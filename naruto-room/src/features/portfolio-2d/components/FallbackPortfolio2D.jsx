@@ -40,7 +40,7 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
   const isNavigatingRef = useRef(false);
   const scrollTimeoutRef = useRef(null);
 
-  useVillagePageMotion(rootRef);
+  const scrollRef = useVillagePageMotion(rootRef);
 
   // Scroll spy to highlight current section in the sticky navbar
   useEffect(() => {
@@ -130,13 +130,17 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
             );
 
       requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTo(targetTop, { duration: 0.65 });
+          return;
+        }
         wrapper.scrollTo({
           top: targetTop,
           behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
         });
       });
     }
-  }, []);
+  }, [scrollRef]);
 
   const handleInspectProjectFromSkills = useCallback((project) => {
     if (!project) return;
@@ -199,9 +203,9 @@ export default function FallbackPortfolio2D({ onSwitchTo3D, webglError }) {
             Crafted by <strong>Ashutosh Kadam</strong> • Konoha Shinobi Portfolio (2D &amp;
             3D Interactive Edition)
           </p>
+          {!openOverlay && <div className="portfolio-footer-music"><MusicButton /></div>}
         </footer>
       </main>
-      {!openOverlay && <div className="p2d-music-dock"><MusicButton /></div>}
 
       {/* ============================================================
           INTERACTIVE FULL-SCREEN MODALS ACCESSIBLE IN 2D MODE

@@ -167,7 +167,7 @@
 /* ================= 3. TWO-COLUMN WORKBENCH LAYOUT ================= */
 .skills-workbench-grid {
   display: grid;
-  grid-template-columns: 27% 73%;
+  grid-template-columns: minmax(0, 27fr) minmax(0, 73fr);
   gap: 22px;
   align-items: start;
 }
@@ -533,7 +533,7 @@
 /* ================= 8. RESPONSIVE MEDIA QUERIES ================= */
 @media (max-width: 1024px) {
   .skills-workbench-grid {
-    grid-template-columns: 32% 68%;
+    grid-template-columns: minmax(0, 32fr) minmax(0, 68fr);
     gap: 16px;
   }
 

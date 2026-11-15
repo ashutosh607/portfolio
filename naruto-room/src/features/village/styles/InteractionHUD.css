@@ -277,7 +277,14 @@
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.58);
   }
 
+  .rpg-dock-list {
+    max-height: max(88px, calc(100dvh - 270px - env(safe-area-inset-bottom)));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .rpg-dock-row {
+    flex-shrink: 0;
     height: 44px;
     font-size: 13px;
   }
@@ -292,6 +299,11 @@
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
+  .rpg-dock-list {
+    max-height: max(88px, calc(100dvh - 120px - env(safe-area-inset-bottom)));
+    overflow-y: auto;
+  }
+
   .rpg-single-pill {
     bottom: 18px;
     height: 36px;
@@ -306,3 +318,11 @@
   }
 }
 
+
+@media (prefers-reduced-motion: no-preference) {
+  .rpg-row-action-tag {translate: -3px 0; transition: opacity .16s ease, translate .16s ease}
+  .rpg-dock-row:is(.is-selected, :focus-visible) .rpg-row-action-tag {translate: 0; opacity: 1}
+}
+@media (prefers-reduced-motion: reduce) {
+  .rpg-nearby-dock, .rpg-single-pill {animation: none}
+}
