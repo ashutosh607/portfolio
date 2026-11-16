@@ -118,7 +118,10 @@ class AppErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="portfolio-2d-wrapper">
-          <FallbackPortfolio2D webglError={this.state.error?.message || 'WebGL initialization error'}/>
+          <FallbackPortfolio2D
+            webglError={this.state.error?.message || 'WebGL initialization error'}
+            onSwitchTo3D={() => this.setState({ hasError: false, error: null })}
+          />
         </div>
       );
     }
