@@ -20,10 +20,12 @@ export function AdminAuthProvider({ children }) {
     sessionStorage.removeItem('shinobi_admin_token');
     localStorage.removeItem('shinobi_admin_token');
     const controller = new AbortController();
+    let mounted = true;
     const timeoutId = setTimeout(() => controller.abort(), 45000);
 
     apiRequest('/auth/me', { signal: controller.signal })
       .then((res) => {
+        if (!mounted) return;
         if (res.success && res.user) {
           setAdmin(res.user);
         } else {
@@ -31,14 +33,15 @@ export function AdminAuthProvider({ children }) {
         }
       })
       .catch(() => {
-        end();
+        if (mounted) end();
       })
       .finally(() => {
         clearTimeout(timeoutId);
-        setLoading(false);
+        if (mounted) setLoading(false);
       });
 
     return () => {
+      mounted = false;
       clearTimeout(timeoutId);
       controller.abort();
       window.removeEventListener('cms-session-ended', end);

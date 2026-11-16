@@ -9,6 +9,8 @@
     "start": "node server.js",
     "seed": "node src/data/seed.js",
     "import:village": "node src/data/importVillage.js",
+    "test": "node --test tests/upload-mission.test.mjs",
+    "test:github": "node --test tests/github.test.mjs",
     "test:audit": "node tests/audit.mjs"
   },
   "keywords": [

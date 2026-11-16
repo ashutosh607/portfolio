@@ -23,7 +23,6 @@ export default function CinematicWelcomeIntro({
   }, []);
   const [isComplete, setIsComplete] = useState(false);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState(0);
-  const [hasStarted, setHasStarted] = useState(false);
 
   const containerRef = useRef(null);
   const sentenceRefs = useRef([]);
@@ -43,10 +42,9 @@ export default function CinematicWelcomeIntro({
   // Main cinematic word-by-word animation timeline
   useEffect(() => {
     // Only start once 3D scene loading is fully completed and not already finished/cancelled
-    if (!isSceneLoaded || isComplete || hasStarted || isCancelledRef.current) {
+    if (!isSceneLoaded || isComplete || isCancelledRef.current) {
       return undefined;
     }
-    setHasStarted(true);
 
     const prefersReducedMotion =
       typeof window !== 'undefined' &&
@@ -150,7 +148,7 @@ export default function CinematicWelcomeIntro({
 
   // Cancel immediately if visitor starts moving AFTER intro has started
   useEffect(() => {
-    if (hasStarted && isVisitorMoving && !isComplete && !isCancelledRef.current) {
+    if (isSceneLoaded && isVisitorMoving && !isComplete && !isCancelledRef.current) {
       isCancelledRef.current = true;
       if (timelineRef.current) {
         timelineRef.current.kill();
@@ -171,7 +169,7 @@ export default function CinematicWelcomeIntro({
         onComplete?.();
       }
     }
-  }, [hasStarted, isVisitorMoving, isComplete, onComplete]);
+  }, [isSceneLoaded, isVisitorMoving, isComplete, onComplete]);
 
   // Return clean uninterrupted screen after animation completes or cancels
   if (isComplete) {

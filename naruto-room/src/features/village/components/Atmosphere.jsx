@@ -2,6 +2,15 @@ import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
+// Keep the village scenery in place when adaptive quality changes the object counts.
+function seededRandom(seed) {
+  let state = seed;
+  return () => {
+    state = (Math.imul(1664525, state) + 1013904223) >>> 0;
+    return state / 4294967296;
+  };
+}
+
 // Shared geometries & materials for clouds and birds (eliminates ~90 duplicate GPU geometries & shaders)
 const puffCenterGeom = new THREE.SphereGeometry(7, 7, 5);
 const puffLeftGeom = new THREE.SphereGeometry(5.2, 6, 5);
@@ -74,16 +83,17 @@ const Atmosphere = React.memo(function Atmosphere({
 
   // ================= 1. PROCEDURAL ANIME CLOUDS =================
   const cloudData = useMemo(() => {
+    const random = seededRandom(31);
     const clouds = [];
     const count = isLiteMode ? 6 : 10;
     for (let i = 0; i < count; i++) {
       clouds.push({
         id: i,
-        x: (Math.random() - 0.5) * 220,
-        y: 42 + Math.random() * 28,
-        z: (Math.random() - 0.5) * 240,
-        scale: 0.8 + Math.random() * 1.6,
-        speed: 0.8 + Math.random() * 1.2,
+        x: (random() - 0.5) * 220,
+        y: 42 + random() * 28,
+        z: (random() - 0.5) * 240,
+        scale: 0.8 + random() * 1.6,
+        speed: 0.8 + random() * 1.2,
       });
     }
     return clouds;
@@ -91,18 +101,19 @@ const Atmosphere = React.memo(function Atmosphere({
 
   // ================= 2. CIRCLING NINJA BIRDS FLOCK =================
   const birdData = useMemo(() => {
+    const random = seededRandom(79);
     const birds = [];
     const count = isLiteMode ? 4 : 7;
     for (let i = 0; i < count; i++) {
       birds.push({
         id: i,
-        radiusX: 38 + (i % 3) * 12 + Math.random() * 6,
-        radiusZ: 44 + (i % 3) * 14 + Math.random() * 8,
-        height: 32 + (i % 4) * 4 + Math.random() * 3,
+        radiusX: 38 + (i % 3) * 12 + random() * 6,
+        radiusZ: 44 + (i % 3) * 14 + random() * 8,
+        height: 32 + (i % 4) * 4 + random() * 3,
         speed: 0.35 + i * 0.04,
         phase: (i / count) * Math.PI * 2,
-        wingPhase: Math.random() * Math.PI * 2,
-        scale: 0.75 + Math.random() * 0.3,
+        wingPhase: random() * Math.PI * 2,
+        scale: 0.75 + random() * 0.3,
       });
     }
     return birds;
@@ -115,16 +126,17 @@ const Atmosphere = React.memo(function Atmosphere({
   // ================= 3. SWIRLING KONOHA LEAF / FIREFLY PARTICLES =================
   const leafCount = isLiteMode ? 36 : 64;
   const leafData = useMemo(() => {
+    const random = seededRandom(103);
     const pos = new Float32Array(leafCount * 3);
     const vel = [];
     for (let i = 0; i < leafCount; i++) {
-      pos[i * 3 + 0] = (Math.random() - 0.5) * 76;
-      pos[i * 3 + 1] = 0.8 + Math.random() * 14;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 84;
+      pos[i * 3 + 0] = (random() - 0.5) * 76;
+      pos[i * 3 + 1] = 0.8 + random() * 14;
+      pos[i * 3 + 2] = (random() - 0.5) * 84;
 
       vel.push({
-        fallSpeed: 0.55 + Math.random() * 0.85,
-        offset: Math.random() * 10,
+        fallSpeed: 0.55 + random() * 0.85,
+        offset: random() * 10,
       });
     }
     return { pos, vel };
@@ -133,11 +145,12 @@ const Atmosphere = React.memo(function Atmosphere({
   // ================= 4. JAPANESE NIGHT SKY STARFIELD =================
   const starCount = isLiteMode ? 140 : 280;
   const starPositions = useMemo(() => {
+    const random = seededRandom(157);
     const arr = new Float32Array(starCount * 3);
     for (let i = 0; i < starCount; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(0.18 + Math.random() * 0.82); // Upper hemisphere
-      const r = 165 + Math.random() * 25;
+      const theta = random() * Math.PI * 2;
+      const phi = Math.acos(0.18 + random() * 0.82); // Upper hemisphere
+      const r = 165 + random() * 25;
       arr[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta);
       arr[i * 3 + 1] = r * Math.cos(phi);
       arr[i * 3 + 2] = r * Math.sin(phi) * Math.sin(theta);

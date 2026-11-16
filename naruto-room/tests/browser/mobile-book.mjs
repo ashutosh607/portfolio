@@ -97,11 +97,20 @@ async function testBook() {
     await check("document.querySelector('.p2d-switch-3d-btn') && document.querySelector('.ramen-inline')");
     console.log('PASS village to 2D round trip and repeat entry');
     await call('Emulation.setTouchEmulationEnabled',{enabled:true});
-    await run("(async()=>{const url=performance.getEntriesByType('resource').find(e=>/\\/gsap\\.js/.test(e.name)).name;window.testGsap=(await import(url)).gsap})()");
+    await run(`(async () => {
+      const resource = performance.getEntriesByType('resource').find(entry => {
+        const filename = new URL(entry.name).pathname.split('/').pop();
+        return filename === 'gsap.js' || filename.startsWith('vendor-motion-');
+      });
+      if (!resource) throw Error('Could not locate the animation module');
+      const exports = await import(resource.name);
+      window.testGsap = Object.values(exports).find(value => value?.globalTimeline && value?.getTweensOf);
+      if (!window.testGsap) throw Error('Could not locate the running GSAP timeline');
+    })()`);
     const freezeAt=async(cls,position)=>{
       await check("document.querySelector('.ramen-book-container.state-"+cls+"')");
       const result=await run(`(()=>{const g=window.testGsap, cover=document.querySelector('.ramen-inline .book-front-cover-leaf');
-        const animation=${JSON.stringify(cls)}==='turning-mobile' ? g.globalTimeline.getChildren(true,true,false).find(t=>t.vars.progress!==undefined && t.vars.onUpdate && t.isActive()) : g.getTweensOf(cover,true)[0]?.parent;
+        const animation=${JSON.stringify(cls)}==='turning-mobile' ? g.globalTimeline.getChildren(true,true,false).find(t=>t.vars.progress!==undefined && t.vars.onUpdate) : g.getTweensOf(cover).findLast(t=>t.vars.rotateY!==undefined)?.parent;
         if(animation){animation.pause().progress(${position});window.testPaused=animation;return true}return false})()`);
       assert.ok(result,'could not capture '+cls);
     };

@@ -49,7 +49,11 @@ export default function SkillsAdmin() {
     setModalOpen(true);
   };
 
-  useEffect(()=>{const row=skills.find(s=>s.slug===params.get('edit'));if(row)openEdit(row);else if(skills[0])openEdit(skills[0])},[params,loading && !skills.length]);
+  useEffect(() => {
+    if (loading) return;
+    const row = skills.find(skill => skill.slug === params.get('edit')) || skills[0];
+    if (row) openEdit(row);
+  }, [params, skills, loading]);
   async function drop(source,target){
     const next=skills.filter(s=>s.slug!==source),item=skills.find(s=>s.slug===source);
     if(!item || source===target)return;

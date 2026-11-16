@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import gsap from 'gsap';
 import '../styles/InteractionHUD.css';
 
+const EMPTY_TARGETS = [];
+
 const InteractionHUD = React.memo(function InteractionHUD({
-  nearbyTargets = [],
+  nearbyTargets = EMPTY_TARGETS,
   selectedUid = null,
   onSelectTarget,
   onActivateTarget,
@@ -13,7 +15,7 @@ const InteractionHUD = React.memo(function InteractionHUD({
   const listRef = useRef(null);
 
   // If blocked (e.g. dialogue or modal active) or no targets nearby, immediately render nothing!
-  const activeTargets = isBlocked ? [] : nearbyTargets;
+  const activeTargets = isBlocked ? EMPTY_TARGETS : nearbyTargets;
 
   const [expandedGroup, setExpandedGroup] = useState('');
   const triggerRef = useRef(null);
@@ -68,7 +70,7 @@ const InteractionHUD = React.memo(function InteractionHUD({
         overwrite: 'auto',
       });
     }
-  }, [selectedIndex, group, expanded]);
+  }, [selectedIndex, group, expanded, activeTargets.length]);
 
   const handleTrigger = useCallback(
     (target) => {

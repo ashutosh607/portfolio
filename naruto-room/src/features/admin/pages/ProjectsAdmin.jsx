@@ -3,7 +3,7 @@ import { projectDetailPhoto, resolveArtwork } from '../../projects/data/projectM
 import EditorDialog from '../components/EditorDialog';
 import AssetInput from '../components/AssetInput';
 import {useSearchParams} from 'react-router-dom';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../services/api';
 import {
   Plus,
@@ -64,7 +64,7 @@ export default function ProjectsAdmin() {
     loadProjects();
   }, []);
 
-  const openAddModal = () => {
+  const openAddModal = useCallback(() => {
     setEditingProject(null);
     setFormData({
       status:'draft',
@@ -85,7 +85,7 @@ export default function ProjectsAdmin() {
       order: projects.length + 1,
     });
     setModalOpen(true);
-  };
+  }, [projects.length]);
 
   const openEditModal = (proj) => {
     setEditingProject(proj);
@@ -116,7 +116,7 @@ export default function ProjectsAdmin() {
     if(params.has('new')) {openAddModal();setParams({}, {replace:true});}
     const project=projects.find(p=>p.slug===params.get('edit'));
     if(project) {openEditModal(project);setParams({}, {replace:true});}
-  },[params,loading && projects.length===0]);
+  },[params, loading, projects, openAddModal, setParams]);
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);

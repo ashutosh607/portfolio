@@ -25,6 +25,20 @@ function formatDate(dateStr) {
   });
 }
 
+async function loadCalendar(url, signal) {
+  const response = await fetch(url, { signal: AbortSignal.any([signal, AbortSignal.timeout(9000)]) });
+  if (!response.ok || !response.headers.get('content-type')?.includes('json')) {
+    throw new Error('GitHub activity is temporarily unavailable.');
+  }
+  const json = await response.json();
+  if (!Array.isArray(json?.contributions) || !json.contributions.every(day =>
+    typeof day?.date === 'string' && Number.isFinite(day.count) && Number.isInteger(day.level)
+  )) {
+    throw new Error('GitHub returned incomplete activity data.');
+  }
+  return json;
+}
+
 export default function GithubContributions({
   username: propUsername,
   title: propTitle,
@@ -53,7 +67,11 @@ export default function GithubContributions({
   const cardRef = useRef(null);
 
   // 1. Fetch live contributions via backend proxy with 4-hr cache and fallback
+  const requestRef = useRef(null);
   const fetchContributions = useCallback(async () => {
+    requestRef.current?.abort();
+    const request = new AbortController();
+    requestRef.current = request;
     try {
       setLoading(true);
       setError(null);
@@ -62,29 +80,22 @@ export default function GithubContributions({
       const baseUrl = apiBase || '/api';
       const apiEndpoint = `${baseUrl}/github/contributions?username=${encodeURIComponent(targetUser)}`;
 
-      // Attempt backend proxy first
-      let res;
+      let json;
       try {
-        res = await fetch(apiEndpoint, { signal: AbortSignal.timeout(9000) });
-      } catch (proxyErr) {
-        // Fallback: If backend is unreachable, try direct community API in dev
-        console.warn('Backend proxy unreachable, falling back to direct community endpoint:', proxyErr);
-        res = await fetch(
+        json = await loadCalendar(apiEndpoint, request.signal);
+      } catch {
+        if (request.signal.aborted) return;
+        json = await loadCalendar(
           `https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(targetUser)}?y=last`,
-          { signal: AbortSignal.timeout(9000) }
+          request.signal
         );
       }
-
-      if (!res.ok) {
-        throw new Error(`Failed to load GitHub activity (Status ${res.status})`);
-      }
-
-      const json = await res.json();
-      const contributions = json.contributions || [];
-      const total =
-        json.total ??
-        json.totalContributions ??
-        contributions.reduce((acc, curr) => acc + (Number(curr.count) || 0), 0);
+      if (request.signal.aborted) return;
+      const contributions = json.contributions;
+      const reportedTotal = json.total?.lastYear ?? json.total ?? json.totalContributions;
+      const total = Number.isFinite(reportedTotal)
+        ? reportedTotal
+        : contributions.reduce((sum, day) => sum + day.count, 0);
 
       setData({
         username: targetUser,
@@ -94,17 +105,17 @@ export default function GithubContributions({
         cachedAt: json.cachedAt,
         source: json.source || 'live',
       });
-    } catch (err) {
-      console.error('GithubContributions error:', err);
-      setError(err.message || 'Unable to connect to GitHub. Please check back shortly.');
+    } catch {
+      if (!request.signal.aborted) setError('GitHub activity is temporarily unavailable. Please try again.');
     } finally {
-      setLoading(false);
+      if (!request.signal.aborted) setLoading(false);
     }
   }, [username]);
 
   useEffect(() => {
-    fetchContributions();
-  }, [fetchContributions]);
+    if (isEnabled) fetchContributions();
+    return () => requestRef.current?.abort();
+  }, [fetchContributions, isEnabled]);
 
   // 2. Format contributions into weeks columns (7 rows per column)
   const { weeks, monthLabels } = useMemo(() => {

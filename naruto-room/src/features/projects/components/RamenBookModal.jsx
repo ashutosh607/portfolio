@@ -86,7 +86,6 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
   const totalSpreads = menuPages + 1;
   const currentProject = projects[selectedProjectIndex];
   const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const mobileView = phoneLayout;
   const lock = useCallback(() => {
     if (isTransitioningRef.current) return false;
     isTransitioningRef.current = true;
@@ -171,7 +170,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     }
 
     setBookState('opening');
-    const isMob = mobileView();
+    const isMob = phoneLayout();
     const isReduced = reducedMotion();
     const duration = isReduced ? 0.01 : isMob ? 0.85 : 1.65;
 
@@ -273,7 +272,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     );
 
     setBookState('closing');
-    const isMob = mobileView();
+    const isMob = phoneLayout();
     const isReduced = reducedMotion();
     const duration = isReduced ? 0.01 : isMob ? 0.65 : 0.88;
 
@@ -386,17 +385,17 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     if (bookState !== 'open' || currentSpread > menuPages || !lock()) return;
     if (index === selectedProjectIndex) {
       setIsMobileDetailView(true);
-      requestAnimationFrame(() => { if (mobileView()) interiorSpreadRef.current?.querySelector('.is-current .mobile-back-action-btn')?.focus({ preventScroll: true }); });
+      requestAnimationFrame(() => { if (phoneLayout()) interiorSpreadRef.current?.querySelector('.is-current .mobile-back-action-btn')?.focus({ preventScroll: true }); });
       unlock();
       return;
     }
     const node = interiorSpreadRef.current.querySelector('.is-current .project-detail');
-    timelineRef.current = gsap.timeline({ onComplete: () => { unlock(); if (mobileView()) interiorSpreadRef.current.querySelector('.is-current .mobile-back-action-btn')?.focus({ preventScroll: true }); } });
+    timelineRef.current = gsap.timeline({ onComplete: () => { unlock(); if (phoneLayout()) interiorSpreadRef.current.querySelector('.is-current .mobile-back-action-btn')?.focus({ preventScroll: true }); } });
     timelineRef.current.to(node, { opacity: 0, filter: 'blur(4px)', y: -8, duration: reducedMotion() ? 0 : 0.17 })
       .call(() => { flushSync(() => { setSelectedProjectIndex(index); setIsMobileDetailView(true); }); node.scrollTop = 0; })
       .set(node, { y: 8 })
       .to(node, { opacity: 1, filter: 'blur(0px)', y: 0, duration: reducedMotion() ? 0.01 : 0.3, ease: 'power2.out' });
-  }, [bookState, currentSpread, menuPages, selectedProjectIndex, isMobileDetailView, turnMobile, lock, unlock]);
+  }, [bookState, currentSpread, menuPages, selectedProjectIndex, turnMobile, lock, unlock]);
 
   const handleTurnSpread = useCallback(direction => {
     const nextSpread = currentSpread + direction;
@@ -404,7 +403,7 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     if (phoneLayout()) { turnMobile(direction,nextSpread,false,Math.max(0, Math.min(projects.length-1,(nextSpread-1)*perPage))); return; }
     if (bookState !== 'open' || !lock()) return;
     const generation = generationRef.current;
-    const mobile = mobileView();
+    const mobile = phoneLayout();
     const finish = () => {
       if (generation !== generationRef.current) return;
       // Commit the resting spread before removing its animated surface.
@@ -481,10 +480,10 @@ export default function RamenBookModal({ isOpen, onClose, onFastTravel, initialP
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [embedded, isOpen, bookState, currentSpread, isMobileDetailView, selectedProjectIndex, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
+  }, [embedded, isOpen, bookState, currentSpread, isMobileDetailView, selectedProjectIndex, perPage, projects.length, handleCloseBook, handleSelectProject, handleTurnSpread]);
 
   const handleTouchEnd = event => {
-    if (!touchRef.current || !mobileView() || busy) return;
+    if (!touchRef.current || !phoneLayout() || busy) return;
     const end = event.changedTouches[0];
     const dx = end.clientX - touchRef.current.x;
     const dy = end.clientY - touchRef.current.y;

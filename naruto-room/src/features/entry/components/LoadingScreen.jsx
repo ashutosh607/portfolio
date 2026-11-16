@@ -158,7 +158,7 @@ export default function LoadingScreen({ onComplete }) {
       setIsUnmounted(true);
       onComplete?.();
     }
-  }, []);
+  }, [onComplete]);
 
   // Main Cinematic Dust Intro Setup & Animation Loop
   useEffect(() => {
@@ -662,7 +662,6 @@ export default function LoadingScreen({ onComplete }) {
           isFinishedRef.current = true;
           if (rafRef.current) cancelAnimationFrame(rafRef.current);
           setIsUnmounted(true);
-          onComplete?.();
         },
       });
       timelineRef.current = tl;
@@ -779,7 +778,7 @@ export default function LoadingScreen({ onComplete }) {
       }
       wordsDataRef.current = [];
     };
-  }, [isUnmounted]);
+  }, [isUnmounted, onComplete]);
 
   if (isUnmounted) {
     return null;

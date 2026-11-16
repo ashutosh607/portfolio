@@ -114,7 +114,10 @@ export default function AssetInput({ label, document = false, acceptBoth = false
       if (navigator.clipboard?.read) {
         const items = await navigator.clipboard.read();
         for (const item of items) {
-          const mediaType = item.types.find((t) => IMAGE_MIME.has(t) || t === 'application/pdf');
+          const mediaType = item.types.find(type =>
+            ((acceptBoth || document) && isPdfAssetFile({ type })) ||
+            ((acceptBoth || !document) && isImageAssetFile({ type }))
+          );
           if (mediaType) {
             const blob = await item.getType(mediaType);
             const ext = mediaType === 'application/pdf' ? 'pdf' : mediaType.split('/')[1] || 'png';

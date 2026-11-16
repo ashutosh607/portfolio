@@ -155,6 +155,7 @@ function AppContent() {
   });
   const [is2DMode, setIs2DMode] = useState(false);
   const [sceneLoaded, setSceneLoaded] = useState(false);
+  const handleSceneLoaded = useCallback(() => setSceneLoaded(true), []);
   const [isTabHidden, setIsTabHidden] = useState(() =>
     typeof document !== 'undefined' ? document.hidden : false
   );
@@ -471,7 +472,7 @@ function AppContent() {
       </Canvas>
 
       {/* Asset Loading Screen */}
-      <LoadingScreen onComplete={() => setSceneLoaded(true)} />
+      <LoadingScreen onComplete={handleSceneLoaded} />
 
       {/* Cinematic Word-by-Word Sky Welcome Intro */}
       <CinematicWelcomeIntro

@@ -11,7 +11,7 @@
     "backend:start": "npm run start --prefix backend",
     "frontend:build": "npm run build --prefix naruto-room",
     "frontend:dev": "npm run dev --prefix naruto-room",
-    "test": "npm test --prefix naruto-room"
+    "test": "npm test --prefix naruto-room && npm test --prefix backend"
   }
 }
 

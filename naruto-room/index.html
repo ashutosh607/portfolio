@@ -30,13 +30,7 @@
         "
       >
       </div>
-      <script>
-        if (/^\/admin(?:\/|$)/.test(location.pathname)) {
-          var boot = document.getElementById('initial-word-boot');
-          boot.textContent = 'SHINOBI ADMIN';
-          boot.style.cssText += 'color:#e68a2e;font:700 14px sans-serif;letter-spacing:0.16em';
-        }
-      </script>
+      <script src="/boot-label.js" defer></script>
     </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

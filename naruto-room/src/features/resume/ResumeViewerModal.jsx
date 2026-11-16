@@ -1,5 +1,5 @@
 import { published } from '../../shared/cms/published';
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import gsap from 'gsap';
 import './ResumeViewerModal.css';
 
@@ -16,7 +16,7 @@ export default function ResumeViewerModal({ isOpen, onClose, onBack, originName 
     typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const handleClose = (afterCallback) => {
+  const handleClose = useCallback((afterCallback) => {
     if (isClosingRef.current) return;
     isClosingRef.current = true;
 
@@ -52,7 +52,7 @@ export default function ResumeViewerModal({ isOpen, onClose, onBack, originName 
       },
       0.04
     );
-  };
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -98,7 +98,7 @@ export default function ResumeViewerModal({ isOpen, onClose, onBack, originName 
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 

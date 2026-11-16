@@ -67,7 +67,8 @@ Images uploaded through the CMS use Cloudinary. PDF uploads support Cloudinary d
 
 | Command from the repository root | Purpose |
 | --- | --- |
-| `npm test` | Run the frontend unit tests for book geometry, mission previews, the contribution calendar, and music playback logic |
+| `npm test` | Run the frontend unit tests and the backend mission validation and upload filter tests |
+| `npm --prefix backend run test:github` | Check GitHub calendar responses and caching against a running development API on port 5000 |
 | `npm --prefix naruto-room run lint` | Run the frontend linter |
 | `npm run build` | Build the frontend into `naruto-room/dist` |
 | `npm --prefix naruto-room run preview` | Serve the production build locally |

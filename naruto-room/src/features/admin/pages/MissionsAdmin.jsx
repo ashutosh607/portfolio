@@ -9,7 +9,7 @@ import {
 } from '../services/assetUploadHelpers';
 import { isDocumentUrl } from '../../experience/data/missionRepository';
 import RecordFields from '../components/RecordFields';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../services/api';
 import {
   Plus,
@@ -172,7 +172,7 @@ export default function MissionsAdmin() {
     loadMissions();
   }, []);
 
-  const openAddModal = () => {
+  const openAddModal = useCallback(() => {
     setEditingMission(null);
     setSlugTouched(false);
     setModalPasteNote({ text: '', type: '' });
@@ -204,7 +204,7 @@ export default function MissionsAdmin() {
       visible: true,
     });
     setModalOpen(true);
-  };
+  }, [missions.length]);
 
   const openEditModal = (m) => {
     setEditingMission(m);
@@ -251,7 +251,7 @@ export default function MissionsAdmin() {
       openEditModal(row);
       setParams({}, { replace: true });
     }
-  }, [params, loading && !missions.length]);
+  }, [params, loading, missions, openAddModal, setParams]);
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
