@@ -142,12 +142,12 @@ function AppContent() {
   const [resetCount, setResetCount] = useState(0);
   const [isLiteMode, setIsLiteMode] = useState(detectInitialLiteMode);
   const [isNightMode, setIsNightMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') return true;
     try {
       const saved = window.localStorage.getItem('shinobi_night_mode');
-      return saved === 'true';
+      return saved === null ? true : saved === 'true';
     } catch {
-      return false;
+      return true;
     }
   });
   const [is2DMode, setIs2DMode] = useState(false);
