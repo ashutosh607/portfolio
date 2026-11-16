@@ -27,7 +27,14 @@ const LOCATION_SHORT_NAMES = {
 export function buildInteractableRegistry() {
   const characters = published?.hasDialogues ? CHARACTERS_DATA.flatMap(character => {
     const script = published.dialogues.find(d => d.characterId === character.id);
-    return script ? [{...character, name:script.name, dialogueSequence:script.dialogueSequence, choices:script.choices}] : [];
+    if (!script) return [];
+    const dialogueSequence = Array.isArray(script.dialogueSequence) && script.dialogueSequence.length > 0
+      ? script.dialogueSequence
+      : character.dialogueSequence;
+    const choices = Array.isArray(script.choices) && script.choices.length > 0
+      ? script.choices
+      : character.choices;
+    return [{ ...character, name: script.name || character.name, dialogueSequence, choices }];
   }) : CHARACTERS_DATA;
   const npcs = characters.map((char, idx) => {
     const shortName = NPC_SHORT_NAMES[char.id] || char.name.split(' ')[0];

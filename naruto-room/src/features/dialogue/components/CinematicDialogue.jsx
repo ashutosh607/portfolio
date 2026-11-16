@@ -17,7 +17,9 @@ export default function CinematicDialogue({
 }) {
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(true);
-  const [activeDialogueList, setActiveDialogueList] = useState([]);
+  const [activeDialogueList, setActiveDialogueList] = useState(
+    () => character?.dialogueSequence || []
+  );
   const [isShowingReply, setIsShowingReply] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 

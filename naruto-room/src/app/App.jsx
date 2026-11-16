@@ -258,10 +258,11 @@ function AppContent() {
   useEffect(() => {
     if (!activeDialogueCharacter) return;
     const charPos = activeDialogueCharacter.position;
-    if (!charPos) return;
+    const livePos = narutoPosRef.current || narutoPos;
+    if (!charPos || !livePos) return;
 
-    const dx = narutoPos[0] - charPos[0];
-    const dz = narutoPos[2] - charPos[2];
+    const dx = livePos[0] - charPos[0];
+    const dz = livePos[2] - charPos[2];
     const dist = Math.hypot(dx, dz);
     const maxAllowedDist = (activeDialogueCharacter.interactionDistance || 3.5) + 2.0;
 
