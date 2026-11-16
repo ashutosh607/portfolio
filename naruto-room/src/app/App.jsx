@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState, useCallback, Component } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback, useMemo, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 
 import KonohaVillage from '../features/village/components/KonohaVillage';
@@ -142,12 +142,12 @@ function AppContent() {
   const [resetCount, setResetCount] = useState(0);
   const [isLiteMode, setIsLiteMode] = useState(detectInitialLiteMode);
   const [isNightMode, setIsNightMode] = useState(() => {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === 'undefined') return false;
     try {
       const saved = window.localStorage.getItem('shinobi_night_mode');
-      return saved !== null ? saved === 'true' : true;
+      return saved === 'true';
     } catch {
-      return true;
+      return false;
     }
   });
   const [is2DMode, setIs2DMode] = useState(false);
@@ -342,6 +342,14 @@ function AppContent() {
   const isMovementPaused = Boolean(activeDialogueCharacter || activeModal);
   const enableShadows = !isLiteMode;
 
+  const selectedNearbyTarget = useMemo(
+    () => nearbyTargets.find((t) => t.uid === selectedTargetUid) || nearbyTargets[0] || null,
+    [nearbyTargets, selectedTargetUid]
+  );
+  const focusTarget =
+    activeDialogueCharacter?.position ||
+    (selectedNearbyTarget?.type === 'npc' ? selectedNearbyTarget.position : null);
+
   const isAnyMovementKeyPressed = Boolean(
     activeKeys.KeyW ||
     activeKeys.KeyA ||
@@ -447,6 +455,7 @@ function AppContent() {
             resetSignal={resetCount}
             isMovementPaused={isMovementPaused}
             fastTravelTarget={fastTravelTarget}
+            focusTarget={focusTarget}
             enableShadows={enableShadows}
             touchInputRef={touchInputRef}
           />

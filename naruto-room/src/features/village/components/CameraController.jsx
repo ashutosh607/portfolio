@@ -34,7 +34,8 @@ const CameraController = React.memo(function CameraController({
 
   // Reusable pre-allocated vectors (zero GC allocations per frame)
   const smoothLookTarget = useRef(new THREE.Vector3(INITIAL_SPAWN.position[0], INITIAL_SPAWN.position[1] + CAMERA_CONFIG.targetHeight, INITIAL_SPAWN.position[2]));
-  const smoothCamPos = useRef(new THREE.Vector3(INITIAL_SPAWN.position[0], INITIAL_SPAWN.position[1] + CAMERA_CONFIG.targetHeight + Math.sin(INITIAL_SPAWN.cameraPitch) * CAMERA_CONFIG.defaultDistance, INITIAL_SPAWN.position[2] + Math.cos(INITIAL_SPAWN.cameraPitch) * CAMERA_CONFIG.defaultDistance));
+  const smoothCamPos = useRef(new THREE.Vector3());
+  const firstFrame = useRef(true);
   const desiredTarget = useRef(new THREE.Vector3());
   const desiredCamPos = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
@@ -239,7 +240,12 @@ const CameraController = React.memo(function CameraController({
     camY = Math.max(minCamY, camY);
 
     desiredCamPos.current.set(camX, camY, camZ);
-    smoothCamPos.current.lerp(desiredCamPos.current, Math.min(1, dt * (dialogueTarget ? 5.5 : 10)));
+    if (firstFrame.current) {
+      smoothCamPos.current.copy(desiredCamPos.current);
+      firstFrame.current = false;
+    } else {
+      smoothCamPos.current.lerp(desiredCamPos.current, Math.min(1, dt * (dialogueTarget ? 5.5 : 10)));
+    }
 
     camera.position.copy(smoothCamPos.current);
 

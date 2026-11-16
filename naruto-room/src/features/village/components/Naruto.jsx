@@ -90,6 +90,7 @@ const Naruto = React.memo(function Naruto({
   resetSignal,
   isMovementPaused = false,
   fastTravelTarget = null,
+  focusTarget = null,
   enableShadows = true,
   touchInputRef = null,
 }) {
@@ -562,7 +563,7 @@ const Naruto = React.memo(function Naruto({
     p.x = newX;
     p.z = newZ;
 
-    // Smooth rotation facing movement direction
+    // Smooth rotation facing movement direction, or automatically face selected/active NPC when standing still
     if (isMoving && p.speed > 0.5) {
       const targetAngle = Math.atan2(moveDirX, moveDirZ);
       const diff = Math.atan2(
@@ -570,6 +571,17 @@ const Naruto = React.memo(function Naruto({
         Math.cos(targetAngle - p.rotation)
       );
       p.rotation += diff * Math.min(1, dt * 15);
+    } else if (focusTarget && p.speed <= 0.5) {
+      const fdx = focusTarget[0] - p.x;
+      const fdz = focusTarget[2] - p.z;
+      if (fdx * fdx + fdz * fdz > 0.04) {
+        const targetAngle = Math.atan2(fdx, fdz);
+        const diff = Math.atan2(
+          Math.sin(targetAngle - p.rotation),
+          Math.cos(targetAngle - p.rotation)
+        );
+        p.rotation += diff * Math.min(1, dt * 10);
+      }
     }
 
     // Apply transformation to character group

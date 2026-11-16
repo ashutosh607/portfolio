@@ -1,4 +1,4 @@
-// Configuration for the 6 interactive portfolio destinations in Konoha Village
+import { INITIAL_SPAWN } from './constants.js';
 
 export const KONOHA_LOCATIONS = [
   {
@@ -13,9 +13,9 @@ export const KONOHA_LOCATIONS = [
     modalKey: 'intro',
     description: 'The bustling central avenue of the Hidden Leaf Village and starting welcome point.',
     // Grand entrance stairs - Konoha Main Street Board
-    position: [-23.59, -0.17, 9.79],
-    arrivalFacing: 0, // Facing visitor with Main Street Board and monument behind
-    cameraYaw: 0,
+    position: INITIAL_SPAWN.position,
+    arrivalFacing: INITIAL_SPAWN.facing,
+    cameraYaw: INITIAL_SPAWN.cameraYaw,
     shrinePosition: [-22.79, 0.55, 7.10],
     shrineRotation: 0, // Properly standing straight facing incoming shinobi
     radius: 5.5,
