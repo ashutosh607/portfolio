@@ -676,13 +676,13 @@ export default function LoadingScreen({ onComplete }) {
         const holdDur = isFinal ? 0.65 : 0.44;
         const dissolveDur = isFinal ? 0.92 : 0.76;
 
-        // Initial state: first word (IMAGINE.) is immediately visible at 0ms so the screen is never blank
+        // The first word has one renderer and stays centered throughout its entrance.
         if (idx === 0) {
-          gsap.set(wordObj.canvasEl, {
+          tl.fromTo(wordObj.canvasEl, { opacity: 0 }, {
             opacity: 1,
-            y: 0,
-            filter: 'none',
-          });
+            duration: prefersReducedMotion ? 0 : enterDur,
+            ease: 'sine.out',
+          }, startT);
         } else {
           gsap.set(wordObj.canvasEl, {
             opacity: 0,
@@ -709,7 +709,7 @@ export default function LoadingScreen({ onComplete }) {
           );
         }
 
-        const dissolveStartT = idx === 0 ? holdDur + 0.18 : startT + enterDur + holdDur;
+        const dissolveStartT = startT + enterDur + holdDur;
 
         // If this is the final word (SHINOBI.), ensure essential 3D assets are ready before disintegrating
         if (isFinal) {

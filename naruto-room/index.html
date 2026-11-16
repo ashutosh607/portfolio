@@ -29,27 +29,12 @@
           pointer-events: none;
         "
       >
-        <span
-          id="initial-word-boot-label"
-          style="
-            color: #f5f1eb;
-            font: 700 clamp(28px, 6.2vw, 86px) 'Cinzel', 'Cormorant Garamond', Georgia, serif;
-            letter-spacing: 0.16em;
-            padding-left: 0.16em;
-          "
-        >
-          IMAGINE.
-        </span>
       </div>
       <script>
         if (/^\/admin(?:\/|$)/.test(location.pathname)) {
-          var l = document.getElementById('initial-word-boot-label');
-          if (l) {
-            l.textContent = 'SHINOBI ADMIN';
-            l.style.fontSize = '14px';
-            l.style.fontFamily = 'sans-serif';
-            l.style.color = '#e68a2e';
-          }
+          var boot = document.getElementById('initial-word-boot');
+          boot.textContent = 'SHINOBI ADMIN';
+          boot.style.cssText += 'color:#e68a2e;font:700 14px sans-serif;letter-spacing:0.16em';
         }
       </script>
     </div>
