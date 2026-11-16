@@ -117,7 +117,7 @@ const globalLimiter = rateLimit({
 app.use('/api', globalLimiter);
 
 const allowedOrigins = new Set([
-  'https://portfolio-zeta-amber-3cr4nj8fai.vercel.app',
+  'https://ashutosh-kadam-portfolio.vercel.app',
   ...(process.env.NODE_ENV === 'production' ? [] : [
     'http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000', 'http://localhost:4173',
   ]),

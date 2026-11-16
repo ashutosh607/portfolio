@@ -2,7 +2,7 @@
 
 A developer portfolio presented as a playable Hidden Leaf Village. Visitors can walk through Konoha as Naruto, talk to characters, and open portfolio sections at six landmarks. A scrollable 2D edition presents the same work, and a private CMS lets Ashutosh update published content.
 
-[Explore the live portfolio](https://portfolio-zeta-amber-3cr4nj8fai.vercel.app/) · [Local setup](#local-development) · [Deployment](#deployment) · [Architecture](docs/architecture.md)
+[Explore the live portfolio](https://ashutosh-kadam-portfolio.vercel.app/) · [Local setup](#local-development) · [Deployment](#deployment) · [Architecture](docs/architecture.md)
 
 ## Explore the village
 

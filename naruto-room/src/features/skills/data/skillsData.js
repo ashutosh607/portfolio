@@ -14,7 +14,7 @@ export const PROJECTS_METADATA = {
     dishName: 'Miso Tonkotsu Special',
     thumbnail: '/ichiraku/projects/konoha-3d-portfolio.webp',
     shortDesc: 'Interactive 3D Hidden Leaf Village with custom third-person camera and GLTF environments.',
-    liveUrl: 'https://portfolio-zeta-amber-3cr4nj8fai.vercel.app/',
+    liveUrl: 'https://ashutosh-kadam-portfolio.vercel.app/',
     githubUrl: 'https://github.com/ashutosh607/portfolio',
     internalModalId: 'projects',
   },
