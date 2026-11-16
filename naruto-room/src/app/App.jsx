@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useRef, useState, useCallback, useMemo, Component } from 'react';
+import React, { Suspense, useEffect, useRef, useState, useCallback, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 
 import KonohaVillage from '../features/village/components/KonohaVillage';
@@ -342,10 +342,7 @@ function AppContent() {
   const isMovementPaused = Boolean(activeDialogueCharacter || activeModal);
   const enableShadows = !isLiteMode;
 
-  const selectedNearbyTarget = useMemo(
-    () => nearbyTargets.find((t) => t.uid === selectedTargetUid) || nearbyTargets[0] || null,
-    [nearbyTargets, selectedTargetUid]
-  );
+  const selectedNearbyTarget = nearbyTargets.find((t) => t.uid === selectedTargetUid) || nearbyTargets[0];
   const focusTarget =
     activeDialogueCharacter?.position ||
     (selectedNearbyTarget?.type === 'npc' ? selectedNearbyTarget.position : null);

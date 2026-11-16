@@ -90,6 +90,12 @@ async function testBook() {
     await call('Page.navigate',{url:base});await check("document.querySelector('.shinobi-nav-visibility') || document.querySelector('[title*=\"2D Classic\"]') || document.querySelector('.p2d-root')");
     await run("if(document.getElementById('village-top-nav')?.hidden) document.querySelector('.shinobi-nav-visibility')?.click(); document.querySelector('[title*=\"2D Classic\"]')?.click()");
     await check("document.querySelector('.ramen-inline')");
+    await click('.p2d-switch-3d-btn');
+    await check("document.querySelector('.three-canvas canvas') && !document.querySelector('.p2d-root')");
+    await check("document.querySelector('[title*=\"2D Classic\"]')");
+    await click('[title*="2D Classic"]');
+    await check("document.querySelector('.p2d-switch-3d-btn') && document.querySelector('.ramen-inline')");
+    console.log('PASS village to 2D round trip and repeat entry');
     await call('Emulation.setTouchEmulationEnabled',{enabled:true});
     await run("(async()=>{const url=performance.getEntriesByType('resource').find(e=>/\\/gsap\\.js/.test(e.name)).name;window.testGsap=(await import(url)).gsap})()");
     const freezeAt=async(cls,position)=>{
